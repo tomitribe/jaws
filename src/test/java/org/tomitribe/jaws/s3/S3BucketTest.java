@@ -16,6 +16,7 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import org.junit.Before;
@@ -70,6 +71,39 @@ public class S3BucketTest {
     }
 
     @Test
+    public void objectsListObjectsRequest() throws IOException {
+        new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color/red/1/1.3/foo.txt", "")
+                .add("repository/org.color/red/1/1.2/foo.txt", "")
+                .add("repository/org.color/red/1/1.1/foo.txt", "")
+                .add("repository/org.color/green/2/2.3/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir(store);
+
+        final S3Bucket bucket = s3Client.getBucket("repository");
+
+        // The bucket name is implied -- we do not need to fill it in
+        final ListObjectsRequest request = new ListObjectsRequest()
+                .withPrefix("org.color/");
+
+        final List<String> list = bucket.objects(request)
+                .map(S3Entry::getKey)
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals("" +
+                        "org.color/green/2/2.3/foo.txt\n" +
+                        "org.color/red/1/1.1/foo.txt\n" +
+                        "org.color/red/1/1.2/foo.txt\n" +
+                        "org.color/red/1/1.3/foo.txt\n" +
+                        "org.color/red/1/1.4/foo.txt"
+                , Join.join("\n", list));
+    }
+
+    @Test
     public void putObjectString() throws IOException {
         final S3Bucket bucket = s3Client.createBucket("repository");
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
@@ -88,10 +122,6 @@ public class S3BucketTest {
         assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
         assertContent(store, "blue", "repository/junit/junit/4/4.12/bar.txt");
         assertContent(store, "orange", "repository/io.tomitribe/crest/5/5.4.1.2/baz.txt");
-    }
-
-    private static void assertContent(final File store, final String orange, final String s) throws IOException {
-        assertEquals(orange, IO.slurp(new File(store, s)));
     }
 
     @Test
@@ -172,13 +202,6 @@ public class S3BucketTest {
         assertObject(bucket, "repository", "io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
     }
 
-    public static void assertObject(final S3Bucket bucket, final String bucketName, final String path, final String red) throws IOException {
-        final S3Object object = bucket.getObject(path);
-        assertEquals(bucketName, object.getBucketName());
-        assertEquals(path, object.getKey());
-        assertEquals(red, IO.slurp(object.getObjectContent()));
-    }
-
     @Test
     public void getObjectAsStream() throws IOException {
         final S3Bucket bucket = s3Client.createBucket("repository");
@@ -245,7 +268,6 @@ public class S3BucketTest {
         assertEquals("repository", bucket.getName());
     }
 
-
     public static List<String> paths(final File store) {
         final Dir dir = Dir.of(Dir.class, store);
         return paths(dir.get(), dir.files().collect(Collectors.toList()));
@@ -265,4 +287,14 @@ public class S3BucketTest {
                 .collect(Collectors.toList());
     }
 
+    public static void assertContent(final File store, final String orange, final String s) throws IOException {
+        assertEquals(orange, IO.slurp(new File(store, s)));
+    }
+
+    public static void assertObject(final S3Bucket bucket, final String bucketName, final String path, final String red) throws IOException {
+        final S3Object object = bucket.getObject(path);
+        assertEquals(bucketName, object.getBucketName());
+        assertEquals(path, object.getKey());
+        assertEquals(red, IO.slurp(object.getObjectContent()));
+    }
 }

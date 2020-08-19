@@ -21,6 +21,7 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.Owner;
@@ -46,8 +47,20 @@ public class S3Bucket {
         s3 = client.getS3();
     }
 
+    public S3Directory asDirectory() {
+        return new S3Directory(this);
+    }
+
     public Stream<S3Entry> objects() {
         final ObjectListingIterator iterator = new ObjectListingIterator(bucket.getName());
+        return S3Client.asStream(iterator)
+                .map(s3ObjectSummary -> new S3Entry(client, s3ObjectSummary))
+                ;
+    }
+
+    public Stream<S3Entry> objects(final ListObjectsRequest request) {
+        request.setBucketName(bucket.getName());
+        final ObjectListingIterator iterator = new ObjectListingIterator(request);
         return S3Client.asStream(iterator)
                 .map(s3ObjectSummary -> new S3Entry(client, s3ObjectSummary))
                 ;
@@ -123,6 +136,11 @@ public class S3Bucket {
         private ObjectListing objectListing;
 
         public ObjectListingIterator(final String bucketName) {
+            objectListing = client.getS3().listObjects(bucketName);
+            iterator = objectListing.getObjectSummaries().iterator();
+        }
+
+        public ObjectListingIterator(final ListObjectsRequest bucketName) {
             objectListing = client.getS3().listObjects(bucketName);
             iterator = objectListing.getObjectSummaries().iterator();
         }

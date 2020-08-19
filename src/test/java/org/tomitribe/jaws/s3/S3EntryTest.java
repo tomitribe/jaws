@@ -124,6 +124,17 @@ public class S3EntryTest {
         assertEquals(3, entry.getSize());
     }
 
+    @Test
+    public void getName() {
+        final S3Bucket bucket = s3Client.createBucket("repository");
+        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
+
+        final Stream<S3Entry> objects = bucket.objects();
+        final S3Entry entry = objects.findAny().orElseThrow(AssertionError::new);
+
+        assertEquals("foo.txt", entry.getName());
+    }
+
     public static void assertEntry(final Map<String, S3Entry> entries, final String key, final String content) throws IOException {
         final S3Entry entry = entries.get(key);
         final S3Object object = entry.getValue();

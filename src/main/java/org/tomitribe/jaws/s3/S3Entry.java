@@ -56,6 +56,11 @@ public class S3Entry {
         summary.setBucketName(bucketName);
     }
 
+    public String getName() {
+        final String[] parts = summary.getKey().split("/");
+        return parts.length > 0 ? parts[parts.length - 1] : summary.getKey();
+    }
+
     public String getKey() {
         return summary.getKey();
     }
