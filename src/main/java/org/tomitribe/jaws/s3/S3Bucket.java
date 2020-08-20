@@ -51,23 +51,21 @@ public class S3Bucket {
         return client;
     }
 
-    public S3Directory asDirectory() {
-        return new S3Directory(this);
+    public S3File asFile() {
+        return new S3File(this, Path.root(), true);
     }
 
-    public Stream<S3Entry> objects() {
+    public Stream<S3File> objects() {
         final ObjectListingIterator iterator = new ObjectListingIterator(bucket.getName());
         return S3Client.asStream(iterator)
-                .map(s3ObjectSummary -> new S3Entry(client, s3ObjectSummary))
-                ;
+                .map(s3ObjectSummary -> new S3File(this, s3ObjectSummary));
     }
 
-    public Stream<S3Entry> objects(final ListObjectsRequest request) {
+    public Stream<S3File> objects(final ListObjectsRequest request) {
         request.setBucketName(bucket.getName());
         final ObjectListingIterator iterator = new ObjectListingIterator(request);
         return S3Client.asStream(iterator)
-                .map(s3ObjectSummary -> new S3Entry(client, s3ObjectSummary))
-                ;
+                .map(s3ObjectSummary -> new S3File(this, s3ObjectSummary));
     }
 
     public PutObjectResult putObject(final String key, final File file) throws SdkClientException, AmazonServiceException {
@@ -84,6 +82,10 @@ public class S3Bucket {
 
     public S3Object getObject(final String key) throws SdkClientException, AmazonServiceException {
         return s3.getObject(bucket.getName(), key);
+    }
+
+    public S3File getFile(final String key) throws SdkClientException, AmazonServiceException {
+        return new S3File(this, getObject(key));
     }
 
     public S3ObjectInputStream getObjectAsStream(final String key) throws SdkClientException, AmazonServiceException {
@@ -117,6 +119,16 @@ public class S3Bucket {
     public PutObjectResult setObjectAsString(final String key, final String value) {
         final AmazonS3 s3 = getClient().getS3();
         return s3.putObject(bucket.getName(), key, value);
+    }
+
+    public PutObjectResult setObjectAsFile(final String key, final File value) {
+        final AmazonS3 s3 = getClient().getS3();
+        return s3.putObject(bucket.getName(), key, value);
+    }
+
+    public PutObjectResult setObjectAsStream(final String key, final InputStream value) {
+        final AmazonS3 s3 = getClient().getS3();
+        return s3.putObject(bucket.getName(), key, value, new ObjectMetadata());
     }
 
     public Owner getOwner() {

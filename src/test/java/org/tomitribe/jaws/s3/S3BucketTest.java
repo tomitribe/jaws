@@ -60,7 +60,7 @@ public class S3BucketTest {
 
         final S3Bucket bucket = s3Client.getBucket("repository");
         final List<String> list = bucket.objects()
-                .map(S3Entry::getKey)
+                .map(S3File::getAbsoluteName)
                 .sorted()
                 .collect(Collectors.toList());
 
@@ -90,7 +90,7 @@ public class S3BucketTest {
                 .withPrefix("org.color/");
 
         final List<String> list = bucket.objects(request)
-                .map(S3Entry::getKey)
+                .map(S3File::getAbsoluteName)
                 .sorted()
                 .collect(Collectors.toList());
 

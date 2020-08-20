@@ -16,7 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.S3Object;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,7 +30,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class S3EntryTest {
+public class S3FileNodeObjectSummary2Test {
 
     @Rule
     public MockS3 mockS3 = new MockS3();
@@ -51,7 +50,7 @@ public class S3EntryTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final Map<String, S3Entry> entries = bucket.objects().collect(Collectors.toMap(S3Entry::getKey, Function.identity()));
+        final Map<String, S3File> entries = bucket.objects().collect(Collectors.toMap(S3File::getAbsoluteName, Function.identity()));
 
         assertEntry(entries, "org.color/red/1/1.4/foo.txt", "red");
         assertEntry(entries, "org.color.bright/green/1/1.4/foo.txt", "green");
@@ -67,7 +66,7 @@ public class S3EntryTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final Map<String, S3Entry> entries = bucket.objects().collect(Collectors.toMap(S3Entry::getKey, Function.identity()));
+        final Map<String, S3File> entries = bucket.objects().collect(Collectors.toMap(S3File::getAbsoluteName, Function.identity()));
 
         assertEntryAsStream(entries, "org.color/red/1/1.4/foo.txt", "red");
         assertEntryAsStream(entries, "org.color.bright/green/1/1.4/foo.txt", "green");
@@ -83,7 +82,7 @@ public class S3EntryTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final Map<String, S3Entry> entries = bucket.objects().collect(Collectors.toMap(S3Entry::getKey, Function.identity()));
+        final Map<String, S3File> entries = bucket.objects().collect(Collectors.toMap(S3File::getAbsoluteName, Function.identity()));
 
         assertEntryAsString(entries, "org.color/red/1/1.4/foo.txt", "red");
         assertEntryAsString(entries, "org.color.bright/green/1/1.4/foo.txt", "green");
@@ -96,8 +95,8 @@ public class S3EntryTest {
         final S3Bucket bucket = s3Client.createBucket("repository");
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
 
-        final Stream<S3Entry> objects = bucket.objects();
-        final S3Entry entry = objects.findAny().orElseThrow(AssertionError::new);
+        final Stream<S3File> objects = bucket.objects();
+        final S3File entry = objects.findAny().orElseThrow(AssertionError::new);
 
         assertEquals("repository", entry.getBucketName());
     }
@@ -107,10 +106,10 @@ public class S3EntryTest {
         final S3Bucket bucket = s3Client.createBucket("repository");
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
 
-        final Stream<S3Entry> objects = bucket.objects();
-        final S3Entry entry = objects.findAny().orElseThrow(AssertionError::new);
+        final Stream<S3File> objects = bucket.objects();
+        final S3File entry = objects.findAny().orElseThrow(AssertionError::new);
 
-        assertEquals("org.color/red/1/1.4/foo.txt", entry.getKey());
+        assertEquals("org.color/red/1/1.4/foo.txt", entry.getAbsoluteName());
     }
 
     @Test
@@ -118,8 +117,8 @@ public class S3EntryTest {
         final S3Bucket bucket = s3Client.createBucket("repository");
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
 
-        final Stream<S3Entry> objects = bucket.objects();
-        final S3Entry entry = objects.findAny().orElseThrow(AssertionError::new);
+        final Stream<S3File> objects = bucket.objects();
+        final S3File entry = objects.findAny().orElseThrow(AssertionError::new);
 
         assertEquals(3, entry.getSize());
     }
@@ -129,28 +128,26 @@ public class S3EntryTest {
         final S3Bucket bucket = s3Client.createBucket("repository");
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
 
-        final Stream<S3Entry> objects = bucket.objects();
-        final S3Entry entry = objects.findAny().orElseThrow(AssertionError::new);
+        final Stream<S3File> objects = bucket.objects();
+        final S3File entry = objects.findAny().orElseThrow(AssertionError::new);
 
         assertEquals("foo.txt", entry.getName());
     }
 
-    public static void assertEntry(final Map<String, S3Entry> entries, final String key, final String content) throws IOException {
-        final S3Entry entry = entries.get(key);
-        final S3Object object = entry.getValue();
-        assertNotNull(object);
-        assertEquals(key, object.getKey());
-        assertEquals(content, IO.slurp(object.getObjectContent()));
+    public static void assertEntry(final Map<String, S3File> entries, final String key, final String content) throws IOException {
+        final S3File file = entries.get(key);
+        assertEquals(key, file.getAbsoluteName());
+        assertEquals(content, IO.slurp(file.getValueAsStream()));
     }
 
-    public static void assertEntryAsStream(final Map<String, S3Entry> entries, final String key, final String content) throws IOException {
-        final S3Entry entry = entries.get(key);
+    public static void assertEntryAsStream(final Map<String, S3File> entries, final String key, final String content) throws IOException {
+        final S3File entry = entries.get(key);
         assertNotNull(entry);
         assertEquals(content, IO.slurp(entry.getValueAsStream()));
     }
 
-    public static void assertEntryAsString(final Map<String, S3Entry> entries, final String key, final String content) throws IOException {
-        final S3Entry entry = entries.get(key);
+    public static void assertEntryAsString(final Map<String, S3File> entries, final String key, final String content) throws IOException {
+        final S3File entry = entries.get(key);
         assertNotNull(entry);
         assertEquals(content, entry.getValueAsString());
     }

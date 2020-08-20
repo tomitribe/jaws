@@ -57,6 +57,10 @@ public class Path {
         return absoluteName;
     }
 
+    public String getSearchPrefix() {
+        return absoluteName + "/";
+    }
+
     public Path getParent() {
         return parent == null ? ROOT : Path.fromKey(parent);
     }
@@ -89,6 +93,11 @@ public class Path {
         @Override
         public Path getChild(final String name) {
             return Path.fromKey(name);
+        }
+
+        @Override
+        public String getSearchPrefix() {
+            return null;
         }
     };
 }

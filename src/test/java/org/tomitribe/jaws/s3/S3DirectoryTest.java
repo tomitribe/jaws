@@ -16,8 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,11 +58,11 @@ public class S3DirectoryTest {
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
                 .toDir(store);
 
-        final S3Directory repository = s3Client.getBucket("repository").asDirectory();
+        final S3File repository = s3Client.getBucket("repository").asFile();
 
         {
-            final List<String> list = repository.objects()
-                    .map(S3Entry::getKey)
+            final List<String> list = repository.files()
+                    .map(S3File::getAbsoluteName)
                     .sorted()
                     .collect(Collectors.toList());
 
@@ -80,11 +78,11 @@ public class S3DirectoryTest {
                     , Join.join("\n", list));
         }
 
-        final S3Directory orgColor = repository.getDirectory("org.color");
+        final S3File orgColor = repository.getFile("org.color/");
 
         {
-            final List<String> list = orgColor.objects()
-                    .map(S3Entry::getKey)
+            final List<String> list = orgColor.files()
+                    .map(S3File::getAbsoluteName)
                     .sorted()
                     .collect(Collectors.toList());
 
@@ -97,11 +95,11 @@ public class S3DirectoryTest {
                     , Join.join("\n", list));
         }
 
-        final S3Directory red = orgColor.getDirectory("red");
+        final S3File red = orgColor.getFile("red/");
 
         {
-            final List<String> list = red.objects()
-                    .map(S3Entry::getKey)
+            final List<String> list = red.files()
+                    .map(S3File::getAbsoluteName)
                     .sorted()
                     .collect(Collectors.toList());
 
@@ -118,14 +116,15 @@ public class S3DirectoryTest {
     public void putObjectString() throws IOException {
         final S3Bucket bucket = s3Client.createBucket("repository");
 
-        bucket.asDirectory()
-                .getDirectory("org.color")
-                .putObject("red/1/1.4/foo.txt", "red");
+        bucket.asFile()
+                .getFile("org.color/")
+                .getFile("red/1/1.4/foo.txt")
+                .setValueAsString("red");
 
-        bucket.asDirectory()
-                .getDirectory("org.color.bright")
-                .getDirectory("green")
-                .putObject("1/1.4/foo.txt", "green");
+        bucket.asFile()
+                .getFile("org.color.bright/")
+                .getFile("green/")
+                .getFile("1/1.4/foo.txt").setValueAsString("green");
 
         assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
         assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
@@ -140,14 +139,16 @@ public class S3DirectoryTest {
 
         final S3Bucket bucket = s3Client.createBucket("repository");
 
-        bucket.asDirectory()
-                .getDirectory("org.color")
-                .putObject("red/1/1.4/foo.txt", new File(data, "red.txt"));
+        bucket.asFile()
+                .getFile("org.color/")
+                .getFile("red/1/1.4/foo.txt")
+                .setValueAsFile(new File(data, "red.txt"));
 
-        bucket.asDirectory()
-                .getDirectory("org.color.bright")
-                .getDirectory("green")
-                .putObject("1/1.4/foo.txt", new File(data, "green.txt"));
+        bucket.asFile()
+                .getFile("org.color.bright/")
+                .getFile("green/")
+                .getFile("1/1.4/foo.txt")
+                .setValueAsFile(new File(data, "green.txt"));
 
         assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
         assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
@@ -162,33 +163,18 @@ public class S3DirectoryTest {
 
         final S3Bucket bucket = s3Client.createBucket("repository");
 
-        bucket.asDirectory()
-                .getDirectory("org.color")
-                .putObject("red/1/1.4/foo.txt", IO.read(new File(data, "red.txt")), new ObjectMetadata());
+        bucket.asFile()
+                .getFile("org.color/")
+                .getFile("red/1/1.4/foo.txt")
+                .setValueAsStream(IO.read(new File(data, "red.txt")));
 
-        bucket.asDirectory()
-                .getDirectory("org.color.bright")
-                .getDirectory("green")
-                .putObject("1/1.4/foo.txt", IO.read(new File(data, "green.txt")), new ObjectMetadata());
+        bucket.asFile()
+                .getFile("org.color.bright/")
+                .getFile("green/")
+                .getFile("1/1.4/foo.txt").setValueAsStream(IO.read(new File(data, "green.txt")));
 
         assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
         assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
-    }
-
-    @Test
-    public void getObject() throws IOException {
-        final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
-        bucket.putObject("org.color.bright/green/1/1.4/foo.txt", "green");
-        bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
-        bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
-
-        final S3Directory directory = bucket.asDirectory().getDirectory("org.color");
-        final S3Object object = directory.getObject("red/1/1.4/foo.txt");
-
-        assertEquals("repository", object.getBucketName());
-        assertEquals("org.color/red/1/1.4/foo.txt", object.getKey());
-        assertEquals("red", IO.slurp(object.getObjectContent()));
     }
 
     @Test
@@ -199,9 +185,9 @@ public class S3DirectoryTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final S3Directory directory = bucket.asDirectory().getDirectory("org.color");
+        final S3File directory = bucket.asFile().getFile("org.color/");
 
-        assertEquals("red", IO.slurp(directory.getObjectAsStream("red/1/1.4/foo.txt")));
+        assertEquals("red", IO.slurp(directory.getFile("red/1/1.4/foo.txt").getValueAsStream()));
     }
 
     @Test
@@ -212,9 +198,9 @@ public class S3DirectoryTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final S3Directory directory = bucket.asDirectory().getDirectory("org.color");
+        final S3File directory = bucket.asFile().getFile("org.color/");
 
-        assertEquals("red", directory.getObjectAsString("red/1/1.4/foo.txt"));
+        assertEquals("red", directory.getFile("red/1/1.4/foo.txt").getValueAsString());
     }
 
     @Test
@@ -230,9 +216,9 @@ public class S3DirectoryTest {
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
                 .toDir(store);
 
-        final S3Directory repository = s3Client.getBucket("repository").asDirectory();
+        final S3File repository = s3Client.getBucket("repository").asFile();
 
-        final S3Directory directory = repository.getDirectory("junit");
+        final S3File directory = repository.getFile("junit/");
         assertNotNull(directory);
         assertEquals("junit", directory.getName());
     }
@@ -250,33 +236,33 @@ public class S3DirectoryTest {
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
                 .toDir(store);
 
-        final S3Directory directory = s3Client.getBucket("repository").asDirectory()
-                .getDirectory("io.tomitribe")
-                .getDirectory("crest");
+        final S3File directory = s3Client.getBucket("repository").asFile()
+                .getFile("io.tomitribe/")
+                .getFile("crest/");
 
         assertNotNull(directory);
         assertEquals("crest", directory.getName());
 
-        assertNotNull(directory.getParentDirectory());
-        assertEquals("io.tomitribe", directory.getParentDirectory().getName());
+        assertNotNull(directory.getParentFile());
+        assertEquals("io.tomitribe", directory.getParentFile().getName());
     }
 
     @Test
     public void getName() {
-        final S3Directory directory = s3Client.createBucket("repository").asDirectory()
-                .getDirectory("org.colors")
-                .getDirectory("green");
+        final S3File directory = s3Client.createBucket("repository").asFile()
+                .getFile("org.colors/")
+                .getFile("green/");
 
         assertEquals("green", directory.getName());
     }
 
     @Test
     public void getAbsoluteName() {
-        final S3Directory directory = s3Client.createBucket("repository").asDirectory()
-                .getDirectory("org.colors")
-                .getDirectory("green");
+        final S3File directory = s3Client.createBucket("repository").asFile()
+                .getFile("org.colors/")
+                .getFile("green/");
 
-        assertEquals("org.colors/green/", directory.getAbsoluteName());
+        assertEquals("org.colors/green", directory.getAbsoluteName());
     }
 
 

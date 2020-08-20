@@ -16,13 +16,18 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
+import java.io.File;
+import java.io.InputStream;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 /**
  * S3File aims to provide an abstraction over the Amazon S3 API
@@ -41,28 +46,22 @@ public class S3File {
     private final Path path;
     private final AtomicReference<Node> node = new AtomicReference<>();
 
-    private S3File(final S3Bucket bucket, final S3ObjectSummary summary) {
+    S3File(final S3Bucket bucket, final S3ObjectSummary summary) {
         this.bucket = bucket;
         this.path = Path.fromKey(summary.getKey());
         this.node.set(new ObjectSummary(summary));
     }
 
-    private S3File(final S3Bucket bucket, final S3Object object) {
+    S3File(final S3Bucket bucket, final S3Object object) {
         this.bucket = bucket;
         this.path = Path.fromKey(object.getKey());
         this.node.set(new Object(object));
     }
 
-    private S3File(final S3Bucket bucket, final Path path) {
+    S3File(final S3Bucket bucket, final Path path, final boolean directory) {
         this.bucket = bucket;
         this.path = path;
-        this.node.set(new Directory());
-    }
-
-    private S3File(final S3Bucket bucket, final Path path, final Node node) {
-        this.bucket = bucket;
-        this.path = path;
-        this.node.set(node);
+        this.node.set(directory ? new Directory() : new Unknown());
     }
 
     public boolean exists() {
@@ -80,11 +79,20 @@ public class S3File {
     public S3File getParentFile() {
         final Path parent = path.getParent();
         if (parent == null) return null;
-        return new S3File(bucket, parent);
+        return new S3File(bucket, parent, true);
     }
 
-    public S3File getChildFile(final String name) {
-        return node.get().getChildFile(name);
+    public S3File getFile(final String name) {
+        return node.get().getFile(name);
+    }
+
+
+    public Stream<S3File> files() {
+        return node.get().files();
+    }
+
+    public Stream<S3File> files(final ListObjectsRequest request) {
+        return node.get().files(request);
     }
 
     public String getAbsoluteName() {
@@ -111,6 +119,14 @@ public class S3File {
         return node.get().setValueAsStream();
     }
 
+    public void setValueAsStream(final InputStream inputStream) {
+        node.get().setValueAsStream(inputStream);
+    }
+
+    public void setValueAsFile(final File file) {
+        node.get().setValueAsFile(file);
+    }
+
     public void setValueAsString(final String value) {
         node.get().setValueAsString(value);
     }
@@ -130,6 +146,7 @@ public class S3File {
     public Date getLastModified() {
         return node.get().getLastModified();
     }
+
 
     /**
      * AmazonS3 API has a very large number of ways to get at
@@ -154,7 +171,11 @@ public class S3File {
 
         boolean exists();
 
-        S3File getChildFile(final String name);
+        S3File getFile(final String name);
+
+        Stream<S3File> files();
+
+        Stream<S3File> files(final ListObjectsRequest request);
 
         S3ObjectInputStream getValueAsStream();
 
@@ -162,13 +183,18 @@ public class S3File {
 
         S3OutputStream setValueAsStream();
 
+        void setValueAsStream(final InputStream inputStream);
+
         void setValueAsString(final String value);
+
+        void setValueAsFile(final File file);
 
         String getETag();
 
         long getSize();
 
         Date getLastModified();
+
     }
 
     /**
@@ -199,17 +225,20 @@ public class S3File {
         }
 
         @Override
-        public S3File getChildFile(final String name) {
+        public Stream<S3File> files() {
+            return bucket.objects(new ListObjectsRequest().withPrefix(path.getSearchPrefix()));
+        }
+
+        @Override
+        public Stream<S3File> files(final ListObjectsRequest request) {
+            Objects.requireNonNull(request);
+            return bucket.objects(request.withPrefix(path.getSearchPrefix()));
+        }
+
+        @Override
+        public S3File getFile(final String name) {
             final Path child = path.getChild(name);
-
-            if (child.isDirectory()) {
-
-                return new S3File(bucket, child, new Directory());
-
-            } else {
-
-                return new S3File(bucket, child, new NewObject());
-            }
+            return new S3File(bucket, child, false);
         }
 
         @Override
@@ -228,7 +257,17 @@ public class S3File {
         }
 
         @Override
+        public void setValueAsStream(final InputStream inputStream) {
+            throw new UnsupportedOperationException("S3File refers to a directory");
+        }
+
+        @Override
         public void setValueAsString(final String value) {
+            throw new UnsupportedOperationException("S3File refers to a directory");
+        }
+
+        @Override
+        public void setValueAsFile(final File file) {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
@@ -277,9 +316,19 @@ public class S3File {
         }
 
         @Override
-        public S3File getChildFile(final String name) {
+        public S3File getFile(final String name) {
             final String message = String.format("S3File '%s' is a not directory and cannot have child '%s'", path.getAbsoluteName(), name);
             throw new UnsupportedOperationException(message);
+        }
+
+        @Override
+        public Stream<S3File> files() {
+            return Stream.of();
+        }
+
+        @Override
+        public Stream<S3File> files(final ListObjectsRequest request) {
+            return Stream.of();
         }
 
         @Override
@@ -298,8 +347,18 @@ public class S3File {
         }
 
         @Override
+        public void setValueAsStream(final InputStream inputStream) {
+            writeStreamAndReplace(this, inputStream);
+        }
+
+        @Override
         public void setValueAsString(final String value) {
             writeStringAndReplace(this, value);
+        }
+
+        @Override
+        public void setValueAsFile(final File value) {
+            writeFileAndReplace(this, value);
         }
 
         @Override
@@ -346,9 +405,19 @@ public class S3File {
         }
 
         @Override
-        public S3File getChildFile(final String name) {
+        public S3File getFile(final String name) {
             final String message = String.format("S3File '%s' is a not directory and cannot have child '%s'", path.getAbsoluteName(), name);
             throw new UnsupportedOperationException(message);
+        }
+
+        @Override
+        public Stream<S3File> files() {
+            return Stream.of();
+        }
+
+        @Override
+        public Stream<S3File> files(final ListObjectsRequest request) {
+            return Stream.of();
         }
 
         @Override
@@ -367,8 +436,18 @@ public class S3File {
         }
 
         @Override
+        public void setValueAsStream(final InputStream inputStream) {
+            writeStreamAndReplace(this, inputStream);
+        }
+
+        @Override
         public void setValueAsString(final String value) {
             writeStringAndReplace(this, value);
+        }
+
+        @Override
+        public void setValueAsFile(final File value) {
+            writeFileAndReplace(this, value);
         }
 
         @Override
@@ -415,14 +494,29 @@ public class S3File {
         }
 
         @Override
-        public S3File getChildFile(final String name) {
+        public S3File getFile(final String name) {
             final String message = String.format("S3File '%s' is a not directory and cannot have child '%s'", path.getAbsoluteName(), name);
             throw new UnsupportedOperationException(message);
         }
 
         @Override
+        public Stream<S3File> files() {
+            return Stream.of();
+        }
+
+        @Override
+        public Stream<S3File> files(final ListObjectsRequest request) {
+            return Stream.of();
+        }
+
+        @Override
         public S3ObjectInputStream getValueAsStream() {
             return bucket.getObjectAsStream(path.getAbsoluteName());
+        }
+
+        @Override
+        public void setValueAsStream(final InputStream inputStream) {
+            writeStreamAndReplace(this, inputStream);
         }
 
         @Override
@@ -438,6 +532,11 @@ public class S3File {
         @Override
         public void setValueAsString(final String value) {
             writeStringAndReplace(this, value);
+        }
+
+        @Override
+        public void setValueAsFile(final File value) {
+            writeFileAndReplace(this, value);
         }
 
         @Override
@@ -458,14 +557,15 @@ public class S3File {
 
     /**
      * Represents an object that may not yet have been created and
-     * therefore has no metadata.  It can be written, but not read.
+     * therefore has no metadata.  It may be a file, it may imply
+     * a directory, it may not exist, we don't know.
      *
      * Once written to S3 the node will be replaced with a node that has
      * all the metadata and can be both read and written.
      */
-    private class NewObject implements Node {
+    private class Unknown implements Node {
 
-        public NewObject() {
+        public Unknown() {
         }
 
         @Override
@@ -475,7 +575,7 @@ public class S3File {
 
         @Override
         public boolean isFile() {
-            return true;
+            return false;
         }
 
         @Override
@@ -484,21 +584,30 @@ public class S3File {
         }
 
         @Override
-        public S3File getChildFile(final String name) {
-            final String message = String.format("S3File '%s' is a not defined as a directory and cannot have child '%s'", path.getAbsoluteName(), name);
-            throw new UnsupportedOperationException(message);
+        public Stream<S3File> files() {
+            return bucket.objects(new ListObjectsRequest().withPrefix(path.getSearchPrefix()));
+        }
+
+        @Override
+        public Stream<S3File> files(final ListObjectsRequest request) {
+            Objects.requireNonNull(request);
+            return bucket.objects(request.withPrefix(path.getSearchPrefix()));
+        }
+
+        @Override
+        public S3File getFile(final String name) {
+            final Path child = path.getChild(name);
+            return new S3File(bucket, child, false);
         }
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            final String message = String.format("S3File '%s' has not yet been created", path.getAbsoluteName());
-            throw new UnsupportedOperationException(message);
+            return bucket.getObjectAsStream(path.getAbsoluteName());
         }
 
         @Override
         public String getValueAsString() {
-            final String message = String.format("S3File '%s' has not yet been created", path.getAbsoluteName());
-            throw new UnsupportedOperationException(message);
+            return bucket.getObjectAsString(path.getAbsoluteName());
         }
 
         @Override
@@ -507,8 +616,18 @@ public class S3File {
         }
 
         @Override
+        public void setValueAsStream(final InputStream inputStream) {
+            writeStreamAndReplace(this, inputStream);
+        }
+
+        @Override
         public void setValueAsString(final String value) {
             writeStringAndReplace(this, value);
+        }
+
+        @Override
+        public void setValueAsFile(final File value) {
+            writeFileAndReplace(this, value);
         }
 
         @Override
@@ -535,10 +654,29 @@ public class S3File {
         node.compareAndSet(current, new UpdatedObject(result));
     }
 
+    private void writeFileAndReplace(final Node current, final File value) {
+        final PutObjectResult result = bucket.setObjectAsFile(path.getAbsoluteName(), value);
+        node.compareAndSet(current, new UpdatedObject(result));
+    }
+
     private S3OutputStream writeStreamAndReplace(final Node current) {
         return new S3OutputStream(bucket.getClient().getS3(), bucket.getName(), path.getAbsoluteName(), () -> {
             final S3Object object = bucket.getObject(path.getAbsoluteName());
             node.compareAndSet(current, new Object(object));
         });
+    }
+
+    private void writeStreamAndReplace(final Node current, final InputStream inputStream) {
+        final PutObjectResult result = bucket.setObjectAsStream(path.getAbsoluteName(), inputStream);
+        node.compareAndSet(current, new UpdatedObject(result));
+    }
+
+    @Override
+    public String toString() {
+        return "S3File{" +
+                "bucket='" + bucket.getName() +
+                "', path='" + path.getAbsoluteName() +
+                "', node=" + node.get().getClass().getSimpleName() +
+                '}';
     }
 }

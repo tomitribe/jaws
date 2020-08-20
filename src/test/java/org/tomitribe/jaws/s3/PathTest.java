@@ -31,6 +31,7 @@ public class PathTest {
         assertSame(Path.ROOT, path.getParent());
         assertEquals("colors.txt", path.getName());
         assertEquals("colors.txt", path.getAbsoluteName());
+        assertEquals("colors.txt/", path.getSearchPrefix());
     }
 
     @Test
@@ -96,6 +97,7 @@ public class PathTest {
 
         assertEquals("", root.getAbsoluteName());
         assertEquals("", root.getName());
+        assertNull(root.getSearchPrefix());
         assertNull(root.getParent());
 
         final Path child = root.getChild("red/");
@@ -130,11 +132,12 @@ public class PathTest {
      */
     @Test
     public void fromKeyWithSlash() throws Exception {
-        final Path root = Path.fromKey("colors/");
+        final Path path = Path.fromKey("colors/");
 
-        assertEquals("colors", root.getAbsoluteName());
-        assertEquals("colors", root.getName());
-        assertSame(Path.ROOT, root.getParent());
+        assertEquals("colors", path.getAbsoluteName());
+        assertEquals("colors", path.getName());
+        assertEquals("colors/", path.getSearchPrefix());
+        assertSame(Path.ROOT, path.getParent());
     }
 
 }
