@@ -19,10 +19,8 @@ package org.tomitribe.jaws.s3;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertSame;
 
 public class PathTest {
 
@@ -30,7 +28,7 @@ public class PathTest {
     public void noParent() throws Exception {
         final Path path = Path.fromKey("colors.txt");
 
-        assertNull(path.getParent());
+        assertSame(Path.ROOT, path.getParent());
         assertEquals("colors.txt", path.getName());
         assertEquals("colors.txt", path.getAbsoluteName());
     }
@@ -59,15 +57,7 @@ public class PathTest {
     public void getParentWithNoParent() throws Exception {
         final Path path = Path.fromKey("red.txt");
 
-        assertNull(path.getParent());
-    }
-
-    @Test
-    public void isDirectory() throws Exception {
-        final Path path = Path.fromKey("colors/red.txt");
-
-        assertFalse(path.isDirectory());
-        assertTrue(path.getParent().isDirectory());
+        assertSame(Path.ROOT, path.getParent());
     }
 
     @Test
@@ -77,20 +67,8 @@ public class PathTest {
 
         assertEquals("colors/green.txt", child.getAbsoluteName());
         assertEquals("green.txt", child.getName());
-        assertEquals("colors/", child.getParent().getAbsoluteName());
+        assertEquals("colors", child.getParent().getAbsoluteName());
 
-    }
-
-    @Test
-    public void getChildAsFile() throws Exception {
-        final Path path = Path.fromKey("red.txt");
-
-        try {
-            path.getChild("foo.txt");
-            fail("UnsupportedOperationException should have been thrown");
-        } catch (UnsupportedOperationException e) {
-            assertEquals("Path 'red.txt' is a not directory and cannot have child 'foo.txt'", e.getMessage());
-        }
     }
 
     /**
@@ -103,7 +81,60 @@ public class PathTest {
 
         assertEquals("colors/red/crimson.txt", child.getAbsoluteName());
         assertEquals("crimson.txt", child.getName());
-        assertEquals("colors/red/", child.getParent().getAbsoluteName());
+        assertEquals("colors/red", child.getParent().getAbsoluteName());
+    }
+
+    /**
+     * The child path itself contains directories
+     */
+    @Test
+    public void root() throws Exception {
+        final Path root = Path.root();
+
+        assertSame(Path.ROOT, root);
+        assertNull(root.getParent());
+
+        assertEquals("", root.getAbsoluteName());
+        assertEquals("", root.getName());
+        assertNull(root.getParent());
+
+        final Path child = root.getChild("red/");
+
+        assertEquals("red", child.getAbsoluteName());
+        assertEquals("red", child.getName());
+        assertSame(Path.ROOT, child.getParent());
+    }
+
+    /**
+     * If "" is used as the name, we should get the ROOT
+     */
+    @Test
+    public void emptyString() throws Exception {
+        final Path root = Path.fromKey("");
+
+        assertSame(Path.ROOT, root);
+    }
+
+    /**
+     * If "" is used as the name, we should get the ROOT
+     */
+    @Test
+    public void slash() throws Exception {
+        final Path root = Path.fromKey("/");
+
+        assertSame(Path.ROOT, root);
+    }
+
+    /**
+     * The child path itself contains directories
+     */
+    @Test
+    public void fromKeyWithSlash() throws Exception {
+        final Path root = Path.fromKey("colors/");
+
+        assertEquals("colors", root.getAbsoluteName());
+        assertEquals("colors", root.getName());
+        assertSame(Path.ROOT, root.getParent());
     }
 
 }

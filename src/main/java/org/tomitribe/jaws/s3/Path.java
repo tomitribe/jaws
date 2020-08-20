@@ -29,13 +29,24 @@ public class Path {
         this.parent = parent;
     }
 
-    public static Path fromKey(final String key) {
+    public static Path fromKey(String key) {
+        key = normalize(key);
+        if ("".equals(key)) return ROOT;
         final int lastSlash = key.lastIndexOf('/') + 1;
         if (lastSlash == 0) return new Path(key, key, null);
 
         final String name = key.substring(lastSlash);
         final String parent = key.substring(0, lastSlash);
         return new Path(name, key, parent);
+    }
+
+    private static String normalize(final String key) {
+        if (!key.endsWith("/")) return key;
+        return normalize(key.substring(0, key.length() - 1));
+    }
+
+    public static Path root() {
+        return ROOT;
     }
 
     public String getName() {
@@ -47,22 +58,13 @@ public class Path {
     }
 
     public Path getParent() {
-        return parent == null ? null : Path.fromKey(parent);
+        return parent == null ? ROOT : Path.fromKey(parent);
     }
 
     public Path getChild(final String name) {
-        if (!isDirectory()) {
-            final String message = String.format("Path '%s' is a not directory and cannot have child '%s'", absoluteName, name);
-            throw new UnsupportedOperationException(message);
-        }
+        if (name.contains("/")) return Path.fromKey(absoluteName + "/" + name);
 
-        if (name.contains("/")) return Path.fromKey(absoluteName + name);
-
-        return new Path(name, absoluteName + name, absoluteName);
-    }
-
-    public boolean isDirectory() {
-        return absoluteName.endsWith("/");
+        return new Path(name, absoluteName + "/" + name, absoluteName);
     }
 
     @Override
@@ -77,4 +79,16 @@ public class Path {
     public int hashCode() {
         return Objects.hash(absoluteName);
     }
+
+    public static final Path ROOT = new Path("", "", null) {
+        @Override
+        public Path getParent() {
+            return null;
+        }
+
+        @Override
+        public Path getChild(final String name) {
+            return Path.fromKey(name);
+        }
+    };
 }
