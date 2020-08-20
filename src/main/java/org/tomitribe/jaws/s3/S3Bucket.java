@@ -47,6 +47,10 @@ public class S3Bucket {
         s3 = client.getS3();
     }
 
+    public S3Client getClient() {
+        return client;
+    }
+
     public S3Directory asDirectory() {
         return new S3Directory(this);
     }
@@ -104,6 +108,15 @@ public class S3Bucket {
             }
             throw e;
         }
+    }
+
+    public S3OutputStream setObjectAsStream(final String key) {
+        return new S3OutputStream(getClient().getS3(), bucket.getName(), key);
+    }
+
+    public PutObjectResult setObjectAsString(final String key, final String value) {
+        final AmazonS3 s3 = getClient().getS3();
+        return s3.putObject(bucket.getName(), key, value);
     }
 
     public Owner getOwner() {

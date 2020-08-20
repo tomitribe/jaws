@@ -28,10 +28,12 @@ import java.util.Date;
 public class S3Entry {
     private final S3Client client;
     private final S3ObjectSummary summary;
+    private final Path path;
 
     public S3Entry(final S3Client client, final S3ObjectSummary summary) {
         this.client = client;
         this.summary = summary;
+        this.path = Path.fromKey(summary.getKey());
     }
 
     public S3Object getValue() throws SdkClientException {
@@ -57,8 +59,7 @@ public class S3Entry {
     }
 
     public String getName() {
-        final String[] parts = summary.getKey().split("/");
-        return parts.length > 0 ? parts[parts.length - 1] : summary.getKey();
+        return path.getName();
     }
 
     public String getKey() {

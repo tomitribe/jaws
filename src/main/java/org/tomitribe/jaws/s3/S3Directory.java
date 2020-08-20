@@ -126,4 +126,5 @@ public class S3Directory {
     public String getAbsoluteName() {
         return prefix;
     }
+
 }
