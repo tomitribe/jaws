@@ -52,7 +52,7 @@ public class S3Bucket {
     }
 
     public S3File asFile() {
-        return new S3File(this, Path.root(), true);
+        return S3File.rootFile(this);
     }
 
     public Stream<S3File> objects() {
