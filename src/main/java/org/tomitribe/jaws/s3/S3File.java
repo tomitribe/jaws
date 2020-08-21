@@ -16,14 +16,18 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import org.tomitribe.util.IO;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -345,12 +349,16 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            return bucket.getObjectAsStream(object.getKey());
+            return object.getObjectContent();
         }
 
         @Override
         public String getValueAsString() {
-            return bucket.getObjectAsString(object.getKey());
+            try {
+                return IO.slurp(object.getObjectContent());
+            } catch (IOException e) {
+                throw new UncheckedIOException("Cannot read content for " + path.getAbsoluteName(), e);
+            }
         }
 
         @Override
@@ -434,12 +442,12 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            return bucket.getObjectAsStream(summary.getKey());
+            return resolve(this).getValueAsStream();
         }
 
         @Override
         public String getValueAsString() {
-            return bucket.getObjectAsString(summary.getKey());
+            return resolve(this).getValueAsString();
         }
 
         @Override
@@ -523,7 +531,7 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            return bucket.getObjectAsStream(path.getAbsoluteName());
+            return resolve(this).getValueAsStream();
         }
 
         @Override
@@ -533,7 +541,7 @@ public class S3File {
 
         @Override
         public String getValueAsString() {
-            return bucket.getObjectAsString(path.getAbsoluteName());
+            return resolve(this).getValueAsString();
         }
 
         @Override
@@ -582,17 +590,17 @@ public class S3File {
 
         @Override
         public boolean exists() {
-            return resolve().exists();
+            return resolve(this).exists();
         }
 
         @Override
         public boolean isFile() {
-            return resolve().isFile();
+            return resolve(this).isFile();
         }
 
         @Override
         public boolean isDirectory() {
-            return resolve().isDirectory();
+            return resolve(this).isDirectory();
         }
 
         @Override
@@ -614,12 +622,12 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            return bucket.getObjectAsStream(path.getAbsoluteName());
+            return resolve(this).getValueAsStream();
         }
 
         @Override
         public String getValueAsString() {
-            return bucket.getObjectAsString(path.getAbsoluteName());
+            return resolve(this).getValueAsString();
         }
 
         @Override
@@ -644,34 +652,27 @@ public class S3File {
 
         @Override
         public String getETag() {
-            return resolve().getETag();
+            return resolve(this).getETag();
         }
 
         @Override
         public long getSize() {
-            return resolve().getSize();
+            return resolve(this).getSize();
         }
 
         @Override
         public Date getLastModified() {
-            return resolve().getLastModified();
+            return resolve(this).getLastModified();
         }
 
-        private Node resolve() {
-            final S3Object object = bucket.getObject(path.getAbsoluteName());
-            final Object newNode = new Object(object);
-
-            if (node.compareAndSet(this, newNode)) {
-                return newNode;
-            } else {
-                return node.get();
-            }
-        }
     }
 
     /**
      * Represents an object that has not yet have been created and
      * therefore has no metadata.  It may be written, but not read.
+     *
+     * Attempts to resolve an S3Object that fail will result in
+     * this object being set as the node.
      *
      * Once written to S3 the node will be replaced with a node that has
      * all the metadata and can be both read and written.
@@ -778,6 +779,32 @@ public class S3File {
     private void writeStreamAndReplace(final Node current, final InputStream inputStream) {
         final PutObjectResult result = bucket.setObjectAsStream(path.getAbsoluteName(), inputStream);
         node.compareAndSet(current, new UpdatedObject(result));
+    }
+
+    private Node resolve(final Node current) {
+        final S3Object object;
+
+        try {
+            object = bucket.getObject(path.getAbsoluteName());
+        } catch (final AmazonS3Exception e) {
+            if ("NoSuchKey".equals(e.getErrorCode())) {
+                final NewObject newObject = new NewObject();
+                if (node.compareAndSet(current, newObject)) {
+                    return newObject;
+                } else {
+                    return node.get();
+                }
+            }
+            throw e;
+        }
+
+        final Object newNode = new Object(object);
+
+        if (node.compareAndSet(current, newNode)) {
+            return newNode;
+        } else {
+            return node.get();
+        }
     }
 
     @Override

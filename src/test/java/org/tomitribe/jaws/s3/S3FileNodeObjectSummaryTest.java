@@ -157,7 +157,7 @@ public class S3FileNodeObjectSummaryTest {
         assertType(file, "UpdatedObject");
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
-        assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API
+        assertEquals(7, file.getSize());
     }
 
     @Test
@@ -195,9 +195,9 @@ public class S3FileNodeObjectSummaryTest {
 
         // State after the update
         assertType(file, "UpdatedObject");
-        assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
-        assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API
+        assertEquals(0, file.getSize()); // TODO Either a bug in the Amazon S3 API or the Mock S3 implementation
+        assertEquals("forrest", file.getValueAsString());
     }
 
     @Test
@@ -212,9 +212,9 @@ public class S3FileNodeObjectSummaryTest {
 
         // State after the update
         assertType(file, "UpdatedObject");
-        assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
-        assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API
+        assertEquals(0, file.getSize()); // TODO Either a bug in the Amazon S3 API or the Mock S3 implementation
+        assertEquals("forrest", file.getValueAsString());
     }
 
     @Test

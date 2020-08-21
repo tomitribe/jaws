@@ -88,6 +88,19 @@ public class S3Bucket {
         return new S3File(this, getObject(key));
     }
 
+    /**
+     * Favor S3File.getValueAsStream() over this method.
+     *
+     * The AmazonS3.getObjectAsString method call that powers this method will
+     * issue 2 HTTP requests to fetch the content.  The first request will be to
+     * get the S3Object, the second call will use S3Object to request the content
+     * itself.
+     *
+     * The S3File.getValueAsStream() will make the same 2 requests, however, the
+     * S3Object will be kept afterwards allowing for calls to get other information
+     * about the content such as lastModified or etag to be zero cost.  Additionally,
+     * any subsequent calls to get the content again will now be just 1 request.
+     */
     public S3ObjectInputStream getObjectAsStream(final String key) throws SdkClientException, AmazonServiceException {
         try {
             final S3Object object = s3.getObject(bucket.getName(), key);
@@ -101,6 +114,19 @@ public class S3Bucket {
         }
     }
 
+    /**
+     * Favor S3File.getValueAsString() over this method.
+     *
+     * The AmazonS3.getObjectAsString method call that powers this method will
+     * issue 2 HTTP requests to fetch the content.  The first request will be to
+     * get the S3Object, the second call will use S3Object to request the content
+     * itself.
+     *
+     * The S3File.getValueAsString() will make the same 2 requests, however, the
+     * S3Object will be kept afterwards allowing for calls to get other information
+     * about the content such as lastModified or etag to be zero cost.  Additionally,
+     * any subsequent calls to get the content again will now be just 1 request.
+     */
     public String getObjectAsString(final String key) throws AmazonServiceException, SdkClientException {
         try {
             return s3.getObjectAsString(bucket.getName(), key);
