@@ -38,7 +38,7 @@ import static org.tomitribe.jaws.s3.Asserts.assertType;
  * Similar to S3FileNodeUnknownTest but the S3File in an unknown
  * state doesn't happen to point to a file that exists.
  */
-public class S3FileNewObjectTest {
+public class S3FileNodeNewObjectTest {
 
     @Rule
     public MockS3 mockS3 = new MockS3();
