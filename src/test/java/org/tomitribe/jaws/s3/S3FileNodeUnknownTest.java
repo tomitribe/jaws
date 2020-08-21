@@ -18,7 +18,6 @@ package org.tomitribe.jaws.s3;
 
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
@@ -34,6 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 public class S3FileNodeUnknownTest {
 
@@ -61,24 +61,31 @@ public class S3FileNodeUnknownTest {
         file = bucket.asFile().getFile("org.color.bright/green/1/1.4/foo.txt");
 
         // Check to ensure our current node type is `Object`
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=Unknown}", this.file.toString());
+        assertType(file, "Unknown");
     }
 
-    @Ignore
     @Test
     public void exists() throws IOException {
         assertTrue(file.exists());
+
+        // type should be Object after the above call
+        assertType(file, "Object");
     }
 
     @Test
-    @Ignore
     public void isFile() {
         assertTrue(file.isFile());
+
+        // type should be Object after the above call
+        assertType(file, "Object");
     }
 
     @Test
     public void isDirectory() {
         assertFalse(file.isDirectory());
+
+        // type should be Object after the above call
+        assertType(file, "Object");
     }
 
     @Test
@@ -139,12 +146,14 @@ public class S3FileNodeUnknownTest {
     @Test
     public void setValueAsStream() {
         // State before the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=Unknown}", file.toString());
+        assertType(file, "Unknown");
 
         file.setValueAsStream(IO.read("forrest"));
 
+        // type should be UpdatedObject after the above call
+        assertType(file, "UpdatedObject");
+
         // State after the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=UpdatedObject}", file.toString());
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API
@@ -153,14 +162,16 @@ public class S3FileNodeUnknownTest {
     @Test
     public void testSetValueAsStream() throws IOException {
         // State before the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=Unknown}", file.toString());
+        assertType(file, "Unknown");
 
         try (S3OutputStream s3OutputStream = file.setValueAsStream()) {
             IO.copy(IO.read("forrest"), s3OutputStream);
         }
 
+        // type should be Object after the above call
+        assertType(file, "Object");
+
         // State after the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=Object}", file.toString());
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());
@@ -169,7 +180,7 @@ public class S3FileNodeUnknownTest {
     @Test
     public void setValueAsFile() throws IOException {
         // State before the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=Unknown}", file.toString());
+        assertType(file, "Unknown");
 
         final File tempFile = File.createTempFile("foo", "bar");
         tempFile.deleteOnExit();
@@ -177,22 +188,26 @@ public class S3FileNodeUnknownTest {
 
         file.setValueAsFile(tempFile);
 
+        // type should be UpdatedObject after the above call
+        assertType(file, "UpdatedObject");
+
         // State after the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=UpdatedObject}", file.toString());
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API
+
     }
 
     @Test
     public void setValueAsString() {
         // State before the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=Unknown}", file.toString());
+        assertType(file, "Unknown");
 
         file.setValueAsString("forrest");
 
-        // State after the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=UpdatedObject}", file.toString());
+        // type should be Object after the above call
+        assertType(file, "UpdatedObject");
+
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API
@@ -204,23 +219,30 @@ public class S3FileNodeUnknownTest {
     }
 
     @Test
-    @Ignore
     public void getETag() {
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
+
+        // type should be Object after the above call
+        assertType(file, "Object");
     }
 
     @Test
-    @Ignore
     public void getSize() {
         assertEquals(5, file.getSize());
+
+        // type should be Object after the above call
+        assertType(file, "Object");
     }
 
     @Test
-    @Ignore
     public void getLastModified() {
         final long time = file.getLastModified().getTime();
         final long tolerance = TimeUnit.SECONDS.toMillis(30);
         assertTrue(time > System.currentTimeMillis() - tolerance);
         assertTrue(time < System.currentTimeMillis() + tolerance);
+
+        // type should be Object after the above call
+        assertType(file, "Object");
     }
+
 }

@@ -34,6 +34,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 public class S3FileNodeObjectSummaryTest {
 
@@ -65,7 +66,7 @@ public class S3FileNodeObjectSummaryTest {
                 .get();
 
         // Check to ensure our current node type is `Object`
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=ObjectSummary}", this.file.toString());
+        assertType(file, "ObjectSummary");
     }
 
     @Test
@@ -145,7 +146,7 @@ public class S3FileNodeObjectSummaryTest {
     @Test
     public void setValueAsStream() {
         // State before the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=ObjectSummary}", file.toString());
+        assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -153,7 +154,7 @@ public class S3FileNodeObjectSummaryTest {
         file.setValueAsStream(IO.read("forrest"));
 
         // State after the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=UpdatedObject}", file.toString());
+        assertType(file, "UpdatedObject");
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API
@@ -162,7 +163,7 @@ public class S3FileNodeObjectSummaryTest {
     @Test
     public void testSetValueAsStream() throws IOException {
         // State before the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=ObjectSummary}", file.toString());
+        assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -172,7 +173,7 @@ public class S3FileNodeObjectSummaryTest {
         }
 
         // State after the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=Object}", file.toString());
+        assertType(file, "Object");
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());
@@ -181,7 +182,7 @@ public class S3FileNodeObjectSummaryTest {
     @Test
     public void setValueAsFile() throws IOException {
         // State before the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=ObjectSummary}", file.toString());
+        assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -193,7 +194,7 @@ public class S3FileNodeObjectSummaryTest {
         file.setValueAsFile(tempFile);
 
         // State after the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=UpdatedObject}", file.toString());
+        assertType(file, "UpdatedObject");
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API
@@ -202,7 +203,7 @@ public class S3FileNodeObjectSummaryTest {
     @Test
     public void setValueAsString() {
         // State before the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=ObjectSummary}", file.toString());
+        assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -210,7 +211,7 @@ public class S3FileNodeObjectSummaryTest {
         file.setValueAsString("forrest");
 
         // State after the update
-        assertEquals("S3File{bucket='repository', path='org.color.bright/green/1/1.4/foo.txt', node=UpdatedObject}", file.toString());
+        assertType(file, "UpdatedObject");
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(0, file.getSize()); // TODO seems like a bug or deficiency in the Amazon S3 API

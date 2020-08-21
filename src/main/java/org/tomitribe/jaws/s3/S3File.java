@@ -644,20 +644,17 @@ public class S3File {
 
         @Override
         public String getETag() {
-            final String message = String.format("S3File '%s' has not yet been created", path.getAbsoluteName());
-            throw new UnsupportedOperationException(message);
+            return resolve().getETag();
         }
 
         @Override
         public long getSize() {
-            final String message = String.format("S3File '%s' has not yet been created", path.getAbsoluteName());
-            throw new UnsupportedOperationException(message);
+            return resolve().getSize();
         }
 
         @Override
         public Date getLastModified() {
-            final String message = String.format("S3File '%s' has not yet been created", path.getAbsoluteName());
-            throw new UnsupportedOperationException(message);
+            return resolve().getLastModified();
         }
 
         private Node resolve() {
@@ -673,9 +670,8 @@ public class S3File {
     }
 
     /**
-     * Represents an object that may not yet have been created and
-     * therefore has no metadata.  It may be a file, it may imply
-     * a directory, it may not exist, we don't know.
+     * Represents an object that has not yet have been created and
+     * therefore has no metadata.  It may be written, but not read.
      *
      * Once written to S3 the node will be replaced with a node that has
      * all the metadata and can be both read and written.
@@ -789,7 +785,7 @@ public class S3File {
         return "S3File{" +
                 "bucket='" + bucket.getName() +
                 "', path='" + path.getAbsoluteName() +
-                "', node=" + node.get().getClass().getSimpleName() +
-                '}';
+                "', node='" + node.get().getClass().getSimpleName() +
+                "'}";
     }
 }
