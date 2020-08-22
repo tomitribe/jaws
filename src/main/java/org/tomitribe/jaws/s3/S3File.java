@@ -163,6 +163,22 @@ public class S3File {
         return node.get().getLastModified();
     }
 
+    @Override
+    public boolean equals(final java.lang.Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final S3File s3File = (S3File) o;
+
+        if (!path.equals(s3File.path)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return path.hashCode();
+    }
 
     /**
      * AmazonS3 API has a very large number of ways to get at

@@ -16,89 +16,65 @@
  */
 package org.tomitribe.jaws.s3;
 
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.tomitribe.util.Archive;
+
+import java.io.File;
 
 import static org.junit.Assert.*;
+import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 public class S3FileTest {
 
-    @Test
-    public void exists() {
-    }
+    @Rule
+    public MockS3 mockS3 = new MockS3();
+    private S3File file;
 
-    @Test
-    public void isFile() {
-    }
+    @Before
+    public final void setUp() throws Exception {
+        final File store = mockS3.getBlobStoreLocation();
+        final S3Client s3Client = new S3Client(mockS3.getAmazonS3());
 
-    @Test
-    public void isDirectory() {
-    }
+        new Archive()
+                .add("repository/org.color/green/2/2.3/foo.txt", "red")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "green")
+                .add("repository/junit/junit/4/4.12/bar.txt", "blue")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange")
+                .toDir(store);
 
-    @Test
-    public void getParentFile() {
-    }
-
-    @Test
-    public void getFile() {
-    }
-
-    @Test
-    public void files() {
-    }
-
-    @Test
-    public void testFiles() {
+        final S3Bucket bucket = s3Client.getBucket("repository");
+        file = bucket.asFile().getFile("org.color.bright/green/1/1.4/foo.txt");
     }
 
     @Test
     public void getAbsoluteName() {
+        assertEquals("org.color.bright/green/1/1.4/foo.txt", file.getAbsoluteName());
     }
 
     @Test
     public void getName() {
+        assertEquals("foo.txt", file.getName());
     }
 
     @Test
     public void getBucket() {
-    }
-
-    @Test
-    public void getValueAsStream() {
-    }
-
-    @Test
-    public void getValueAsString() {
-    }
-
-    @Test
-    public void setValueAsStream() {
-    }
-
-    @Test
-    public void testSetValueAsStream() {
-    }
-
-    @Test
-    public void setValueAsFile() {
-    }
-
-    @Test
-    public void setValueAsString() {
+        assertEquals("repository", file.getBucket().getName());
     }
 
     @Test
     public void getBucketName() {
+        assertEquals("repository", file.getBucketName());
     }
 
     @Test
-    public void getETag() {
+    public void equals() {
+        final S3File repository = this.file.getBucket().asFile();
+        assertEquals(file, repository.getFile("org.color.bright/green/1/1.4/foo.txt"));
+        assertNotEquals(file, repository.getFile("org.color.bright/green/1/1.4/bar.txt"));
+        assertNotEquals(file, "org.color.bright/green/1/1.4/bar.txt");
+        assertNotEquals(file, null);
     }
 
-    @Test
-    public void getSize() {
-    }
-
-    @Test
-    public void getLastModified() {
-    }
 }
