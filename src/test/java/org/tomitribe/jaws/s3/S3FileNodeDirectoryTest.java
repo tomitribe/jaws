@@ -26,7 +26,6 @@ import org.tomitribe.util.IO;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -40,16 +39,12 @@ public class S3FileNodeDirectoryTest {
 
     @Rule
     public MockS3 mockS3 = new MockS3();
-    private File store;
-    private S3Client s3Client;
     private S3File file;
-    private S3Bucket bucket;
-
 
     @Before
     public final void setUp() throws Exception {
-        this.store = mockS3.getBlobStoreLocation();
-        this.s3Client = new S3Client(mockS3.getAmazonS3());
+        final File store = mockS3.getBlobStoreLocation();
+        final S3Client s3Client = new S3Client(mockS3.getAmazonS3());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -59,7 +54,7 @@ public class S3FileNodeDirectoryTest {
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange")
                 .toDir(store);
 
-        bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.getBucket("repository");
 
         file = bucket.getFile("org.color.bright/green/1/1.4/foo.txt").getParentFile();
 

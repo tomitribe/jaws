@@ -41,16 +41,12 @@ public class S3FileNodeUpdatedObjectTest {
 
     @Rule
     public MockS3 mockS3 = new MockS3();
-    private File store;
-    private S3Client s3Client;
     private S3File file;
-    private S3Bucket bucket;
-
 
     @Before
     public final void setUp() throws Exception {
-        this.store = mockS3.getBlobStoreLocation();
-        this.s3Client = new S3Client(mockS3.getAmazonS3());
+        final File store = mockS3.getBlobStoreLocation();
+        final S3Client s3Client = new S3Client(mockS3.getAmazonS3());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -59,7 +55,7 @@ public class S3FileNodeUpdatedObjectTest {
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange")
                 .toDir(store);
 
-        bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.getBucket("repository");
 
         file = bucket.asFile().getFile("org.color.bright/green/3/updated.txt");
 
