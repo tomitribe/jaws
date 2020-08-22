@@ -16,27 +16,21 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.function.Predicate;
 
 /**
- * Filters results on the client side.  Allows a query
- * to be further refined once the data is requested and
- * returned.
+ * Sets the delimiter field of the ListObjectsRequest used
+ * to query S3.
  *
- * When possible use @Prefix as this will perform the
- * filtering on the server side and result in a smaller
- * http payload.
- *
- * @see Prefix
+ * @see ListObjectsRequest
  */
-@Repeatable(Filters.class)
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Filter {
-    Class<? extends Predicate<S3File>> value();
+public @interface Delimiter {
+    String value();
 }

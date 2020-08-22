@@ -48,17 +48,17 @@ public class S3Test {
         this.s3Client = new S3Client(mockS3.getAmazonS3());
 
         new Archive()
-                .add("project/src/main/java/org/supertribe/colors/Red.java", "crimson")
+                .add("project/pom.xml", "<xml>")
                 .add("project/src/main/java/org/supertribe/colors/Green.java", "forrest")
+                .add("project/src/main/java/org/supertribe/colors/Red.java", "crimson")
                 .add("project/src/main/resources/square.txt", "block")
                 .add("project/src/main/resources/triangle.txt", "three")
-                .add("project/src/test/java/org/supertribe/colors/RedTest.java", "crimson test")
                 .add("project/src/test/java/org/supertribe/colors/GreenTest.java", "forrest test")
+                .add("project/src/test/java/org/supertribe/colors/RedTest.java", "crimson test")
                 .add("project/src/test/resources/circle.txt", "pizza")
                 .add("project/src/test/resources/rectangle.txt", "book")
-                .add("project/target/foo.txt", "foofoo")
                 .add("project/target/bar.txt", "barbar")
-                .add("project/pom.xml", "<xml>")
+                .add("project/target/foo.txt", "foofoo")
                 .toDir(store);
 
         project = S3.of(Project.class, s3Client.getBucket("project").asFile());
@@ -380,6 +380,36 @@ public class S3Test {
                 "target/foo.txt", Join.join("\n", S3File::getAbsoluteName, data));
     }
 
+    @Test
+    public void prefixAnnotation() throws Exception {
+        final RequestAnnotations dir = S3.of(RequestAnnotations.class, project.src().main().java().getParentFile());
+
+        final List<S3File> data = dir.javaFiles().collect(Collectors.toList());
+        assertEquals("" +
+                "src/main/java/org/supertribe/colors/Green.java\n" +
+                "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", S3File::getAbsoluteName, data));
+    }
+
+    @Test
+    public void markerAnnotation() throws Exception {
+        final RequestAnnotations dir = S3.of(RequestAnnotations.class, project.get());
+
+        final List<S3File> data = dir.afterRedTest().collect(Collectors.toList());
+        assertEquals("" +
+                "src/test/resources/circle.txt\n" +
+                "src/test/resources/rectangle.txt\n" +
+                "target/bar.txt\n" +
+                "target/foo.txt", Join.join("\n", S3File::getAbsoluteName, data));
+    }
+
+    @Test
+    public void delimiterAnnotation() throws Exception {
+        final RequestAnnotations dir = S3.of(RequestAnnotations.class, this.project.get());
+
+        final List<S3File> data = dir.slash().collect(Collectors.toList());
+        assertEquals("pom.xml", Join.join("\n", S3File::getAbsoluteName, data));
+    }
+
     public interface Project extends S3 {
         Src src();
 
@@ -487,7 +517,7 @@ public class S3Test {
         }
     }
 
-    public static interface DefaultMethods extends S3 {
+    public interface DefaultMethods extends S3 {
 
         default Stream<S3File> getTextFiles() {
             return files().filter(s3File -> s3File.getName().endsWith(".txt"));
@@ -496,5 +526,16 @@ public class S3Test {
         default Stream<S3File> getFilesWithExtension(final String ext) {
             return files().filter(s3File -> s3File.getName().endsWith("." + ext));
         }
+    }
+
+    public interface RequestAnnotations extends S3 {
+        @Prefix("java")
+        Stream<S3File> javaFiles();
+
+        @Marker("src/test/java/org/supertribe/colors/RedTest.java")
+        Stream<S3File> afterRedTest();
+
+        @Delimiter("/")
+        Stream<S3File> slash();
     }
 }

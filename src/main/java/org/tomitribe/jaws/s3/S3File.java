@@ -80,6 +80,10 @@ public class S3File {
         return new S3File(bucket, Path.ROOT, Directory.class);
     }
 
+    public Path getPath() {
+        return path;
+    }
+
     public boolean exists() {
         return node.get().exists();
     }
@@ -263,8 +267,7 @@ public class S3File {
 
         @Override
         public Stream<S3File> files(final ListObjectsRequest request) {
-            Objects.requireNonNull(request);
-            return bucket.objects(request.withPrefix(path.getSearchPrefix()));
+            return listRequest(request);
         }
 
         @Override
@@ -626,8 +629,7 @@ public class S3File {
 
         @Override
         public Stream<S3File> files(final ListObjectsRequest request) {
-            Objects.requireNonNull(request);
-            return bucket.objects(request.withPrefix(path.getSearchPrefix()));
+            return listRequest(request);
         }
 
         @Override
@@ -820,6 +822,15 @@ public class S3File {
             return newNode;
         } else {
             return node.get();
+        }
+    }
+
+    private Stream<S3File> listRequest(final ListObjectsRequest request) {
+        Objects.requireNonNull(request);
+        if (request.getPrefix() == null) {
+            return bucket.objects(request.withPrefix(path.getSearchPrefix()));
+        } else {
+            return bucket.objects(request);
         }
     }
 

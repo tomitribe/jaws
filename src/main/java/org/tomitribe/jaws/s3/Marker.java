@@ -16,27 +16,28 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.function.Predicate;
 
 /**
- * Filters results on the client side.  Allows a query
- * to be further refined once the data is requested and
- * returned.
+ * Sets the prefix field of the ListObjectsRequest used
+ * to query S3.
  *
- * When possible use @Prefix as this will perform the
- * filtering on the server side and result in a smaller
- * http payload.
+ * The marker indicates where in the bucket to begin listing. The
+ * list will only include keys that occur lexicographically after the
+ * marker. This enables pagination; to get the next page of results use the
+ * current value from {@link ObjectListing#getNextMarker()} as the marker
+ * for the next request to list objects.
  *
- * @see Prefix
+ * @see ListObjectsRequest
  */
-@Repeatable(Filters.class)
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Filter {
-    Class<? extends Predicate<S3File>> value();
+public @interface Marker {
+    String value();
 }

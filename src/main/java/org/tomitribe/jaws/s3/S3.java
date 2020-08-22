@@ -16,6 +16,7 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.tomitribe.util.dir.Name;
 import org.tomitribe.util.reflect.Generics;
 
@@ -214,14 +215,14 @@ public interface S3 {
 
             if (S3File.class.equals(arrayType)) {
 
-                return dir.files()
+                return stream(method)
                         .filter(filter)
                         .toArray(S3File[]::new);
 
             } else if (arrayType.isInterface()) {
 
                 // will be an array of type Object[]
-                final Object[] src = dir.files()
+                final Object[] src = stream(method)
                         .filter(filter)
                         .map(child -> S3.of(arrayType, child))
                         .toArray();
@@ -243,13 +244,13 @@ public interface S3 {
 
             if (S3File.class.equals(listType)) {
 
-                return dir.files()
+                return stream(method)
                         .filter(filter)
                         .collect(Collectors.toList());
 
             } else if (listType.isInterface()) {
 
-                return dir.files()
+                return stream(method)
                         .filter(filter)
                         .map(child -> S3.of(listType, child))
                         .collect(Collectors.toList());
@@ -264,13 +265,13 @@ public interface S3 {
 
             if (S3File.class.equals(listType)) {
 
-                return dir.files()
+                return stream(method)
                         .filter(filter)
                         .collect(Collectors.toSet());
 
             } else if (listType.isInterface()) {
 
-                return dir.files()
+                return stream(method)
                         .filter(filter)
                         .map(child -> S3.of(listType, child))
                         .collect(Collectors.toSet());
@@ -313,15 +314,36 @@ public interface S3 {
             final Predicate<S3File> filter = getFilter(method);
 
             if (returnType.isInterface()) {
-                return dir.files()
+                return stream(method)
                         .filter(filter)
                         .map(child -> S3.of(returnType, child));
             }
             if (S3File.class.equals(returnType)) {
-                return dir.files()
+                return stream(method)
                         .filter(filter);
             }
             throw new UnsupportedOperationException(method.toGenericString());
+        }
+
+        private Stream<S3File> stream(final Method method) {
+            final ListObjectsRequest request = new ListObjectsRequest();
+
+            if (method.isAnnotationPresent(Prefix.class)) {
+                final Prefix prefix = method.getAnnotation(Prefix.class);
+                request.setPrefix(dir.getPath().getSearchPrefix() + prefix.value());
+            }
+            
+            if (method.isAnnotationPresent(Marker.class)) {
+                final Marker marker = method.getAnnotation(Marker.class);
+                request.setMarker(marker.value());
+            }
+            
+            if (method.isAnnotationPresent(Delimiter.class)) {
+                final Delimiter delimiter = method.getAnnotation(Delimiter.class);
+                request.setDelimiter(delimiter.value());
+            }
+            
+            return dir.files(request);
         }
 
         @Override
