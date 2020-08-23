@@ -20,11 +20,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
+import org.tomitribe.util.Join;
 
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
-import static org.tomitribe.jaws.s3.Asserts.assertType;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class S3FileTest {
 
@@ -42,10 +45,64 @@ public class S3FileTest {
                 .add("repository/org.color.bright/green/1/1.4/foo.txt", "green")
                 .add("repository/junit/junit/4/4.12/bar.txt", "blue")
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange")
+                .add("repository/io.tomitribe/index.txt", "purple")
+                .add("repository/index.txt", "brown")
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
         file = bucket.asFile().getFile("org.color.bright/green/1/1.4/foo.txt");
+    }
+
+    @Test
+    public void walk() {
+        final List<String> list = file.getBucket().asFile().walk()
+                .map(S3File::getAbsoluteName)
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals("" +
+                "index.txt\n" +
+                "io.tomitribe\n" +
+                "io.tomitribe/crest\n" +
+                "io.tomitribe/crest/5\n" +
+                "io.tomitribe/crest/5/5.4.1.2\n" +
+                "io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
+                "io.tomitribe/index.txt\n" +
+                "junit\n" +
+                "junit/junit\n" +
+                "junit/junit/4\n" +
+                "junit/junit/4/4.12\n" +
+                "junit/junit/4/4.12/bar.txt\n" +
+                "org.color\n" +
+                "org.color.bright\n" +
+                "org.color.bright/green\n" +
+                "org.color.bright/green/1\n" +
+                "org.color.bright/green/1/1.4\n" +
+                "org.color.bright/green/1/1.4/foo.txt\n" +
+                "org.color/green\n" +
+                "org.color/green/2\n" +
+                "org.color/green/2/2.3\n" +
+                "org.color/green/2/2.3/foo.txt", Join.join("\n", list));
+    }
+
+    @Test
+    public void walkDepth2() {
+        final List<String> list = file.getBucket().asFile().walk(2)
+                .map(S3File::getAbsoluteName)
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals("" +
+                "index.txt\n" +
+                "io.tomitribe\n" +
+                "io.tomitribe/crest\n" +
+                "io.tomitribe/index.txt\n" +
+                "junit\n" +
+                "junit/junit\n" +
+                "org.color\n" +
+                "org.color.bright\n" +
+                "org.color.bright/green\n" +
+                "org.color/green", Join.join("\n", list));
     }
 
     @Test

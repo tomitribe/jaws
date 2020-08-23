@@ -111,6 +111,16 @@ public class S3FileNodeObjectSummaryTest {
     }
 
     @Test
+    public void walk() {
+        final List<String> list = file.walk()
+                .map(S3File::getAbsoluteName)
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals(0, list.size());
+    }
+
+    @Test
     public void getAbsoluteName() {
         assertEquals("org.color.bright/green/1/1.4/foo.txt", file.getAbsoluteName());
     }

@@ -22,6 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
+import org.tomitribe.util.Join;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +51,9 @@ public class S3FileNodeDirectoryTest {
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
                 .add("repository/org.color.bright/green/1/1.4/foo.txt", "green")
                 .add("repository/org.color.bright/green/1/1.4/bar.txt", "yellow")
+                .add("repository/org.color.bright/green/1/1.4/a/bar.txt", "yellow")
+                .add("repository/org.color.bright/green/1/1.4/a/b/c/foo.txt", "magenta")
+                .add("repository/org.color.bright/green/1/1.4/a/b/c/d/e/f/bar.txt", "cyan")
                 .add("repository/junit/junit/4/4.12/bar.txt", "blue")
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange")
                 .toDir(store);
@@ -105,13 +109,96 @@ public class S3FileNodeDirectoryTest {
     @Test
     public void files() {
         final List<S3File> list = file.files().collect(Collectors.toList());
-        assertEquals(2, list.size());
+        assertEquals("" +
+                "org.color.bright/green/1/1.4/a/b/c/d/e/f/bar.txt\n" +
+                "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
+                "org.color.bright/green/1/1.4/a/bar.txt\n" +
+                "org.color.bright/green/1/1.4/bar.txt\n" +
+                "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", S3File::getAbsoluteName, list));
     }
 
     @Test
     public void testFiles() {
         final List<S3File> list = file.files(new ListObjectsRequest()).collect(Collectors.toList());
-        assertEquals(2, list.size());
+        assertEquals("" +
+                "org.color.bright/green/1/1.4/a/b/c/d/e/f/bar.txt\n" +
+                "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
+                "org.color.bright/green/1/1.4/a/bar.txt\n" +
+                "org.color.bright/green/1/1.4/bar.txt\n" +
+                "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", S3File::getAbsoluteName, list));
+    }
+
+    @Test
+    public void walk() {
+        {
+            final List<String> list = file.walk()
+                    .map(S3File::getAbsoluteName)
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            assertEquals("org.color.bright/green/1/1.4/a\n" +
+                    "org.color.bright/green/1/1.4/a/b\n" +
+                    "org.color.bright/green/1/1.4/a/b/c\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/d\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/d/e\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/d/e/f\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/d/e/f/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
+                    "org.color.bright/green/1/1.4/a/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", list));
+        }
+        {
+            final List<String> list = file.getParentFile().getParentFile().walk()
+                    .map(S3File::getAbsoluteName)
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            assertEquals("org.color.bright/green/1\n" +
+                    "org.color.bright/green/1/1.4\n" +
+                    "org.color.bright/green/1/1.4/a\n" +
+                    "org.color.bright/green/1/1.4/a/b\n" +
+                    "org.color.bright/green/1/1.4/a/b/c\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/d\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/d/e\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/d/e/f\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/d/e/f/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
+                    "org.color.bright/green/1/1.4/a/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", list));
+        }
+    }
+
+    @Test
+    public void walk3() {
+        {
+            final List<String> list = file.walk(3)
+                    .map(S3File::getAbsoluteName)
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            assertEquals("" +
+                    "org.color.bright/green/1/1.4/a\n" +
+                    "org.color.bright/green/1/1.4/a/b\n" +
+                    "org.color.bright/green/1/1.4/a/b/c\n" +
+                    "org.color.bright/green/1/1.4/a/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", list));
+        }
+        {
+            final List<String> list = file.getParentFile().getParentFile().walk(3)
+                    .map(S3File::getAbsoluteName)
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            assertEquals("" +
+                    "org.color.bright/green/1\n" +
+                    "org.color.bright/green/1/1.4\n" +
+                    "org.color.bright/green/1/1.4/a\n" +
+                    "org.color.bright/green/1/1.4/bar.txt\n" +
+                    "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", list));
+        }
     }
 
     @Test

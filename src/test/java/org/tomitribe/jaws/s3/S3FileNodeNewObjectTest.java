@@ -116,6 +116,16 @@ public class S3FileNodeNewObjectTest {
     }
 
     @Test
+    public void walk() {
+        final List<String> list = file.walk()
+                .map(S3File::getAbsoluteName)
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals(0, list.size());
+    }
+
+    @Test
     public void getAbsoluteName() {
         assertEquals("org.color.bright/green/does/not/exist.txt", file.getAbsoluteName());
     }

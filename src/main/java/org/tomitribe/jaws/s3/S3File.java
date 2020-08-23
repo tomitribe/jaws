@@ -16,8 +16,10 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
@@ -28,10 +30,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+
+import static org.tomitribe.jaws.s3.S3Client.asStream;
 
 /**
  * S3File aims to provide an abstraction over the Amazon S3 API
@@ -113,6 +121,14 @@ public class S3File {
 
     public Stream<S3File> files(final ListObjectsRequest request) {
         return node.get().files(request);
+    }
+
+    public Stream<S3File> walk() {
+        return node.get().walk(WalkingIterator.INFINITE);
+    }
+
+    public Stream<S3File> walk(final int maxDepth) {
+        return node.get().walk(maxDepth);
     }
 
     public String getAbsoluteName() {
@@ -213,6 +229,8 @@ public class S3File {
 
         Stream<S3File> files(final ListObjectsRequest request);
 
+        Stream<S3File> walk(final int maxDepth);
+
         S3ObjectInputStream getValueAsStream();
 
         String getValueAsString();
@@ -274,6 +292,11 @@ public class S3File {
         public S3File getFile(final String name) {
             final Path child = path.getChild(name);
             return new S3File(bucket, child, Unknown.class);
+        }
+
+        @Override
+        public Stream<S3File> walk(final int maxDepth) {
+            return performWalk(maxDepth);
         }
 
         @Override
@@ -363,6 +386,11 @@ public class S3File {
 
         @Override
         public Stream<S3File> files(final ListObjectsRequest request) {
+            return Stream.of();
+        }
+
+        @Override
+        public Stream<S3File> walk(final int maxDepth) {
             return Stream.of();
         }
 
@@ -460,6 +488,11 @@ public class S3File {
         }
 
         @Override
+        public Stream<S3File> walk(final int maxDepth) {
+            return Stream.of();
+        }
+
+        @Override
         public S3ObjectInputStream getValueAsStream() {
             return resolve(this).getValueAsStream();
         }
@@ -549,6 +582,11 @@ public class S3File {
         }
 
         @Override
+        public Stream<S3File> walk(final int maxDepth) {
+            return Stream.of();
+        }
+
+        @Override
         public S3ObjectInputStream getValueAsStream() {
             return resolve(this).getValueAsStream();
         }
@@ -630,6 +668,11 @@ public class S3File {
         @Override
         public Stream<S3File> files(final ListObjectsRequest request) {
             return listRequest(request);
+        }
+
+        @Override
+        public Stream<S3File> walk(final int maxDepth) {
+            return performWalk(maxDepth);
         }
 
         @Override
@@ -726,6 +769,11 @@ public class S3File {
         }
 
         @Override
+        public Stream<S3File> walk(final int maxDepth) {
+            return Stream.of();
+        }
+
+        @Override
         public S3File getFile(final String name) {
             final Path child = path.getChild(name);
             return new S3File(bucket, child, Unknown.class);
@@ -799,6 +847,10 @@ public class S3File {
         node.compareAndSet(current, new UpdatedObject(result));
     }
 
+    private Stream<S3File> performWalk(final int depth) {
+        return asStream(new WalkingIterator(this, depth));
+    }
+
     private Node resolve(final Node current) {
         final S3Object object;
 
@@ -842,4 +894,168 @@ public class S3File {
                 "', node='" + node.get().getClass().getSimpleName() +
                 "'}";
     }
+
+    class WalkingIterator implements Iterator<S3File> {
+
+        static final int INFINITE = Integer.MAX_VALUE;
+        private final int remaining;
+        private Iterator<S3File> iterator;
+        private final List<Iterator<S3File>> children = new ArrayList<>();
+
+        private final ListObjectsRequest request;
+
+        public WalkingIterator(final S3File file, final int depth) {
+            this(new ListObjectsRequest(), file, depth);
+        }
+
+        public WalkingIterator(final ListObjectsRequest request, final S3File file, final int depth) {
+            this.request = request
+                    .withDelimiter("/")
+                    .withPrefix(file.getPath().getSearchPrefix())
+                    .withBucketName(bucket.getName());
+
+            iterator = new Listing(getS3().listObjects(this.request));
+            remaining = depth == INFINITE ? INFINITE : depth - 1;
+        }
+
+        class Listing implements Iterator<S3File> {
+
+            private final ObjectListing objectListing;
+            private final Iterator<S3File> objectListingIterator;
+
+            public Listing(final ObjectListing objectListing) {
+                this.objectListing = objectListing;
+                this.objectListingIterator = iterator(objectListing);
+            }
+
+            private Iterator<S3File> iterator(final ObjectListing objectListing) {
+                return new IteratorIterator<>(
+                        new ObjectSummaryIterator(objectListing.getObjectSummaries().iterator()),
+                        new DirectoryIterator(objectListing.getCommonPrefixes().iterator())
+                );
+            }
+
+            @Override
+            public boolean hasNext() {
+                /*
+                 * Drain out anything from the current objectListing
+                 */
+                if (objectListingIterator.hasNext()) {
+                    return true;
+                }
+
+                /*
+                 * Replace this iterator with one for the next objectListing
+                 */
+                if (objectListing.isTruncated()) {
+                    iterator = new Listing(getS3().listNextBatchOfObjects(objectListing));
+                    return iterator.hasNext();
+                }
+
+                /*
+                 * If we're done with all objectListings, now descend into the
+                 * children if there are any.
+                 *
+                 * Replace this iterator with one for the children
+                 */
+                if (children.size() > 0) {
+                    iterator = new IteratorIterator<>(children);
+                    return iterator.hasNext();
+                }
+
+                return false;
+            }
+
+            @Override
+            public S3File next() {
+                final S3File next = objectListingIterator.next();
+
+                if (next.isDirectory() && (remaining == INFINITE || remaining > 0)) {
+                    children.add(new WalkingIterator(request, next, remaining));
+                }
+
+                return next;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public S3File next() {
+            return iterator.next();
+        }
+
+        private AmazonS3 getS3() {
+            return bucket.getClient().getS3();
+        }
+    }
+
+    class DirectoryIterator implements Iterator<S3File> {
+        private final Iterator<String> iterator;
+
+        public DirectoryIterator(final Iterator<String> iterator) {
+            this.iterator = iterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public S3File next() {
+            return new S3File(bucket, Path.fromKey(iterator.next()), Directory.class);
+        }
+    }
+
+    class ObjectSummaryIterator implements Iterator<S3File> {
+        private final Iterator<S3ObjectSummary> iterator;
+
+        public ObjectSummaryIterator(final Iterator<S3ObjectSummary> iterator) {
+            this.iterator = iterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public S3File next() {
+            return new S3File(bucket, iterator.next());
+        }
+    }
+
+    static class IteratorIterator<T> implements Iterator<T> {
+        private final Iterator<Iterator<T>> iterators;
+        private Iterator<T> current;
+
+        public IteratorIterator(final Iterator<T>... iterators) {
+            this(Arrays.asList(iterators));
+        }
+
+        public IteratorIterator(final List<Iterator<T>> iterators) {
+            this.iterators = iterators.iterator();
+            current = this.iterators.next();
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (current.hasNext()) return true;
+            if (!iterators.hasNext()) return false;
+
+            current = iterators.next();
+
+            return hasNext();
+        }
+
+        @Override
+        public T next() {
+            return current.next();
+        }
+    }
+
 }

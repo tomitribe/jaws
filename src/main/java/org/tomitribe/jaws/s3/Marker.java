@@ -16,9 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -31,10 +28,10 @@ import java.lang.annotation.Target;
  * The marker indicates where in the bucket to begin listing. The
  * list will only include keys that occur lexicographically after the
  * marker. This enables pagination; to get the next page of results use the
- * current value from {@link ObjectListing#getNextMarker()} as the marker
+ * current value from {@link com.amazonaws.services.s3.model.ObjectListing#getNextMarker()} as the marker
  * for the next request to list objects.
  *
- * @see ListObjectsRequest
+ * @see com.amazonaws.services.s3.model.ListObjectsRequest
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

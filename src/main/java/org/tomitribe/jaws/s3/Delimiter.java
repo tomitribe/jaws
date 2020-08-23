@@ -16,8 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -27,7 +25,7 @@ import java.lang.annotation.Target;
  * Sets the delimiter field of the ListObjectsRequest used
  * to query S3.
  *
- * @see ListObjectsRequest
+ * @see com.amazonaws.services.s3.model.ListObjectsRequest
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

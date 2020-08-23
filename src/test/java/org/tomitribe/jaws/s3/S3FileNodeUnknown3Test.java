@@ -21,7 +21,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
-import org.tomitribe.util.IO;
+import org.tomitribe.util.Join;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,9 +36,9 @@ import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 /**
  * Similar to S3FileNodeUnknownTest but the S3File in an unknown
- * state doesn't happen to point to a file that exists.
+ * state that happens to point to a directory.
  */
-public class S3FileNodeUnknown2Test {
+public class S3FileNodeUnknown3Test {
 
     @Rule
     public MockS3 mockS3 = new MockS3();
@@ -52,12 +52,13 @@ public class S3FileNodeUnknown2Test {
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
                 .add("repository/org.color.bright/green/1/1.4/foo.txt", "green")
+                .add("repository/org.color.bright/green/1/1.4/a/b/c/foo.txt", "green")
                 .add("repository/junit/junit/4/4.12/bar.txt", "blue")
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange")
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        file = bucket.asFile().getFile("org.color.bright/green/does/not/exist.txt");
+        file = bucket.asFile().getFile("org.color.bright/green/1");
 
         // Check to ensure our current node type is `Object`
         assertType(file, "Unknown");
@@ -91,26 +92,30 @@ public class S3FileNodeUnknown2Test {
     public void getParentFile() {
         final S3File parent = file.getParentFile();
         assertNotNull(parent);
-        assertEquals("not", parent.getName());
-        assertEquals("org.color.bright/green/does/not", parent.getAbsoluteName());
+        assertEquals("green", parent.getName());
+        assertEquals("org.color.bright/green", parent.getAbsoluteName());
     }
 
     @Test
     public void getFile() {
         final S3File child = this.file.getFile("allowed");
-        assertEquals("org.color.bright/green/does/not/exist.txt/allowed", child.getAbsoluteName());
+        assertEquals("org.color.bright/green/1/allowed", child.getAbsoluteName());
     }
 
     @Test
     public void files() {
         final List<S3File> list = file.files().collect(Collectors.toList());
-        assertEquals(0, list.size());
+        assertEquals("" +
+                "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
+                "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", S3File::getAbsoluteName, list));
     }
 
     @Test
     public void testFiles() {
         final List<S3File> list = file.files(new ListObjectsRequest()).collect(Collectors.toList());
-        assertEquals(0, list.size());
+        assertEquals("" +
+                "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
+                "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", S3File::getAbsoluteName, list));
     }
 
     @Test
@@ -120,17 +125,35 @@ public class S3FileNodeUnknown2Test {
                 .sorted()
                 .collect(Collectors.toList());
 
-        assertEquals(0, list.size());
+        assertEquals("org.color.bright/green/1/1.4\n" +
+                "org.color.bright/green/1/1.4/a\n" +
+                "org.color.bright/green/1/1.4/a/b\n" +
+                "org.color.bright/green/1/1.4/a/b/c\n" +
+                "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
+                "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", list));
+    }
+
+    @Test
+    public void walk2() {
+        final List<String> list = file.walk(3)
+                .map(S3File::getAbsoluteName)
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals("org.color.bright/green/1/1.4\n" +
+                "org.color.bright/green/1/1.4/a\n" +
+                "org.color.bright/green/1/1.4/a/b\n" +
+                "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", list));
     }
 
     @Test
     public void getAbsoluteName() {
-        assertEquals("org.color.bright/green/does/not/exist.txt", file.getAbsoluteName());
+        assertEquals("org.color.bright/green/1", file.getAbsoluteName());
     }
 
     @Test
     public void getName() {
-        assertEquals("exist.txt", file.getName());
+        assertEquals("1", file.getName());
     }
 
     @Test
@@ -150,74 +173,6 @@ public class S3FileNodeUnknown2Test {
         assertNoSuchObject(() -> file.getValueAsString());
     }
 
-    @Test
-    public void setValueAsStream() {
-        // State before the update
-        assertType(file, "Unknown");
-
-        file.setValueAsStream(IO.read("forrest"));
-
-        // type should be UpdatedObject after the above call
-        assertType(file, "UpdatedObject");
-
-        // State after the update
-        assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
-        assertEquals(0, file.getSize()); // TODO Either a bug in the Amazon S3 API or the Mock S3 implementation
-        assertEquals("forrest", file.getValueAsString());
-    }
-
-    @Test
-    public void testSetValueAsStream() throws IOException {
-        // State before the update
-        assertType(file, "Unknown");
-
-        try (S3OutputStream s3OutputStream = file.setValueAsStream()) {
-            IO.copy(IO.read("forrest"), s3OutputStream);
-        }
-
-        // type should be Object after the above call
-        assertType(file, "Object");
-// State after the update
-        assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
-        assertEquals(7, file.getSize());
-        assertEquals("forrest", file.getValueAsString());
-    }
-
-    @Test
-    public void setValueAsFile() throws IOException {
-        // State before the update
-        assertType(file, "Unknown");
-
-        final File tempFile = File.createTempFile("foo", "bar");
-        tempFile.deleteOnExit();
-        IO.copy(IO.read("forrest"), tempFile);
-
-        file.setValueAsFile(tempFile);
-
-        // type should be UpdatedObject after the above call
-        assertType(file, "UpdatedObject");
-
-        // State after the update
-        assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
-        assertEquals(0, file.getSize()); // TODO Either a bug in the Amazon S3 API or the Mock S3 implementation
-        assertEquals("forrest", file.getValueAsString());
-
-    }
-
-    @Test
-    public void setValueAsString() {
-        // State before the update
-        assertType(file, "Unknown");
-
-        file.setValueAsString("forrest");
-
-        // type should be Object after the above call
-        assertType(file, "UpdatedObject");
-
-        assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
-        assertEquals(0, file.getSize()); // TODO Either a bug in the Amazon S3 API or the Mock S3 implementation
-        assertEquals("forrest", file.getValueAsString());
-    }
 
     @Test
     public void getBucketName() {
@@ -244,7 +199,7 @@ public class S3FileNodeUnknown2Test {
             action.run();
             fail("NoSuchS3ObjectException should have been thrown");
         } catch (final NoSuchS3ObjectException e) {
-            assertEquals("Key 'org.color.bright/green/does/not/exist.txt' not found in bucket 'repository'", e.getMessage());
+            assertEquals("Key 'org.color.bright/green/1' not found in bucket 'repository'", e.getMessage());
         }
     }
 

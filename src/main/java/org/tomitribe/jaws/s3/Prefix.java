@@ -16,8 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -30,7 +28,7 @@ import java.lang.annotation.Target;
  * The value is considered to be relative and will be appended
  * to the prefix of the underlying S3File.
  *
- * @see ListObjectsRequest
+ * @see com.amazonaws.services.s3.model.ListObjectsRequest
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
