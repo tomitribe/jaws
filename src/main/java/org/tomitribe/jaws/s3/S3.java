@@ -18,6 +18,7 @@ package org.tomitribe.jaws.s3;
 
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.tomitribe.util.dir.Name;
+import org.tomitribe.util.dir.Walk;
 import org.tomitribe.util.reflect.Generics;
 
 import java.io.FileNotFoundException;
@@ -326,24 +327,62 @@ public interface S3 {
         }
 
         private Stream<S3File> stream(final Method method) {
+
+            final Walk walk = method.getAnnotation(Walk.class);
+
+            if (walk != null) return walk(walk, dir);
+
             final ListObjectsRequest request = new ListObjectsRequest();
 
             if (method.isAnnotationPresent(Prefix.class)) {
                 final Prefix prefix = method.getAnnotation(Prefix.class);
                 request.setPrefix(dir.getPath().getSearchPrefix() + prefix.value());
             }
-            
+
             if (method.isAnnotationPresent(Marker.class)) {
                 final Marker marker = method.getAnnotation(Marker.class);
                 request.setMarker(marker.value());
             }
-            
+
             if (method.isAnnotationPresent(Delimiter.class)) {
                 final Delimiter delimiter = method.getAnnotation(Delimiter.class);
                 request.setDelimiter(delimiter.value());
             }
-            
+
             return dir.files(request);
+        }
+
+        private static Stream<S3File> walk(final Walk walk, final S3File dir) {
+            return walk(dir, walk.maxDepth(), walk.minDepth());
+        }
+
+        private static Stream<S3File> walk(final S3File dir, final int maxDepth, final int minDepth) {
+            final Predicate<S3File> min = minDepth <= 0 ? s3File -> true : minDepth(dir, minDepth);
+
+            if (maxDepth != -1) {
+                return dir.walk(maxDepth).filter(min);
+            } else {
+                return dir.walk().filter(min);
+            }
+        }
+
+        private static Predicate<S3File> minDepth(final S3File dir, final int minDepth) {
+            int parentDepth = getDepth(dir);
+            return s3File -> {
+                final int s3FileDepth = getDepth(s3File);
+                final int depth = s3FileDepth - parentDepth;
+                return depth >= minDepth;
+            };
+        }
+
+        private static int getDepth(final S3File dir) {
+            int depth = 0;
+            S3File f = dir;
+            while (f != null) {
+                f = f.getParentFile();
+                depth++;
+            }
+            return depth;
         }
 
         @Override
