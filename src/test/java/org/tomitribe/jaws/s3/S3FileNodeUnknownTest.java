@@ -16,6 +16,7 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 public class S3FileNodeUnknownTest {
@@ -136,6 +138,28 @@ public class S3FileNodeUnknownTest {
         final S3Bucket bucket = file.getBucket();
         assertNotNull(bucket);
         assertEquals("repository", bucket.getName());
+    }
+
+    @Test
+    public void delete() {
+        final S3Bucket bucket = file.getBucket();
+
+        final S3File file = bucket.asFile().getFile("junit/junit/4/4.12/bar.txt");
+        // Check to ensure our current node type is `Object`
+        assertType(file, "Unknown");
+        assertTrue(file.exists());
+        file.delete();
+
+        assertFalse(file.exists());
+        assertType(file, "NewObject");
+
+        // The object should be deleted
+        try {
+            bucket.getFile("junit/junit/4/4.12/bar.txt");
+            fail("Expected AmazonS3Exception");
+        } catch (final AmazonS3Exception e) {
+            assertTrue(e.getMessage().contains("The specified key does not exist"));
+        }
     }
 
     @Test

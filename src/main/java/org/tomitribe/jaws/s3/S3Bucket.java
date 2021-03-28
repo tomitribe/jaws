@@ -21,6 +21,7 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -155,6 +156,10 @@ public class S3Bucket {
     public PutObjectResult setObjectAsStream(final String key, final InputStream value) {
         final AmazonS3 s3 = getClient().getS3();
         return s3.putObject(bucket.getName(), key, value, new ObjectMetadata());
+    }
+
+    public void deleteObject(final String key) {
+        s3.deleteObject(new DeleteObjectRequest(bucket.getName(), key));
     }
 
     public Owner getOwner() {

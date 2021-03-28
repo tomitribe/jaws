@@ -16,6 +16,7 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
 import org.junit.Rule;
@@ -131,6 +132,30 @@ public class S3FileNodeObjectTest {
         final S3Bucket bucket = file.getBucket();
         assertNotNull(bucket);
         assertEquals("repository", bucket.getName());
+    }
+
+    @Test
+    public void delete() {
+        final S3Bucket bucket = file.getBucket();
+
+        {
+            final S3File bar = bucket.getFile("junit/junit/4/4.12/bar.txt");
+            // Check to ensure our current node type
+            assertType(file, "Object");
+            assertTrue(bar.exists());
+            bar.delete();
+
+            assertFalse(bar.exists());
+            assertType(bar, "NewObject");
+        }
+
+        // The object should be deleted
+        try {
+            bucket.getFile("junit/junit/4/4.12/bar.txt");
+            fail("Expected AmazonS3Exception");
+        } catch (final AmazonS3Exception e) {
+            assertTrue(e.getMessage().contains("The specified key does not exist"));
+        }
     }
 
     @Test

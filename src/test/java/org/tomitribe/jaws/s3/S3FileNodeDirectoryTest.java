@@ -16,6 +16,7 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
 import org.junit.Rule;
@@ -216,6 +217,24 @@ public class S3FileNodeDirectoryTest {
         final S3Bucket bucket = file.getBucket();
         assertNotNull(bucket);
         assertEquals("repository", bucket.getName());
+    }
+
+    @Test
+    public void delete() {
+        final S3Bucket bucket = file.getBucket();
+
+        final S3File file = bucket.getFile("junit/junit/4/4.12/bar.txt").getParentFile();
+        assertType(file, "Directory");
+        assertTrue(file.exists());
+
+        try {
+            file.delete();
+            fail("UnsupportedOperationException");
+        } catch (final UnsupportedOperationException e) {
+        }
+
+
+        assertTrue(bucket.getFile("junit/junit/4/4.12/bar.txt").exists());
     }
 
     @Test

@@ -200,6 +200,10 @@ public class S3File {
         return path.hashCode();
     }
 
+    public void delete() {
+        node.get().delete();
+    }
+
     /**
      * AmazonS3 API has a very large number of ways to get at
      * the same data.
@@ -249,6 +253,7 @@ public class S3File {
 
         Date getLastModified();
 
+        void delete();
     }
 
     /**
@@ -341,6 +346,11 @@ public class S3File {
 
         @Override
         public Date getLastModified() {
+            throw new UnsupportedOperationException("S3File refers to a directory");
+        }
+
+        @Override
+        public void delete() {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
     }
@@ -442,6 +452,12 @@ public class S3File {
         public Date getLastModified() {
             return object.getObjectMetadata().getLastModified();
         }
+
+        @Override
+        public void delete() {
+            bucket.deleteObject(object.getKey());
+            node.compareAndSet(this, new NewObject());
+        }
     }
 
     /**
@@ -536,6 +552,12 @@ public class S3File {
         public Date getLastModified() {
             return summary.getLastModified();
         }
+
+        @Override
+        public void delete() {
+            bucket.deleteObject(summary.getKey());
+            node.compareAndSet(this, new NewObject());
+        }
     }
 
     /**
@@ -629,6 +651,12 @@ public class S3File {
         @Override
         public Date getLastModified() {
             return result.getMetadata().getLastModified();
+        }
+
+        @Override
+        public void delete() {
+            bucket.deleteObject(path.getAbsoluteName());
+            node.compareAndSet(this, new NewObject());
         }
     }
 
@@ -726,6 +754,11 @@ public class S3File {
             return resolve(this).getLastModified();
         }
 
+
+        @Override
+        public void delete() {
+            resolve(this).delete();
+        }
     }
 
     /**
@@ -821,6 +854,11 @@ public class S3File {
 
         @Override
         public Date getLastModified() {
+            throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
+        }
+
+        @Override
+        public void delete() {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
     }
