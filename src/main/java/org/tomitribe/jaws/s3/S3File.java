@@ -183,6 +183,10 @@ public class S3File {
         return node.get().getLastModified();
     }
 
+    public S3Object getS3Object() {
+        return node.get().getS3Object();
+    }
+
     @Override
     public boolean equals(final java.lang.Object o) {
         if (this == o) return true;
@@ -254,6 +258,8 @@ public class S3File {
         Date getLastModified();
 
         void delete();
+
+        S3Object getS3Object();
     }
 
     /**
@@ -351,6 +357,11 @@ public class S3File {
 
         @Override
         public void delete() {
+            throw new UnsupportedOperationException("S3File refers to a directory");
+        }
+
+        @Override
+        public S3Object getS3Object() {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
     }
@@ -458,6 +469,11 @@ public class S3File {
             bucket.deleteObject(object.getKey());
             node.compareAndSet(this, new NewObject());
         }
+
+        @Override
+        public S3Object getS3Object() {
+            return object;
+        }
     }
 
     /**
@@ -558,6 +574,12 @@ public class S3File {
             bucket.deleteObject(summary.getKey());
             node.compareAndSet(this, new NewObject());
         }
+
+        @Override
+        public S3Object getS3Object() {
+            return resolve(this).getS3Object();
+        }
+
     }
 
     /**
@@ -658,6 +680,11 @@ public class S3File {
             bucket.deleteObject(path.getAbsoluteName());
             node.compareAndSet(this, new NewObject());
         }
+
+        @Override
+        public S3Object getS3Object() {
+            return resolve(this).getS3Object();
+        }
     }
 
     /**
@@ -754,10 +781,14 @@ public class S3File {
             return resolve(this).getLastModified();
         }
 
-
         @Override
         public void delete() {
             resolve(this).delete();
+        }
+
+        @Override
+        public S3Object getS3Object() {
+            return resolve(this).getS3Object();
         }
     }
 
@@ -859,6 +890,11 @@ public class S3File {
 
         @Override
         public void delete() {
+            throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
+        }
+
+        @Override
+        public S3Object getS3Object() {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
     }
