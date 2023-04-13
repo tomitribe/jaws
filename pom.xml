@@ -28,14 +28,14 @@
 
   <artifactId>tomitribe-jaws</artifactId>
   <packaging>jar</packaging>
-  <version>0.10-SNAPSHOT</version>
+  <version>0.10</version>
   <name>Tomitribe :: JAWS</name>
 
   <scm>
     <connection>scm:git:git@github.com:tomitribe/jaws.git</connection>
     <url>scm:git:git@github.com:tomitribe/jaws.git</url>
     <developerConnection>scm:git:git@github.com:tomitribe/jaws.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>tomitribe-jaws-0.10</tag>
   </scm>
 
   <dependencies>
