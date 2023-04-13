@@ -20,19 +20,44 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import org.tomitribe.jaws.NoSuchBucketException;
 
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class S3Client {
     private final AmazonS3 s3;
 
+    private final TransferManager transferManager;
+
     public S3Client(final AmazonS3 s3) {
         this.s3 = s3;
+        this.transferManager = TransferManagerBuilder.standard()
+                .withS3Client(s3)
+                .withExecutorFactory(S3Client::createDefaultExecutorService)
+                .build();
+    }
+
+    private static ThreadPoolExecutor createDefaultExecutorService() {
+        ThreadFactory threadFactory = new ThreadFactory() {
+            private int threadCount = 1;
+
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r);
+                thread.setDaemon(true);
+                thread.setName("s3-transfer-manager-worker-" + threadCount++);
+                return thread;
+            }
+        };
+        return (ThreadPoolExecutor) Executors.newFixedThreadPool(10, threadFactory);
     }
 
     public static <T> Stream<T> asStream(final Iterator<T> iterator) {
@@ -67,5 +92,9 @@ public class S3Client {
 
     public AmazonS3 getS3() {
         return s3;
+    }
+
+    public TransferManager getTransferManager() {
+        return transferManager;
     }
 }

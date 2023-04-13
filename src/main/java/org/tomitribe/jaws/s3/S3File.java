@@ -16,14 +16,20 @@
  */
 package org.tomitribe.jaws.s3;
 
+import com.amazonaws.event.ProgressEventType;
+import com.amazonaws.event.ProgressListener;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.Download;
+import com.amazonaws.services.s3.transfer.Upload;
 import org.tomitribe.util.IO;
 
 import java.io.File;
@@ -45,7 +51,7 @@ import static org.tomitribe.jaws.s3.S3Client.asStream;
  * S3File aims to provide an abstraction over the Amazon S3 API
  * that acts like java.io.File and provides a stable reference
  * to all the states of an S3 object.
- *
+ * <p>
  * Like java.io.File, S3File can refer to an S3 object before it
  * exists, once it is created, after it is updated and after it
  * is deleted.  Throughout these various states, callers may simply
@@ -208,18 +214,33 @@ public class S3File {
         node.get().delete();
     }
 
+    public Upload upload(final InputStream input, final ObjectMetadata objectMetadata) {
+        return upload(new PutObjectRequest(getBucketName(), getAbsoluteName(), input, objectMetadata));
+    }
+
+    public Upload upload(final File file) {
+        return upload(new PutObjectRequest(getBucketName(), getAbsoluteName(), file));
+    }
+
+    public Upload upload(final PutObjectRequest putObjectRequest) {
+        return node.get().upload(putObjectRequest);
+    }
+
+    public Download download(final File destination) {
+        return node.get().download(destination);
+    }
     /**
      * AmazonS3 API has a very large number of ways to get at
      * the same data.
-     *
+     * <p>
      * For example if you look up a single object in S3 you will
      * get an S3Object instance.  If you list objects in S3 you
      * will get several S3ObjectSummary instances.  If you update
      * an object in S3 you will get a PutObjectResult.
-     *
+     * <p>
      * This interface serves as a way to adapt them all to one
      * common interface, making all these variations manageable.
-     *
+     * <p>
      * The name 'Node' is somewhat inspired by the inode concept
      * of the unix file system.
      */
@@ -260,15 +281,19 @@ public class S3File {
         void delete();
 
         S3Object getS3Object();
+
+        Upload upload(final PutObjectRequest putObjectRequest);
+
+        Download download(File destination);
     }
 
     /**
      * S3 does not actually have the concept of directories.
-     *
+     * <p>
      * They can be implied, however, as you are allowed to
      * use slashes in the names of Objects as well as query
      * Objects that live only under a specific prefix (path).
-     *
+     * <p>
      * This Node implementation attempts to enforce/invent
      * some structure that can more strongly imply directories.
      */
@@ -362,6 +387,16 @@ public class S3File {
 
         @Override
         public S3Object getS3Object() {
+            throw new UnsupportedOperationException("S3File refers to a directory");
+        }
+
+        @Override
+        public Upload upload(final PutObjectRequest putObjectRequest) {
+            throw new UnsupportedOperationException("S3File refers to a directory");
+        }
+
+        @Override
+        public Download download(final File destination) {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
     }
@@ -474,6 +509,30 @@ public class S3File {
         public S3Object getS3Object() {
             return object;
         }
+
+        @Override
+        public Upload upload(final PutObjectRequest putObjectRequest) {
+            final Upload upload = bucket.getClient().getTransferManager().upload(putObjectRequest);
+            upload.addProgressListener(resolveOnCompletion(this));
+            return upload;
+        }
+
+        public Download download(final File destination) {
+            return bucket.getClient().getTransferManager().download(bucket.getName(), getAbsoluteName(), destination);
+        }
+    }
+
+    private ProgressListener resolveOnCompletion(final Node current) {
+        return progressEvent -> {
+            final ProgressEventType eventType = progressEvent.getEventType();
+
+            if (eventType == ProgressEventType.TRANSFER_COMPLETED_EVENT ||
+                    eventType == ProgressEventType.TRANSFER_FAILED_EVENT ||
+                    eventType == ProgressEventType.TRANSFER_CANCELED_EVENT) {
+
+                resolve(current);
+            }
+        };
     }
 
     /**
@@ -578,6 +637,17 @@ public class S3File {
         @Override
         public S3Object getS3Object() {
             return resolve(this).getS3Object();
+        }
+
+        @Override
+        public Upload upload(final PutObjectRequest putObjectRequest) {
+            final Upload upload = bucket.getClient().getTransferManager().upload(putObjectRequest);
+            upload.addProgressListener(resolveOnCompletion(this));
+            return upload;
+        }
+
+        public Download download(final File destination) {
+            return bucket.getClient().getTransferManager().download(bucket.getName(), getAbsoluteName(), destination);
         }
 
     }
@@ -685,13 +755,24 @@ public class S3File {
         public S3Object getS3Object() {
             return resolve(this).getS3Object();
         }
+
+        @Override
+        public Upload upload(final PutObjectRequest putObjectRequest) {
+            final Upload upload = bucket.getClient().getTransferManager().upload(putObjectRequest);
+            upload.addProgressListener(resolveOnCompletion(this));
+            return upload;
+        }
+
+        public Download download(final File destination) {
+            return bucket.getClient().getTransferManager().download(bucket.getName(), getAbsoluteName(), destination);
+        }
     }
 
     /**
      * Represents an object that may not yet have been created and
      * therefore has no metadata.  It may be a file, it may imply
      * a directory, it may not exist, we don't know.
-     *
+     * <p>
      * Once written to S3 the node will be replaced with a node that has
      * all the metadata and can be both read and written.
      */
@@ -790,15 +871,27 @@ public class S3File {
         public S3Object getS3Object() {
             return resolve(this).getS3Object();
         }
+
+        @Override
+        public Upload upload(final PutObjectRequest putObjectRequest) {
+            final Upload upload = bucket.getClient().getTransferManager().upload(putObjectRequest);
+            upload.addProgressListener(resolveOnCompletion(this));
+            return upload;
+        }
+
+        public Download download(final File destination) {
+            return resolve(this).download(destination);
+        }
+
     }
 
     /**
      * Represents an object that has not yet have been created and
      * therefore has no metadata.  It may be written, but not read.
-     *
+     * <p>
      * Attempts to resolve an S3Object that fail will result in
      * this object being set as the node.
-     *
+     * <p>
      * Once written to S3 the node will be replaced with a node that has
      * all the metadata and can be both read and written.
      */
@@ -895,6 +988,17 @@ public class S3File {
 
         @Override
         public S3Object getS3Object() {
+            throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
+        }
+
+        @Override
+        public Upload upload(final PutObjectRequest putObjectRequest) {
+            final Upload upload = bucket.getClient().getTransferManager().upload(putObjectRequest);
+            upload.addProgressListener(resolveOnCompletion(this));
+            return upload;
+        }
+
+        public Download download(final File destination) {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
     }
