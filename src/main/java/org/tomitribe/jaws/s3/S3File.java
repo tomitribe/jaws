@@ -453,19 +453,12 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            final S3Object object = bucket.getObject(getAbsoluteName());
-            return object.getObjectContent();
+            return openStreamAndReplace(this);
         }
 
         @Override
         public String getValueAsString() {
-            try {
-                try (final InputStream in = getValueAsStream()) {
-                    return IO.slurp(in);
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException("Cannot read content for " + path.getAbsoluteName(), e);
-            }
+            return readAndReplace(this);
         }
 
         @Override
@@ -589,12 +582,12 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            return resolve(this).getValueAsStream();
+            return openStreamAndReplace(this);
         }
 
         @Override
         public String getValueAsString() {
-            return resolve(this).getValueAsString();
+            return readAndReplace(this);
         }
 
         @Override
@@ -706,17 +699,17 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            return resolve(this).getValueAsStream();
+            return openStreamAndReplace(this);
+        }
+
+        @Override
+        public String getValueAsString() {
+            return readAndReplace(this);
         }
 
         @Override
         public void setValueAsStream(final InputStream inputStream) {
             writeStreamAndReplace(this, inputStream);
-        }
-
-        @Override
-        public String getValueAsString() {
-            return resolve(this).getValueAsString();
         }
 
         @Override
@@ -823,12 +816,12 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
-            return resolve(this).getValueAsStream();
+            return openStreamAndReplace(this);
         }
 
         @Override
         public String getValueAsString() {
-            return resolve(this).getValueAsString();
+            return readAndReplace(this);
         }
 
         @Override
@@ -1028,6 +1021,42 @@ public class S3File {
     private void writeStreamAndReplace(final Node current, final InputStream inputStream) {
         final PutObjectResult result = bucket.setObjectAsStream(path.getAbsoluteName(), inputStream);
         node.compareAndSet(current, new UpdatedObject(result));
+    }
+
+    /**
+     * Reading the object also gives us refreshed metadata, so we should always
+     * replace the current node with a new Metadata instance.
+     * <p>
+     * Critical note, calling this method and not closing the InputStream will
+     * cause a connection leak that will eventually prevent further S3 calls
+     * of any kind.
+     */
+    private S3ObjectInputStream openStreamAndReplace(final Node current) {
+        final S3Object object;
+        try {
+            object = bucket.getObject(path.getAbsoluteName());
+        } catch (AmazonS3Exception e) {
+            if (e.getMessage().contains("Status Code: 404;")) {
+                throw new NoSuchS3ObjectException(bucket.getName(), path.getAbsoluteName(), e);
+            }
+            throw new RuntimeException(e);
+        }
+        try {
+            return object.getObjectContent();
+        } finally {
+            final Metadata metadata = new Metadata(object.getObjectMetadata());
+            node.compareAndSet(current, metadata);
+        }
+    }
+
+    private String readAndReplace(final Node current) {
+        try {
+            try (final InputStream in = openStreamAndReplace(current)) {
+                return IO.slurp(in);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Cannot read content for " + path.getAbsoluteName(), e);
+        }
     }
 
     private Stream<S3File> performWalk(final int depth) {
