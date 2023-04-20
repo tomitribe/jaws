@@ -70,10 +70,10 @@ public class S3File {
         this.node.set(new ObjectSummary(summary));
     }
 
-    S3File(final S3Bucket bucket, final S3Object object) {
+    S3File(final S3Bucket bucket, final String key, final ObjectMetadata object) {
         this.bucket = bucket;
-        this.path = Path.fromKey(object.getKey());
-        this.node.set(new Object(object));
+        this.path = Path.fromKey(key);
+        this.node.set(new Metadata(object));
     }
 
     S3File(final S3Bucket bucket, final Path path, final Class<? extends Node> type) {
@@ -189,8 +189,8 @@ public class S3File {
         return node.get().getLastModified();
     }
 
-    public S3Object getS3Object() {
-        return node.get().getS3Object();
+    public ObjectMetadata getObjectMetadata() {
+        return node.get().getObjectMetadata();
     }
 
     @Override
@@ -229,6 +229,7 @@ public class S3File {
     public Download download(final File destination) {
         return node.get().download(destination);
     }
+
     /**
      * AmazonS3 API has a very large number of ways to get at
      * the same data.
@@ -280,11 +281,11 @@ public class S3File {
 
         void delete();
 
-        S3Object getS3Object();
-
         Upload upload(final PutObjectRequest putObjectRequest);
 
         Download download(File destination);
+
+        ObjectMetadata getObjectMetadata();
     }
 
     /**
@@ -386,17 +387,17 @@ public class S3File {
         }
 
         @Override
-        public S3Object getS3Object() {
-            throw new UnsupportedOperationException("S3File refers to a directory");
-        }
-
-        @Override
         public Upload upload(final PutObjectRequest putObjectRequest) {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
         @Override
         public Download download(final File destination) {
+            throw new UnsupportedOperationException("S3File refers to a directory");
+        }
+
+        @Override
+        public ObjectMetadata getObjectMetadata() {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
     }
@@ -407,11 +408,11 @@ public class S3File {
      * the Node adapter for that form of representing the
      * common metadata.
      */
-    private class Object implements Node {
-        private final S3Object object;
+    private class Metadata implements Node {
+        private final ObjectMetadata metadata;
 
-        public Object(final S3Object object) {
-            this.object = object;
+        public Metadata(final ObjectMetadata metadata) {
+            this.metadata = metadata;
         }
 
         @Override
@@ -452,13 +453,16 @@ public class S3File {
 
         @Override
         public S3ObjectInputStream getValueAsStream() {
+            final S3Object object = bucket.getObject(getAbsoluteName());
             return object.getObjectContent();
         }
 
         @Override
         public String getValueAsString() {
             try {
-                return IO.slurp(object.getObjectContent());
+                try (final InputStream in = getValueAsStream()) {
+                    return IO.slurp(in);
+                }
             } catch (IOException e) {
                 throw new UncheckedIOException("Cannot read content for " + path.getAbsoluteName(), e);
             }
@@ -486,28 +490,28 @@ public class S3File {
 
         @Override
         public String getETag() {
-            return object.getObjectMetadata().getETag();
+            return metadata.getETag();
         }
 
         @Override
         public long getSize() {
-            return object.getObjectMetadata().getContentLength();
+            return metadata.getContentLength();
         }
 
         @Override
         public Date getLastModified() {
-            return object.getObjectMetadata().getLastModified();
+            return metadata.getLastModified();
         }
 
         @Override
         public void delete() {
-            bucket.deleteObject(object.getKey());
+            bucket.deleteObject(getAbsoluteName());
             node.compareAndSet(this, new NewObject());
         }
 
         @Override
-        public S3Object getS3Object() {
-            return object;
+        public ObjectMetadata getObjectMetadata() {
+            return metadata;
         }
 
         @Override
@@ -635,8 +639,8 @@ public class S3File {
         }
 
         @Override
-        public S3Object getS3Object() {
-            return resolve(this).getS3Object();
+        public ObjectMetadata getObjectMetadata() {
+            return resolve(this).getObjectMetadata();
         }
 
         @Override
@@ -752,8 +756,8 @@ public class S3File {
         }
 
         @Override
-        public S3Object getS3Object() {
-            return resolve(this).getS3Object();
+        public ObjectMetadata getObjectMetadata() {
+            return result.getMetadata();
         }
 
         @Override
@@ -868,8 +872,8 @@ public class S3File {
         }
 
         @Override
-        public S3Object getS3Object() {
-            return resolve(this).getS3Object();
+        public ObjectMetadata getObjectMetadata() {
+            return resolve(this).getObjectMetadata();
         }
 
         @Override
@@ -987,7 +991,7 @@ public class S3File {
         }
 
         @Override
-        public S3Object getS3Object() {
+        public ObjectMetadata getObjectMetadata() {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
 
@@ -1016,7 +1020,8 @@ public class S3File {
     private S3OutputStream writeStreamAndReplace(final Node current) {
         return new S3OutputStream(bucket.getClient().getS3(), bucket.getName(), path.getAbsoluteName(), () -> {
             final S3Object object = bucket.getObject(path.getAbsoluteName());
-            node.compareAndSet(current, new Object(object));
+            final ObjectMetadata objectMetadata = object.getObjectMetadata();
+            node.compareAndSet(current, new Metadata(objectMetadata));
         });
     }
 
@@ -1030,12 +1035,12 @@ public class S3File {
     }
 
     private Node resolve(final Node current) {
-        final S3Object object;
+        final ObjectMetadata object;
 
         try {
-            object = bucket.getObject(path.getAbsoluteName());
+            object = bucket.getObjectMetadata(path.getAbsoluteName());
         } catch (final AmazonS3Exception e) {
-            if ("NoSuchKey".equals(e.getErrorCode())) {
+            if ("NoSuchKey".equals(e.getErrorCode()) || "404 Not Found".equals(e.getErrorCode())) {
                 final NewObject newObject = new NewObject();
                 if (node.compareAndSet(current, newObject)) {
                     return newObject;
@@ -1046,7 +1051,7 @@ public class S3File {
             throw e;
         }
 
-        final Object newNode = new Object(object);
+        final Metadata newNode = new Metadata(object);
 
         if (node.compareAndSet(current, newNode)) {
             return newNode;

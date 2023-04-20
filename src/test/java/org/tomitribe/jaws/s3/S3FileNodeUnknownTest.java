@@ -68,7 +68,7 @@ public class S3FileNodeUnknownTest {
         assertTrue(file.exists());
 
         // type should be Object after the above call
-        assertType(file, "Object");
+        assertType(file, "Metadata");
     }
 
     @Test
@@ -76,7 +76,7 @@ public class S3FileNodeUnknownTest {
         assertTrue(file.isFile());
 
         // type should be Object after the above call
-        assertType(file, "Object");
+        assertType(file, "Metadata");
     }
 
     @Test
@@ -84,7 +84,7 @@ public class S3FileNodeUnknownTest {
         assertFalse(file.isDirectory());
 
         // type should be Object after the above call
-        assertType(file, "Object");
+        assertType(file, "Metadata");
     }
 
     @Test
@@ -158,7 +158,7 @@ public class S3FileNodeUnknownTest {
             bucket.getFile("junit/junit/4/4.12/bar.txt");
             fail("Expected AmazonS3Exception");
         } catch (final AmazonS3Exception e) {
-            assertTrue(e.getMessage().contains("The specified key does not exist"));
+            assertTrue(e.getMessage().contains("Not Found"));
         }
     }
 
@@ -200,7 +200,7 @@ public class S3FileNodeUnknownTest {
         }
 
         // type should be Object after the above call
-        assertType(file, "Object");
+        assertType(file, "Metadata");
 
         // State after the update
         assertEquals("forrest", file.getValueAsString());
@@ -254,7 +254,7 @@ public class S3FileNodeUnknownTest {
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
 
         // type should be Object after the above call
-        assertType(file, "Object");
+        assertType(file, "Metadata");
     }
 
     @Test
@@ -262,7 +262,7 @@ public class S3FileNodeUnknownTest {
         assertEquals(5, file.getSize());
 
         // type should be Object after the above call
-        assertType(file, "Object");
+        assertType(file, "Metadata");
     }
 
     @Test
@@ -273,7 +273,7 @@ public class S3FileNodeUnknownTest {
         assertTrue(time < System.currentTimeMillis() + tolerance);
 
         // type should be Object after the above call
-        assertType(file, "Object");
+        assertType(file, "Metadata");
     }
 
 }

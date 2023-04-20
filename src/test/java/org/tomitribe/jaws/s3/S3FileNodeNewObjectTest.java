@@ -170,7 +170,7 @@ public class S3FileNodeNewObjectTest {
             bucket.getFile("org.color.bright/blue/does/not/exist.txt");
             fail("Expected AmazonS3Exception");
         } catch (final AmazonS3Exception e) {
-            assertTrue(e.getMessage().contains("The specified key does not exist"));
+            assertTrue(e.getMessage().contains("Not Found"));
         }
     }
 
@@ -210,7 +210,7 @@ public class S3FileNodeNewObjectTest {
         }
 
         // type should be Object after the above call
-        assertType(file, "Object");
+        assertType(file, "Metadata");
 // State after the update
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());

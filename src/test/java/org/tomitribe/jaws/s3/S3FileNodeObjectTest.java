@@ -59,7 +59,7 @@ public class S3FileNodeObjectTest {
         final S3Bucket bucket = s3Client.getBucket("repository");
         file = bucket.getFile("org.color.bright/green/1/1.4/foo.txt");
         // Check to ensure our current node type is `Object`
-        assertType(file, "Object");
+        assertType(file, "Metadata");
     }
 
     @Test
@@ -141,7 +141,7 @@ public class S3FileNodeObjectTest {
         {
             final S3File bar = bucket.getFile("junit/junit/4/4.12/bar.txt");
             // Check to ensure our current node type
-            assertType(file, "Object");
+            assertType(file, "Metadata");
             assertTrue(bar.exists());
             bar.delete();
 
@@ -154,7 +154,7 @@ public class S3FileNodeObjectTest {
             bucket.getFile("junit/junit/4/4.12/bar.txt");
             fail("Expected AmazonS3Exception");
         } catch (final AmazonS3Exception e) {
-            assertTrue(e.getMessage().contains("The specified key does not exist"));
+            assertTrue(e.getMessage().contains("Not Found"));
         }
     }
 
@@ -173,7 +173,7 @@ public class S3FileNodeObjectTest {
     @Test
     public void setValueAsStream() {
         // State before the update
-        assertType(file, "Object");
+        assertType(file, "Metadata");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -190,7 +190,7 @@ public class S3FileNodeObjectTest {
     @Test
     public void testSetValueAsStream() throws IOException {
         // State before the update
-        assertType(file, "Object");
+        assertType(file, "Metadata");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -200,7 +200,7 @@ public class S3FileNodeObjectTest {
         }
 
         // State after the update
-        assertType(file, "Object");
+        assertType(file, "Metadata");
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());
@@ -209,7 +209,7 @@ public class S3FileNodeObjectTest {
     @Test
     public void setValueAsFile() throws IOException {
         // State before the update
-        assertType(file, "Object");
+        assertType(file, "Metadata");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -230,7 +230,7 @@ public class S3FileNodeObjectTest {
     @Test
     public void setValueAsString() {
         // State before the update
-        assertType(file, "Object");
+        assertType(file, "Metadata");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());

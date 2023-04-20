@@ -187,7 +187,7 @@ public class S3FileNodeUnknown3Test {
             bucket.getFile("junit/junit/4/4.12");
             fail("Expected AmazonS3Exception");
         } catch (final AmazonS3Exception e) {
-            assertTrue(e.getMessage().contains("The specified key does not exist"));
+            assertTrue(e.getMessage().contains("Not Found"));
         }
     }
 
