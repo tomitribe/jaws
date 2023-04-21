@@ -206,7 +206,7 @@ public class S3FileNodeNewObjectTest {
         file.upload(IO.read(value), value.length()).waitForUploadResult();
 
         // type should be Object after the above call
-        assertType(file, "Metadata");
+        assertType(file, "UploadingObject");
 // State after the update
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());

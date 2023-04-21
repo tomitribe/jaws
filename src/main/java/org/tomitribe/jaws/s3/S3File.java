@@ -16,11 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.event.ProgressEvent;
-import com.amazonaws.event.ProgressEventType;
-import com.amazonaws.event.ProgressListener;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
@@ -32,12 +27,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.Download;
-import com.amazonaws.services.s3.transfer.PauseResult;
-import com.amazonaws.services.s3.transfer.PersistableUpload;
-import com.amazonaws.services.s3.transfer.TransferProgress;
 import com.amazonaws.services.s3.transfer.Upload;
-import com.amazonaws.services.s3.transfer.exception.PauseException;
-import com.amazonaws.services.s3.transfer.model.UploadResult;
 import org.tomitribe.util.IO;
 
 import java.io.File;
@@ -50,7 +40,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -234,10 +223,7 @@ public class S3File {
     }
 
     public Upload upload(final PutObjectRequest putObjectRequest) {
-        final Node current = node.get();
-
-        final Upload upload = current.upload(putObjectRequest);
-        return new UploadAndRefresh(upload, current);
+        return node.get().upload(putObjectRequest);
     }
 
     public Download download(final File destination) {
@@ -511,9 +497,7 @@ public class S3File {
 
         @Override
         public Upload upload(final PutObjectRequest putObjectRequest) {
-            final Upload upload = bucket.getClient().getTransferManager().upload(putObjectRequest);
-//            upload.addProgressListener(resolveOnCompletion(this));
-            return upload;
+            return uploadAndReplace(this, putObjectRequest);
         }
 
         public Download download(final File destination) {
@@ -622,7 +606,7 @@ public class S3File {
 
         @Override
         public Upload upload(final PutObjectRequest putObjectRequest) {
-            return bucket.getClient().getTransferManager().upload(putObjectRequest);
+            return uploadAndReplace(this, putObjectRequest);
         }
 
         public Download download(final File destination) {
@@ -732,7 +716,112 @@ public class S3File {
 
         @Override
         public Upload upload(final PutObjectRequest putObjectRequest) {
-            return bucket.getClient().getTransferManager().upload(putObjectRequest);
+            return uploadAndReplace(this, putObjectRequest);
+        }
+
+        public Download download(final File destination) {
+            return bucket.getClient().getTransferManager().download(bucket.getName(), getAbsoluteName(), destination);
+        }
+    }
+
+    /**
+     * Represents an object that is being uploaded.
+     */
+    private class UploadingObject implements Node {
+
+        public UploadingObject() {
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public boolean isFile() {
+            return true;
+        }
+
+        @Override
+        public boolean isDirectory() {
+            return false;
+        }
+
+        @Override
+        public S3File getFile(final String name) {
+            final String message = String.format("S3File '%s' is a not directory and cannot have child '%s'", path.getAbsoluteName(), name);
+            throw new UnsupportedOperationException(message);
+        }
+
+        @Override
+        public Stream<S3File> files() {
+            return Stream.of();
+        }
+
+        @Override
+        public Stream<S3File> files(final ListObjectsRequest request) {
+            return Stream.of();
+        }
+
+        @Override
+        public Stream<S3File> walk(final int maxDepth) {
+            return Stream.of();
+        }
+
+        @Override
+        public S3ObjectInputStream getValueAsStream() {
+            return openStreamAndReplace(this);
+        }
+
+        @Override
+        public String getValueAsString() {
+            return readAndReplace(this);
+        }
+
+        @Override
+        public void setValueAsStream(final InputStream inputStream) {
+            writeStreamAndReplace(this, inputStream);
+        }
+
+        @Override
+        public void setValueAsString(final String value) {
+            writeStringAndReplace(this, value);
+        }
+
+        @Override
+        public void setValueAsFile(final File value) {
+            writeFileAndReplace(this, value);
+        }
+
+        @Override
+        public String getETag() {
+            return resolve(this).getETag();
+        }
+
+        @Override
+        public long getSize() {
+            return resolve(this).getSize();
+        }
+
+        @Override
+        public Date getLastModified() {
+            return resolve(this).getLastModified();
+        }
+
+        @Override
+        public void delete() {
+            bucket.deleteObject(path.getAbsoluteName());
+            node.compareAndSet(this, new NewObject());
+        }
+
+        @Override
+        public ObjectMetadata getObjectMetadata() {
+            return resolve(this).getObjectMetadata();
+        }
+
+        @Override
+        public Upload upload(final PutObjectRequest putObjectRequest) {
+            return uploadAndReplace(this, putObjectRequest);
         }
 
         public Download download(final File destination) {
@@ -841,7 +930,7 @@ public class S3File {
 
         @Override
         public Upload upload(final PutObjectRequest putObjectRequest) {
-            return bucket.getClient().getTransferManager().upload(putObjectRequest);
+            return uploadAndReplace(this, putObjectRequest);
         }
 
         public Download download(final File destination) {
@@ -953,7 +1042,7 @@ public class S3File {
 
         @Override
         public Upload upload(final PutObjectRequest putObjectRequest) {
-            return bucket.getClient().getTransferManager().upload(putObjectRequest);
+            return uploadAndReplace(this, putObjectRequest);
         }
 
         public Download download(final File destination) {
@@ -974,6 +1063,14 @@ public class S3File {
     private void writeStreamAndReplace(final Node current, final InputStream inputStream) {
         final PutObjectResult result = bucket.setObjectAsStream(path.getAbsoluteName(), inputStream);
         node.compareAndSet(current, new UpdatedObject(result));
+    }
+
+    private Upload uploadAndReplace(final Node current, final PutObjectRequest putObjectRequest) {
+        try {
+            return bucket.getClient().getTransferManager().upload(putObjectRequest);
+        } finally {
+            node.compareAndSet(current, new UploadingObject());
+        }
     }
 
     /**
@@ -1223,125 +1320,6 @@ public class S3File {
         @Override
         public T next() {
             return current.next();
-        }
-    }
-
-    /**
-     * We need to refresh the Node instance after the upload is complete as
-     * all the metadata will have changed.
-     * <p>
-     * Unfortunately the waitForUploadResult() method will not wait for listeners
-     * to complete.  It seems they run asynchronously.  Therefore, we override
-     * waitForUploadResult() so that it will wait for our listener to complete.
-     */
-    private class UploadAndRefresh implements Upload {
-        private final Upload upload;
-        private final Node current;
-        private final CountDownLatch refresh = new CountDownLatch(1);
-
-        public UploadAndRefresh(final Upload upload, final Node current) {
-            this.upload = upload;
-            this.current = current;
-            this.upload.addProgressListener((ProgressListener) this::progressEvent);
-        }
-
-        /**
-         * Watch for the end of the events, attempt to resolve the new Node
-         * information, then notify the CountDownLatch that we are done.
-         */
-        public void progressEvent(final ProgressEvent progressEvent) {
-            final ProgressEventType eventType = progressEvent.getEventType();
-            if (eventType == ProgressEventType.TRANSFER_COMPLETED_EVENT ||
-                    eventType == ProgressEventType.TRANSFER_FAILED_EVENT ||
-                    eventType == ProgressEventType.TRANSFER_CANCELED_EVENT) {
-
-                try {
-                    resolve(current);
-                } finally {
-                    refresh.countDown();
-                }
-            }
-        }
-
-        /**
-         * Block for waitForUploadResult(), then block again for our listener
-         * to notify the CountDownLatch signifying that it has done its work
-         * and the result is truly done.
-         */
-        @Override
-        public UploadResult waitForUploadResult() throws AmazonClientException, AmazonServiceException, InterruptedException {
-            try {
-                return upload.waitForUploadResult();
-            } finally {
-                refresh.await();
-            }
-        }
-
-        @Override
-        public PersistableUpload pause() throws PauseException {
-            return upload.pause();
-        }
-
-        @Override
-        public PauseResult<PersistableUpload> tryPause(final boolean b) {
-            return upload.tryPause(b);
-        }
-
-        @Override
-        public void abort() {
-            upload.abort();
-        }
-
-        @Override
-        public boolean isDone() {
-            return upload.isDone();
-        }
-
-        @Override
-        public void waitForCompletion() throws AmazonClientException, AmazonServiceException, InterruptedException {
-            upload.waitForCompletion();
-        }
-
-        @Override
-        public AmazonClientException waitForException() throws InterruptedException {
-            return upload.waitForException();
-        }
-
-        @Override
-        public String getDescription() {
-            return upload.getDescription();
-        }
-
-        @Override
-        public TransferState getState() {
-            return upload.getState();
-        }
-
-        @Override
-        public void addProgressListener(final ProgressListener progressListener) {
-            upload.addProgressListener(progressListener);
-        }
-
-        @Override
-        public void removeProgressListener(final ProgressListener progressListener) {
-            upload.removeProgressListener(progressListener);
-        }
-
-        @Override
-        public TransferProgress getProgress() {
-            return upload.getProgress();
-        }
-
-        @Override
-        @Deprecated
-        public void addProgressListener(final com.amazonaws.services.s3.model.ProgressListener progressListener) {
-            upload.addProgressListener(progressListener);
-        }
-
-        @Override
-        @Deprecated
-        public void removeProgressListener(final com.amazonaws.services.s3.model.ProgressListener progressListener) {
-            upload.removeProgressListener(progressListener);
         }
     }
 

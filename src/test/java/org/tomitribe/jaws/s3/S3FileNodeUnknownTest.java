@@ -187,15 +187,15 @@ public class S3FileNodeUnknownTest {
     }
 
     @Test
-    public void testSetValueAsStream() throws Exception {
+    public void upload() throws Exception {
         // State before the update
         assertType(file, "Unknown");
 
         final String value = "forrest";
         file.upload(IO.read(value), value.length()).waitForUploadResult();
 
-        // type should be Object after the above call
-        assertType(file, "Metadata");
+        // type should be UploadingObject after the above call
+        assertType(file, "UploadingObject");
 
         // State after the update
         assertEquals("forrest", file.getValueAsString());
