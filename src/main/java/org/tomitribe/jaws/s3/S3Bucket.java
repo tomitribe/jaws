@@ -26,10 +26,13 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.Owner;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.Download;
+import com.amazonaws.services.s3.transfer.Upload;
 
 import java.io.File;
 import java.io.InputStream;
@@ -82,12 +85,10 @@ public class S3Bucket {
     }
 
     public S3Object getObject(final String key) throws SdkClientException, AmazonServiceException {
-        System.out.println("getObject+" + key);
         return s3.getObject(bucket.getName(), key);
     }
 
     public ObjectMetadata getObjectMetadata(final String key) throws SdkClientException, AmazonServiceException {
-        System.out.println("getObjectMetadata+" + key);
         return s3.getObjectMetadata(bucket.getName(), key);
     }
 
@@ -134,7 +135,7 @@ public class S3Bucket {
      * about the content such as lastModified or etag to be zero cost.  Additionally,
      * any subsequent calls to get the content again will now be just 1 request.
      */
-    public String getObjectAsString(final String key) throws AmazonServiceException, SdkClientException {
+    public String getObjectAsString(final String key) throws SdkClientException {
         try {
             return s3.getObjectAsString(bucket.getName(), key);
         } catch (AmazonS3Exception e) {
@@ -145,8 +146,26 @@ public class S3Bucket {
         }
     }
 
-    public S3OutputStream setObjectAsStream(final String key) {
-        return new S3OutputStream(getClient().getS3(), bucket.getName(), key);
+    public Upload upload(final String key, final InputStream input, final long size) {
+        final ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(size);
+        return upload(key, input, metadata);
+    }
+
+    public Upload upload(final String key, final InputStream input, final ObjectMetadata objectMetadata) {
+        return upload(new PutObjectRequest(bucket.getName(), key, input, objectMetadata));
+    }
+
+    public Upload upload(final String key, final File file) {
+        return upload(new PutObjectRequest(bucket.getName(), key, file));
+    }
+
+    private Upload upload(PutObjectRequest putObjectRequest) {
+        return client.getTransferManager().upload(putObjectRequest);
+    }
+
+    public Download download(final String key, final File destination) {
+        return client.getTransferManager().download(bucket.getName(), key, destination);
     }
 
     public PutObjectResult setObjectAsString(final String key, final String value) {

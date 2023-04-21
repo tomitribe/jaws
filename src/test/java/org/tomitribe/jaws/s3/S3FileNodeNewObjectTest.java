@@ -18,6 +18,7 @@ package org.tomitribe.jaws.s3;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.transfer.Upload;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,11 +30,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 /**
@@ -201,13 +198,12 @@ public class S3FileNodeNewObjectTest {
     }
 
     @Test
-    public void testSetValueAsStream() throws IOException {
+    public void upload() throws Exception {
         // State before the update
         assertType(file, "NewObject");
 
-        try (S3OutputStream s3OutputStream = file.setValueAsStream()) {
-            IO.copy(IO.read("forrest"), s3OutputStream);
-        }
+        final String value = "forrest";
+        file.upload(IO.read(value), value.length()).waitForUploadResult();
 
         // type should be Object after the above call
         assertType(file, "Metadata");

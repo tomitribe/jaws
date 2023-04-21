@@ -195,16 +195,15 @@ public class S3FileNodeObjectSummaryTest {
     }
 
     @Test
-    public void testSetValueAsStream() throws IOException {
+    public void upload() throws Exception {
         // State before the update
         assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
 
-        try (S3OutputStream s3OutputStream = file.setValueAsStream()) {
-            IO.copy(IO.read("forrest"), s3OutputStream);
-        }
+        final String value = "forrest";
+        file.upload(IO.read(value), value.length()).waitForUploadResult();
 
         // State after the update
         assertType(file, "Metadata");

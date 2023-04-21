@@ -17,6 +17,7 @@
 package org.tomitribe.jaws.s3;
 
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -170,16 +171,15 @@ public class S3FileNodeUpdatedObjectTest {
     }
 
     @Test
-    public void testSetValueAsStream() throws IOException {
+    public void upload() throws Exception {
         // State before the update
         assertType(file, "UpdatedObject");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
 
-        try (S3OutputStream s3OutputStream = file.setValueAsStream()) {
-            IO.copy(IO.read("forrest"), s3OutputStream);
-        }
+        final String value = "forrest";
+        file.upload(IO.read(value), value.length()).waitForUploadResult();
 
         // State after the update
         assertType(file, "Metadata");

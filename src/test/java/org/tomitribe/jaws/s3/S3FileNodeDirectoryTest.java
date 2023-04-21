@@ -16,7 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,11 +29,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 public class S3FileNodeDirectoryTest {
@@ -254,7 +249,7 @@ public class S3FileNodeDirectoryTest {
 
     @Test
     public void testSetValueAsStream() throws IOException {
-        assertUnsupported(() -> file.setValueAsStream());
+        assertUnsupported(() -> file.upload(null, 0));
     }
 
     @Test

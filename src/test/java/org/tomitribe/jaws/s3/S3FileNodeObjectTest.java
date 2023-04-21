@@ -30,11 +30,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 public class S3FileNodeObjectTest {
@@ -188,16 +184,15 @@ public class S3FileNodeObjectTest {
     }
 
     @Test
-    public void testSetValueAsStream() throws IOException {
+    public void upload() throws Exception {
         // State before the update
         assertType(file, "Metadata");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
 
-        try (S3OutputStream s3OutputStream = file.setValueAsStream()) {
-            IO.copy(IO.read("forrest"), s3OutputStream);
-        }
+        final String value = "forrest";
+        file.upload(IO.read(value), value.length()).waitForUploadResult();
 
         // State after the update
         assertType(file, "Metadata");
