@@ -28,6 +28,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3.transfer.internal.S3ProgressListener;
 import org.tomitribe.util.IO;
 
 import java.io.File;
@@ -209,21 +210,37 @@ public class S3File {
     }
 
     public Upload upload(final InputStream input, final long size) {
-        final ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(size);
-        return upload(input, metadata);
+        return upload(input, size, null);
     }
 
     public Upload upload(final InputStream input, final ObjectMetadata objectMetadata) {
-        return upload(new PutObjectRequest(getBucketName(), getAbsoluteName(), input, objectMetadata));
+        return upload(input, objectMetadata, null);
     }
 
     public Upload upload(final File file) {
-        return upload(new PutObjectRequest(getBucketName(), getAbsoluteName(), file));
+        return upload(file, null);
     }
 
     public Upload upload(final PutObjectRequest putObjectRequest) {
-        return node.get().upload(putObjectRequest);
+        return upload(putObjectRequest, null);
+    }
+
+    public Upload upload(final InputStream input, final long size, final S3ProgressListener progressListener) {
+        final ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(size);
+        return upload(input, metadata, progressListener);
+    }
+
+    public Upload upload(final InputStream input, final ObjectMetadata objectMetadata, final S3ProgressListener progressListener) {
+        return upload(new PutObjectRequest(getBucketName(), getAbsoluteName(), input, objectMetadata), progressListener);
+    }
+
+    public Upload upload(final File file, final S3ProgressListener progressListener) {
+        return upload(new PutObjectRequest(getBucketName(), getAbsoluteName(), file), progressListener);
+    }
+
+    public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
+        return node.get().upload(putObjectRequest, progressListener);
     }
 
     public Download download(final File destination) {
@@ -279,7 +296,7 @@ public class S3File {
 
         void delete();
 
-        Upload upload(final PutObjectRequest putObjectRequest);
+        Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener);
 
         Download download(File destination);
 
@@ -380,7 +397,7 @@ public class S3File {
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest) {
+        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
@@ -496,8 +513,8 @@ public class S3File {
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest) {
-            return uploadAndReplace(this, putObjectRequest);
+        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
+            return uploadAndReplace(this, putObjectRequest, progressListener);
         }
 
         public Download download(final File destination) {
@@ -605,8 +622,8 @@ public class S3File {
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest) {
-            return uploadAndReplace(this, putObjectRequest);
+        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
+            return uploadAndReplace(this, putObjectRequest, progressListener);
         }
 
         public Download download(final File destination) {
@@ -715,8 +732,8 @@ public class S3File {
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest) {
-            return uploadAndReplace(this, putObjectRequest);
+        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
+            return uploadAndReplace(this, putObjectRequest, progressListener);
         }
 
         public Download download(final File destination) {
@@ -820,8 +837,8 @@ public class S3File {
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest) {
-            return uploadAndReplace(this, putObjectRequest);
+        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
+            return uploadAndReplace(this, putObjectRequest, progressListener);
         }
 
         public Download download(final File destination) {
@@ -929,8 +946,8 @@ public class S3File {
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest) {
-            return uploadAndReplace(this, putObjectRequest);
+        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
+            return uploadAndReplace(this, putObjectRequest, progressListener);
         }
 
         public Download download(final File destination) {
@@ -1041,8 +1058,8 @@ public class S3File {
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest) {
-            return uploadAndReplace(this, putObjectRequest);
+        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
+            return uploadAndReplace(this, putObjectRequest, progressListener);
         }
 
         public Download download(final File destination) {
@@ -1065,9 +1082,9 @@ public class S3File {
         node.compareAndSet(current, new UpdatedObject(result));
     }
 
-    private Upload uploadAndReplace(final Node current, final PutObjectRequest putObjectRequest) {
+    private Upload uploadAndReplace(final Node current, final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
         try {
-            return bucket.getClient().getTransferManager().upload(putObjectRequest);
+            return bucket.getClient().getTransferManager().upload(putObjectRequest, progressListener);
         } finally {
             node.compareAndSet(current, new UploadingObject());
         }
