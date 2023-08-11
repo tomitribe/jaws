@@ -18,6 +18,7 @@ package org.tomitribe.jaws.s3;
 
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.tomitribe.util.dir.Name;
+import org.tomitribe.util.dir.Parent;
 import org.tomitribe.util.dir.Walk;
 import org.tomitribe.util.reflect.Generics;
 
@@ -85,7 +86,7 @@ public interface S3 {
                 throw new IllegalStateException("Unknown method " + method);
             }
 
-            final S3File file = dir.getFile(name(method));
+            final S3File file = getFile(method);
 
             final Class<?> returnType = method.getReturnType();
 
@@ -122,6 +123,21 @@ public interface S3 {
             }
 
             throw new UnsupportedOperationException(method.toGenericString());
+        }
+
+        private S3File getFile(final Method method) {
+            final Parent parent = method.getAnnotation(Parent.class);
+            if (parent != null) {
+                S3File parentFile = dir;
+                for (int depth = parent.value(); depth > 0; depth--) {
+                    if (parentFile.getParentFile() == null) throw new NoParentException(method, parentFile);
+                    parentFile = parentFile.getParentFile();
+                }
+
+                return parentFile;
+            }
+
+            return dir.getFile(name(method));
         }
 
         private boolean hasStringArg(final Method method) {
@@ -389,5 +405,7 @@ public interface S3 {
         public String toString() {
             return dir.getAbsoluteName();
         }
+
     }
+
 }
