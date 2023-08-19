@@ -72,6 +72,11 @@ public class Path {
     }
 
     @Override
+    public String toString() {
+        return absoluteName;
+    }
+
+    @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
