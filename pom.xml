@@ -28,7 +28,7 @@
 
   <artifactId>tomitribe-jaws</artifactId>
   <packaging>jar</packaging>
-  <version>0.14</version>
+  <version>0.15-SNAPSHOT</version>
   <name>Tomitribe :: JAWS</name>
 
   <scm>
