@@ -1137,7 +1137,6 @@ public class S3File {
             final String absoluteName = path.getAbsoluteName();
             object = bucket.getObjectMetadata(absoluteName);
         } catch (final AmazonS3Exception e) {
-            e.printStackTrace();
             if ("NoSuchKey".equals(e.getErrorCode()) || "404 Not Found".equals(e.getErrorCode())) {
                 final NewObject newObject = new NewObject();
                 if (node.compareAndSet(current, newObject)) {
