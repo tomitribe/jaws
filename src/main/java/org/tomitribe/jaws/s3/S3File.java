@@ -209,6 +209,10 @@ public class S3File {
         node.get().delete();
     }
 
+    public void delete(final boolean force) {
+        node.get().delete(force);
+    }
+
     public Upload upload(final InputStream input, final long size) {
         return upload(input, size, null);
     }
@@ -294,7 +298,11 @@ public class S3File {
 
         Date getLastModified();
 
-        void delete();
+        default void delete() {
+            delete(false);
+        }
+
+        void delete(final boolean force);
 
         Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener);
 
@@ -392,8 +400,19 @@ public class S3File {
         }
 
         @Override
-        public void delete() {
-            throw new UnsupportedOperationException("S3File refers to a directory");
+        public void delete(final boolean force) {
+            if (!files().findAny().isPresent()) { // not possible or it's not a Directory object but in case of a bug ...
+                return;
+            }
+
+            if (!force) {
+                throw new UnsupportedOperationException("S3File refers to a non empty directory. Use force delete flag.");
+
+            } else {
+                files().forEach(S3File::delete);
+                node.compareAndSet(this, new NewObject());
+
+            }
         }
 
         @Override
@@ -502,7 +521,7 @@ public class S3File {
         }
 
         @Override
-        public void delete() {
+        public void delete(final boolean ignore) {
             bucket.deleteObject(getAbsoluteName());
             node.compareAndSet(this, new NewObject());
         }
@@ -611,7 +630,7 @@ public class S3File {
         }
 
         @Override
-        public void delete() {
+        public void delete(final boolean ignore) {
             bucket.deleteObject(summary.getKey());
             node.compareAndSet(this, new NewObject());
         }
@@ -721,7 +740,7 @@ public class S3File {
         }
 
         @Override
-        public void delete() {
+        public void delete(final boolean ignore) {
             bucket.deleteObject(path.getAbsoluteName());
             node.compareAndSet(this, new NewObject());
         }
@@ -826,7 +845,7 @@ public class S3File {
         }
 
         @Override
-        public void delete() {
+        public void delete(final boolean ignore) {
             bucket.deleteObject(path.getAbsoluteName());
             node.compareAndSet(this, new NewObject());
         }
@@ -936,8 +955,8 @@ public class S3File {
         }
 
         @Override
-        public void delete() {
-            resolve(this).delete();
+        public void delete(final boolean force) {
+            resolve(this).delete(force);
         }
 
         @Override
@@ -1048,7 +1067,7 @@ public class S3File {
         }
 
         @Override
-        public void delete() {
+        public void delete(final boolean ignore) {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
 
