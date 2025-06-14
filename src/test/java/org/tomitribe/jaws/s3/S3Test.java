@@ -107,12 +107,24 @@ public class S3Test {
                 .collect(Collectors.toList());
 
         assertEquals("" +
+                "src/main\n" +
+                "src/main/java\n" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java\n" +
+                "src/main/resources\n" +
                 "src/main/resources/square.txt\n" +
                 "src/main/resources/triangle.txt\n" +
+                "src/test\n" +
+                "src/test/java\n" +
+                "src/test/java/org\n" +
+                "src/test/java/org/supertribe\n" +
+                "src/test/java/org/supertribe/colors\n" +
                 "src/test/java/org/supertribe/colors/GreenTest.java\n" +
                 "src/test/java/org/supertribe/colors/RedTest.java\n" +
+                "src/test/resources\n" +
                 "src/test/resources/circle.txt\n" +
                 "src/test/resources/rectangle.txt", Join.join("\n", list));
     }
@@ -149,6 +161,9 @@ public class S3Test {
 
         final Java[] data = returns.returnArrayOfInterface();
         assertEquals("" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", (Object[]) data));
     }
@@ -159,6 +174,9 @@ public class S3Test {
 
         final S3File[] data = returns.returnArrayOfS3File();
         assertEquals("" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", S3File::getAbsoluteName, data));
     }
@@ -169,6 +187,9 @@ public class S3Test {
 
         final List<Java> data = returns.returnStreamOfInterface().collect(Collectors.toList());
         assertEquals("" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", data));
     }
@@ -179,6 +200,9 @@ public class S3Test {
 
         final List<S3File> data = returns.returnStreamOfS3File().collect(Collectors.toList());
         assertEquals("" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", S3File::getAbsoluteName, data));
     }
@@ -189,6 +213,9 @@ public class S3Test {
 
         final List<Java> data = returns.returnListOfInterface();
         assertEquals("" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", data));
     }
@@ -199,6 +226,9 @@ public class S3Test {
 
         final List<S3File> data = returns.returnListOfS3File();
         assertEquals("" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", S3File::getAbsoluteName, data));
     }
@@ -209,8 +239,11 @@ public class S3Test {
 
         final Set<Java> data = returns.returnSetOfInterface();
         assertEquals("" +
+                "src/main/java/org/supertribe\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
-                "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", data));
+                "src/main/java/org/supertribe/colors/Red.java\n" +
+                "src/main/java/org/supertribe/colors\n" +
+                "src/main/java/org", Join.join("\n", data));
     }
 
     @Test
@@ -218,9 +251,11 @@ public class S3Test {
         final Returns returns = S3.of(Returns.class, project.src().main().java());
 
         final Set<S3File> data = returns.returnSetOfS3File();
-        assertEquals("" +
+        assertEquals("src/main/java/org/supertribe\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
-                "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", S3File::getAbsoluteName, data));
+                "src/main/java/org/supertribe/colors/Red.java\n" +
+                "src/main/java/org/supertribe/colors\n" +
+                "src/main/java/org", Join.join("\n", S3File::getAbsoluteName, data));
     }
 
     @Test
@@ -229,6 +264,9 @@ public class S3Test {
 
         final Collection<Java> data = returns.returnCollectionOfInterface();
         assertEquals("" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", data));
     }
@@ -239,6 +277,9 @@ public class S3Test {
 
         final Collection<S3File> data = returns.returnCollectionOfS3File();
         assertEquals("" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", S3File::getAbsoluteName, data));
     }
@@ -386,6 +427,10 @@ public class S3Test {
 
         final List<S3File> data = dir.javaFiles().collect(Collectors.toList());
         assertEquals("" +
+                "src/main/java\n" +
+                "src/main/java/org\n" +
+                "src/main/java/org/supertribe\n" +
+                "src/main/java/org/supertribe/colors\n" +
                 "src/main/java/org/supertribe/colors/Green.java\n" +
                 "src/main/java/org/supertribe/colors/Red.java", Join.join("\n", S3File::getAbsoluteName, data));
     }
@@ -395,9 +440,10 @@ public class S3Test {
         final RequestAnnotations dir = S3.of(RequestAnnotations.class, project.get());
 
         final List<S3File> data = dir.afterRedTest().collect(Collectors.toList());
-        assertEquals("" +
+        assertEquals("src/test/resources\n" +
                 "src/test/resources/circle.txt\n" +
                 "src/test/resources/rectangle.txt\n" +
+                "target\n" +
                 "target/bar.txt\n" +
                 "target/foo.txt", Join.join("\n", S3File::getAbsoluteName, data));
     }

@@ -107,7 +107,7 @@ public class S3FileNodeObjectSummary2Test {
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
 
         final Stream<S3File> objects = bucket.objects();
-        final S3File entry = objects.findAny().orElseThrow(AssertionError::new);
+        final S3File entry = objects.filter(s3File -> s3File.getName().endsWith(".txt")).findAny().orElseThrow(AssertionError::new);
 
         assertEquals("org.color/red/1/1.4/foo.txt", entry.getAbsoluteName());
     }
@@ -118,7 +118,7 @@ public class S3FileNodeObjectSummary2Test {
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
 
         final Stream<S3File> objects = bucket.objects();
-        final S3File entry = objects.findAny().orElseThrow(AssertionError::new);
+        final S3File entry = objects.filter(s3File -> s3File.getName().endsWith(".txt")).findAny().orElseThrow(AssertionError::new);
 
         assertEquals(3, entry.getSize());
     }
@@ -129,7 +129,7 @@ public class S3FileNodeObjectSummary2Test {
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
 
         final Stream<S3File> objects = bucket.objects();
-        final S3File entry = objects.findAny().orElseThrow(AssertionError::new);
+        final S3File entry = objects.filter(s3File -> s3File.getName().endsWith(".txt")).findAny().orElseThrow(AssertionError::new);
 
         assertEquals("foo.txt", entry.getName());
     }

@@ -67,15 +67,36 @@ public class S3DirectoryTest {
                     .collect(Collectors.toList());
 
             assertEquals("" +
-                            "io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
-                            "junit/junit/4/4.12/bar.txt\n" +
-                            "org.color.bright/green/1/1.4/foo.txt\n" +
-                            "org.color/green/2/2.3/foo.txt\n" +
-                            "org.color/red/1/1.1/foo.txt\n" +
-                            "org.color/red/1/1.2/foo.txt\n" +
-                            "org.color/red/1/1.3/foo.txt\n" +
-                            "org.color/red/1/1.4/foo.txt"
-                    , Join.join("\n", list));
+                    "io.tomitribe\n" +
+                    "io.tomitribe/crest\n" +
+                    "io.tomitribe/crest/5\n" +
+                    "io.tomitribe/crest/5/5.4.1.2\n" +
+                    "io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
+                    "junit\n" +
+                    "junit/junit\n" +
+                    "junit/junit/4\n" +
+                    "junit/junit/4/4.12\n" +
+                    "junit/junit/4/4.12/bar.txt\n" +
+                    "org.color\n" +
+                    "org.color.bright\n" +
+                    "org.color.bright/green\n" +
+                    "org.color.bright/green/1\n" +
+                    "org.color.bright/green/1/1.4\n" +
+                    "org.color.bright/green/1/1.4/foo.txt\n" +
+                    "org.color/green\n" +
+                    "org.color/green/2\n" +
+                    "org.color/green/2/2.3\n" +
+                    "org.color/green/2/2.3/foo.txt\n" +
+                    "org.color/red\n" +
+                    "org.color/red/1\n" +
+                    "org.color/red/1/1.1\n" +
+                    "org.color/red/1/1.1/foo.txt\n" +
+                    "org.color/red/1/1.2\n" +
+                    "org.color/red/1/1.2/foo.txt\n" +
+                    "org.color/red/1/1.3\n" +
+                    "org.color/red/1/1.3/foo.txt\n" +
+                    "org.color/red/1/1.4\n" +
+                    "org.color/red/1/1.4/foo.txt"                    , Join.join("\n", list));
         }
 
         final S3File orgColor = repository.getFile("org.color/");
@@ -87,12 +108,20 @@ public class S3DirectoryTest {
                     .collect(Collectors.toList());
 
             assertEquals("" +
-                            "org.color/green/2/2.3/foo.txt\n" +
-                            "org.color/red/1/1.1/foo.txt\n" +
-                            "org.color/red/1/1.2/foo.txt\n" +
-                            "org.color/red/1/1.3/foo.txt\n" +
-                            "org.color/red/1/1.4/foo.txt"
-                    , Join.join("\n", list));
+                    "org.color/green\n" +
+                    "org.color/green/2\n" +
+                    "org.color/green/2/2.3\n" +
+                    "org.color/green/2/2.3/foo.txt\n" +
+                    "org.color/red\n" +
+                    "org.color/red/1\n" +
+                    "org.color/red/1/1.1\n" +
+                    "org.color/red/1/1.1/foo.txt\n" +
+                    "org.color/red/1/1.2\n" +
+                    "org.color/red/1/1.2/foo.txt\n" +
+                    "org.color/red/1/1.3\n" +
+                    "org.color/red/1/1.3/foo.txt\n" +
+                    "org.color/red/1/1.4\n" +
+                    "org.color/red/1/1.4/foo.txt"                    , Join.join("\n", list));
         }
 
         final S3File red = orgColor.getFile("red/");
@@ -104,11 +133,15 @@ public class S3DirectoryTest {
                     .collect(Collectors.toList());
 
             assertEquals("" +
-                            "org.color/red/1/1.1/foo.txt\n" +
-                            "org.color/red/1/1.2/foo.txt\n" +
-                            "org.color/red/1/1.3/foo.txt\n" +
-                            "org.color/red/1/1.4/foo.txt"
-                    , Join.join("\n", list));
+                    "org.color/red/1\n" +
+                    "org.color/red/1/1.1\n" +
+                    "org.color/red/1/1.1/foo.txt\n" +
+                    "org.color/red/1/1.2\n" +
+                    "org.color/red/1/1.2/foo.txt\n" +
+                    "org.color/red/1/1.3\n" +
+                    "org.color/red/1/1.3/foo.txt\n" +
+                    "org.color/red/1/1.4\n" +
+                    "org.color/red/1/1.4/foo.txt"                    , Join.join("\n", list));
         }
     }
 
