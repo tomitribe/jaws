@@ -22,13 +22,20 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import org.gaul.s3proxy.junit.S3ProxyJunitCore;
 import org.gaul.s3proxy.junit.S3ProxyRule;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.net.URI;
 
 public class MockS3 extends ExternalResource {
 
@@ -59,13 +66,33 @@ public class MockS3 extends ExternalResource {
         return getAmazonS3(s3Proxy);
     }
 
+    public S3Client getS3Client() {
+        final AwsBasicCredentials awsCreds = AwsBasicCredentials.create("access", "secret");
+
+        final URI uri = s3Proxy.getUri();
+        return S3Client.builder()
+                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
+                .endpointOverride(uri)
+                .region(Region.US_EAST_1)
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)
+                        .build())
+                .build();
+    }
+
     public File getBlobStoreLocation() {
+        final Object core = get(S3ProxyRule.class, s3Proxy, "core");
+        final Object blobStoreLocation = get(S3ProxyJunitCore.class, core, "blobStoreLocation");
+        return blobStoreLocation instanceof File ? (File) blobStoreLocation : null;
+    }
+
+    private Object get(final Class<?> clazz, final Object object, final String field) {
         try {
-            final Field blobStoreLocation = S3ProxyRule.class.getDeclaredField("blobStoreLocation");
+            final Field blobStoreLocation = clazz.getDeclaredField(field);
             blobStoreLocation.setAccessible(true);
-            return (File) blobStoreLocation.get(s3Proxy);
+            return blobStoreLocation.get(object);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to get blobStoreLocation", e);
+            throw new IllegalStateException("Failed to get " + field, e);
         }
     }
 }
