@@ -26,8 +26,8 @@
     <version>9</version>
   </parent>
 
-  <artifactId>tomitribe-jaws</artifactId>
-  <packaging>jar</packaging>
+  <artifactId>jaws-parent</artifactId>
+  <packaging>pom</packaging>
   <version>2.0-SNAPSHOT</version>
   <name>Tomitribe :: JAWS</name>
 
@@ -35,107 +35,62 @@
     <connection>scm:git:git@github.com:tomitribe/jaws.git</connection>
     <url>scm:git:git@github.com:tomitribe/jaws.git</url>
     <developerConnection>scm:git:git@github.com:tomitribe/jaws.git</developerConnection>
-    <tag>tomitribe-jaws-0.14</tag>
+    <tag>jaws-0.14</tag>
   </scm>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.tomitribe</groupId>
-      <artifactId>tomitribe-util</artifactId>
-      <version>1.5.2</version>
-    </dependency>
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3</artifactId>
-      <version>2.42.4</version>
-    </dependency>
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3-transfer-manager</artifactId>
-      <version>2.42.4</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.gaul</groupId>
-      <artifactId>s3proxy</artifactId>
-      <version>2.6.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-      <version>1.7.1</version>
-    </dependency>
-  </dependencies>
+  <modules>
+    <module>jaws-s3</module>
+    <module>jaws-s3-test</module>
+  </modules>
+
+  <properties>
+    <awssdk.version>2.42.4</awssdk.version>
+    <jackson.version>2.15.2</jackson.version>
+    <s3proxy.version>2.6.0</s3proxy.version>
+  </properties>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>s3</artifactId>
+        <version>${awssdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>s3-transfer-manager</artifactId>
+        <version>${awssdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gaul</groupId>
+        <artifactId>s3proxy</artifactId>
+        <version>${s3proxy.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.15.2</version>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.15.2</version>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-xml</artifactId>
-        <version>2.15.2</version>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-cbor</artifactId>
-        <version>2.15.2</version>
+        <version>${jackson.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
 
   <build>
     <plugins>
-      <!-- exclude a bit more -->
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-        <version>0.10</version>
-        <configuration>
-          <includes>
-            <include>src/**/*</include>
-            <include>pom.xml</include>
-          </includes>
-          <excludes>
-            <exclude>**/*.adoc</exclude>
-            <exclude>**/*/MANIFEST.MF</exclude>
-            <exclude>.git</exclude>
-            <exclude>.gitignore</exclude>
-            <exclude>derby.log</exclude>
-            <exclude>**/META-INF/services/*</exclude>
-            <exclude>**/bootstrap-*</exclude>
-            <exclude>**/js/jquery-*</exclude>
-            <exclude>**/*.json</exclude>
-            <exclude>src/test/resources/**/*.txt</exclude>
-            <exclude>src/test/resources/**/*.csv</exclude>
-            <exclude>src/test/resources/**/*.sh</exclude>
-            <exclude>src/test/resources/colors/other/hsb/saturation</exclude>
-          </excludes>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -148,4 +103,3 @@
   </build>
 
 </project>
-

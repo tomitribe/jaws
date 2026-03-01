@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNotEquals;
 public class S3FileTest {
 
     @Rule
-    public MockS3 mockS3 = new MockS3();
+    public MockS3Rule mockS3 = new MockS3Rule();
     private S3File file;
 
     @Before

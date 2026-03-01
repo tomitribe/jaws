@@ -29,17 +29,21 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 /**
  * Similar to S3FileNodeUnknownTest but the S3File in an unknown
  * state doesn't happen to point to a file that exists.
  */
-public class S3FileNodeNewObjectTest {
+public class S3FileNodeUnknown2Test {
 
     @Rule
-    public MockS3 mockS3 = new MockS3();
+    public MockS3Rule mockS3 = new MockS3Rule();
     private S3File file;
 
     @Before
@@ -57,10 +61,8 @@ public class S3FileNodeNewObjectTest {
         final S3Bucket bucket = s3Client.getBucket("repository");
         file = bucket.asFile().getFile("org.color.bright/green/does/not/exist.txt");
 
-        assertFalse(file.exists());
-
         // Check to ensure our current node type is `Object`
-        assertType(file, "NewObject");
+        assertType(file, "Unknown");
     }
 
     @Test
@@ -145,12 +147,8 @@ public class S3FileNodeNewObjectTest {
         final S3Bucket bucket = file.getBucket();
 
         final S3File file = bucket.asFile().getFile("org.color.bright/blue/does/not/exist.txt");
-        assertFalse(file.exists());
 
-        // Check to ensure our current node type
-        assertType(file, "NewObject");
-
-        assertFalse(file.exists());
+        assertType(file, "Unknown");
 
         try {
             file.delete();
@@ -183,7 +181,7 @@ public class S3FileNodeNewObjectTest {
     @Test
     public void setValueAsStream() {
         // State before the update
-        assertType(file, "NewObject");
+        assertType(file, "Unknown");
 
         file.setValueAsStream(IO.read("forrest"));
 
@@ -199,7 +197,7 @@ public class S3FileNodeNewObjectTest {
     @Test
     public void upload() throws Exception {
         // State before the update
-        assertType(file, "NewObject");
+        assertType(file, "Unknown");
 
         final String value = "forrest";
         file.upload(IO.read(value), value.length()).completionFuture().join();
@@ -215,7 +213,7 @@ public class S3FileNodeNewObjectTest {
     @Test
     public void setValueAsFile() throws IOException {
         // State before the update
-        assertType(file, "NewObject");
+        assertType(file, "Unknown");
 
         final File tempFile = File.createTempFile("foo", "bar");
         tempFile.deleteOnExit();
@@ -236,7 +234,7 @@ public class S3FileNodeNewObjectTest {
     @Test
     public void setValueAsString() {
         // State before the update
-        assertType(file, "NewObject");
+        assertType(file, "Unknown");
 
         file.setValueAsString("forrest");
 

@@ -17,10 +17,6 @@
 package org.tomitribe.jaws.s3;
 
 import org.gaul.s3proxy.junit.S3ProxyJunitCore;
-import org.gaul.s3proxy.junit.S3ProxyRule;
-import org.junit.rules.ExternalResource;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
@@ -33,22 +29,24 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URI;
 
-public class MockS3 extends ExternalResource {
+public class MockS3 {
 
-    private final S3ProxyRule s3Proxy = S3ProxyRule
-            .builder()
+    private final S3ProxyJunitCore core = new S3ProxyJunitCore.Builder()
             .withCredentials("access", "secret")
             .build();
 
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return s3Proxy.apply(base, description);
+    public void start() throws Exception {
+        core.beforeEach();
+    }
+
+    public void stop() {
+        core.afterEach();
     }
 
     public software.amazon.awssdk.services.s3.S3Client getS3Client() {
         final AwsBasicCredentials awsCreds = AwsBasicCredentials.create("access", "secret");
 
-        final URI uri = s3Proxy.getUri();
+        final URI uri = core.getUri();
         return software.amazon.awssdk.services.s3.S3Client.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
                 .endpointOverride(uri)
@@ -64,7 +62,7 @@ public class MockS3 extends ExternalResource {
     public S3AsyncClient getS3AsyncClient() {
         final AwsBasicCredentials awsCreds = AwsBasicCredentials.create("access", "secret");
 
-        final URI uri = s3Proxy.getUri();
+        final URI uri = core.getUri();
         return S3AsyncClient.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
                 .endpointOverride(uri)
@@ -76,18 +74,12 @@ public class MockS3 extends ExternalResource {
     }
 
     public File getBlobStoreLocation() {
-        final Object core = get(S3ProxyRule.class, s3Proxy, "core");
-        final Object blobStoreLocation = get(S3ProxyJunitCore.class, core, "blobStoreLocation");
-        return blobStoreLocation instanceof File ? (File) blobStoreLocation : null;
-    }
-
-    private Object get(final Class<?> clazz, final Object object, final String field) {
         try {
-            final Field blobStoreLocation = clazz.getDeclaredField(field);
-            blobStoreLocation.setAccessible(true);
-            return blobStoreLocation.get(object);
+            final Field field = S3ProxyJunitCore.class.getDeclaredField("blobStoreLocation");
+            field.setAccessible(true);
+            return (File) field.get(core);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to get " + field, e);
+            throw new IllegalStateException("Failed to get blobStoreLocation", e);
         }
     }
 }

@@ -38,7 +38,7 @@ import static org.junit.Assert.fail;
 public class S3BucketTest {
 
     @Rule
-    public MockS3 mockS3 = new MockS3();
+    public MockS3Rule mockS3 = new MockS3Rule();
     private File store;
     private S3Client s3Client;
 

@@ -36,7 +36,7 @@ import java.util.List;
 public class FooTest {
 
     @Rule
-    public MockS3 mockS3 = new MockS3();
+    public MockS3Rule mockS3 = new MockS3Rule();
     private File store;
     private org.tomitribe.jaws.s3.S3Client s3Client;
 

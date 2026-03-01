@@ -33,7 +33,7 @@ import static org.junit.Assert.assertNotNull;
 public class S3FileNodeObjectSummary2Test {
 
     @Rule
-    public MockS3 mockS3 = new MockS3();
+    public MockS3Rule mockS3 = new MockS3Rule();
     private S3Client s3Client;
 
 

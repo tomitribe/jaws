@@ -33,10 +33,10 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
-public class S3FileNodeUnknownTest {
+public class S3FileNodeObjectTest {
 
     @Rule
-    public MockS3 mockS3 = new MockS3();
+    public MockS3Rule mockS3 = new MockS3Rule();
     private S3File file;
 
 
@@ -53,34 +53,24 @@ public class S3FileNodeUnknownTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        file = bucket.asFile().getFile("org.color.bright/green/1/1.4/foo.txt");
-
+        file = bucket.getFile("org.color.bright/green/1/1.4/foo.txt");
         // Check to ensure our current node type is `Object`
-        assertType(file, "Unknown");
+        assertType(file, "Metadata");
     }
 
     @Test
     public void exists() throws IOException {
         assertTrue(file.exists());
-
-        // type should be Object after the above call
-        assertType(file, "Metadata");
     }
 
     @Test
     public void isFile() {
         assertTrue(file.isFile());
-
-        // type should be Object after the above call
-        assertType(file, "Metadata");
     }
 
     @Test
     public void isDirectory() {
         assertFalse(file.isDirectory());
-
-        // type should be Object after the above call
-        assertType(file, "Metadata");
     }
 
     @Test
@@ -93,8 +83,12 @@ public class S3FileNodeUnknownTest {
 
     @Test
     public void getFile() {
-        final S3File child = this.file.getFile("allowed");
-        assertEquals("org.color.bright/green/1/1.4/foo.txt/allowed", child.getAbsoluteName());
+        try {
+            file.getFile("this shouldn't work");
+            fail("UnsupportedOperationException should have been thrown");
+        } catch (UnsupportedOperationException e) {
+            assertEquals("S3File 'org.color.bright/green/1/1.4/foo.txt' is a not directory and cannot have child 'this shouldn't work'", e.getMessage());
+        }
     }
 
     @Test
@@ -140,14 +134,16 @@ public class S3FileNodeUnknownTest {
     public void delete() {
         final S3Bucket bucket = file.getBucket();
 
-        final S3File file = bucket.asFile().getFile("junit/junit/4/4.12/bar.txt");
-        // Check to ensure our current node type is `Object`
-        assertType(file, "Unknown");
-        assertTrue(file.exists());
-        file.delete();
+        {
+            final S3File bar = bucket.getFile("junit/junit/4/4.12/bar.txt");
+            // Check to ensure our current node type
+            assertType(file, "Metadata");
+            assertTrue(bar.exists());
+            bar.delete();
 
-        assertFalse(file.exists());
-        assertType(file, "NewObject");
+            assertFalse(bar.exists());
+            assertType(bar, "NewObject");
+        }
 
         // The object should be deleted
         try {
@@ -173,40 +169,95 @@ public class S3FileNodeUnknownTest {
     @Test
     public void setValueAsStream() {
         // State before the update
-        assertType(file, "Unknown");
+        assertType(file, "Metadata");
+        assertEquals("green", file.getValueAsString());
+        assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
+        assertEquals(5, file.getSize());
 
         file.setValueAsStream(IO.read("forrest"));
 
-        // type should be UpdatedObject after the above call
+        // State after the update
         assertType(file, "UpdatedObject");
-
-        // State after the update
-        assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
-        assertEquals(0, file.getSize()); // TODO Either a bug in the Amazon S3 API or the Mock S3 implementation
-        assertEquals("forrest", file.getValueAsString());
-    }
-
-    @Test
-    public void upload() throws Exception {
-        // State before the update
-        assertType(file, "Unknown");
-
-        final String value = "forrest";
-        file.upload(IO.read(value), value.length()).completionFuture().join();
-
-        // type should be UploadingObject after the above call
-        assertType(file, "UploadingObject");
-
-        // State after the update
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());
     }
 
     @Test
+    public void upload() throws Exception {
+        // State before the update
+        assertType(file, "Metadata");
+        assertEquals("green", file.getValueAsString());
+        assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
+        assertEquals(5, file.getSize());
+
+        final String value = "forrest";
+        file.upload(IO.read(value), value.length()).completionFuture().join();
+
+        // State after the update
+        assertType(file, "UploadingObject");
+        assertEquals("forrest", file.getValueAsString());
+        assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
+        assertEquals(7, file.getSize());
+    }
+
+    /**
+     * Upload with ObjectMetadata containing contentType and userMetadata.
+     * Note: s3proxy does not round-trip contentType or userMetadata,
+     * so we verify the upload succeeds and content is correct.
+     */
+    @Test
+    public void uploadWithObjectMetadata() throws Exception {
+        // State before the update
+        assertType(file, "Metadata");
+        assertEquals("green", file.getValueAsString());
+
+        final String value = "forrest";
+        final ObjectMetadata metadata = ObjectMetadata.builder()
+                .contentLength(value.length())
+                .contentType("text/plain")
+                .userMetadata("author", "tom")
+                .userMetadata("version", "42")
+                .build();
+
+        file.upload(IO.read(value), metadata).completionFuture().join();
+
+        // State after the update
+        assertType(file, "UploadingObject");
+        assertEquals("forrest", file.getValueAsString());
+        assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
+        assertEquals(7, file.getSize());
+    }
+
+    /**
+     * Upload with ObjectMetadata containing only contentLength and contentType.
+     */
+    @Test
+    public void uploadWithObjectMetadataContentTypeOnly() throws Exception {
+        // State before the update
+        assertType(file, "Metadata");
+        assertEquals("green", file.getValueAsString());
+
+        final String value = "{\"color\":\"forrest\"}";
+        final ObjectMetadata metadata = ObjectMetadata.builder()
+                .contentLength(value.length())
+                .contentType("application/json")
+                .build();
+
+        file.upload(IO.read(value), metadata).completionFuture().join();
+
+        // State after the update
+        assertType(file, "UploadingObject");
+        assertEquals("{\"color\":\"forrest\"}", file.getValueAsString());
+    }
+
+    @Test
     public void setValueAsFile() throws IOException {
         // State before the update
-        assertType(file, "Unknown");
+        assertType(file, "Metadata");
+        assertEquals("green", file.getValueAsString());
+        assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
+        assertEquals(5, file.getSize());
 
         final File tempFile = File.createTempFile("foo", "bar");
         tempFile.deleteOnExit();
@@ -214,26 +265,25 @@ public class S3FileNodeUnknownTest {
 
         file.setValueAsFile(tempFile);
 
-        // type should be UpdatedObject after the above call
-        assertType(file, "UpdatedObject");
-
         // State after the update
+        assertType(file, "UpdatedObject");
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(0, file.getSize()); // TODO Either a bug in the Amazon S3 API or the Mock S3 implementation
         assertEquals("forrest", file.getValueAsString());
-
     }
 
     @Test
     public void setValueAsString() {
         // State before the update
-        assertType(file, "Unknown");
+        assertType(file, "Metadata");
+        assertEquals("green", file.getValueAsString());
+        assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
+        assertEquals(5, file.getSize());
 
         file.setValueAsString("forrest");
 
-        // type should be Object after the above call
+        // State after the update
         assertType(file, "UpdatedObject");
-
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(0, file.getSize()); // TODO Either a bug in the Amazon S3 API or the Mock S3 implementation
         assertEquals("forrest", file.getValueAsString());
@@ -247,17 +297,11 @@ public class S3FileNodeUnknownTest {
     @Test
     public void getETag() {
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
-
-        // type should be Object after the above call
-        assertType(file, "Metadata");
     }
 
     @Test
     public void getSize() {
         assertEquals(5, file.getSize());
-
-        // type should be Object after the above call
-        assertType(file, "Metadata");
     }
 
     @Test
@@ -266,9 +310,5 @@ public class S3FileNodeUnknownTest {
         final long tolerance = TimeUnit.SECONDS.toMillis(30);
         assertTrue(time > System.currentTimeMillis() - tolerance);
         assertTrue(time < System.currentTimeMillis() + tolerance);
-
-        // type should be Object after the above call
-        assertType(file, "Metadata");
     }
-
 }

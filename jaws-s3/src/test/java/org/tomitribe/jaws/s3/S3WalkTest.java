@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 public class S3WalkTest {
 
     @Rule
-    public MockS3 mockS3 = new MockS3();
+    public MockS3Rule mockS3 = new MockS3Rule();
     private S3Client s3Client;
     private File store;
 

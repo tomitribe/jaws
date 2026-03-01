@@ -16,13 +16,13 @@
  */
 package org.tomitribe.jaws.s3;
 
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,10 +37,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
-public class S3FileNodeUpdatedObjectTest {
+public class S3FileNodeObjectSummaryTest {
 
     @Rule
-    public MockS3 mockS3 = new MockS3();
+    public MockS3Rule mockS3 = new MockS3Rule();
     private S3File file;
 
     @Before
@@ -57,15 +57,13 @@ public class S3FileNodeUpdatedObjectTest {
 
         final S3Bucket bucket = s3Client.getBucket("repository");
 
-        file = bucket.asFile().getFile("org.color.bright/green/3/updated.txt");
+        file = bucket.objects()
+                .filter(s3File -> s3File.getAbsoluteName().equals("org.color.bright/green/1/1.4/foo.txt"))
+                .findAny()
+                .get();
 
-        assertFalse(file.exists());
-        assertType(file, "NewObject");
-
-        file.setValueAsString("green");
-
-        assertTrue(file.exists());
-        assertType(file, "UpdatedObject");
+        // Check to ensure our current node type is `Object`
+        assertType(file, "ObjectSummary");
     }
 
     @Test
@@ -87,8 +85,8 @@ public class S3FileNodeUpdatedObjectTest {
     public void getParentFile() {
         final S3File parent = file.getParentFile();
         assertNotNull(parent);
-        assertEquals("3", parent.getName());
-        assertEquals("org.color.bright/green/3", parent.getAbsoluteName());
+        assertEquals("1.4", parent.getName());
+        assertEquals("org.color.bright/green/1/1.4", parent.getAbsoluteName());
     }
 
     @Test
@@ -97,7 +95,7 @@ public class S3FileNodeUpdatedObjectTest {
             file.getFile("this shouldn't work");
             fail("UnsupportedOperationException should have been thrown");
         } catch (UnsupportedOperationException e) {
-            assertEquals("S3File 'org.color.bright/green/3/updated.txt' is a not directory and cannot have child 'this shouldn't work'", e.getMessage());
+            assertEquals("S3File 'org.color.bright/green/1/1.4/foo.txt' is a not directory and cannot have child 'this shouldn't work'", e.getMessage());
         }
     }
 
@@ -125,12 +123,12 @@ public class S3FileNodeUpdatedObjectTest {
 
     @Test
     public void getAbsoluteName() {
-        assertEquals("org.color.bright/green/3/updated.txt", file.getAbsoluteName());
+        assertEquals("org.color.bright/green/1/1.4/foo.txt", file.getAbsoluteName());
     }
 
     @Test
     public void getName() {
-        assertEquals("updated.txt", file.getName());
+        assertEquals("foo.txt", file.getName());
     }
 
     @Test
@@ -138,6 +136,33 @@ public class S3FileNodeUpdatedObjectTest {
         final S3Bucket bucket = file.getBucket();
         assertNotNull(bucket);
         assertEquals("repository", bucket.getName());
+    }
+
+    @Test
+    public void delete() {
+        final S3Bucket bucket = file.getBucket();
+
+        final S3File file = bucket.objects()
+                .filter(s3File -> s3File.getAbsoluteName().equals("junit/junit/4/4.12/bar.txt"))
+                .findAny()
+                .get();
+
+        // Check to ensure our current node type is `Object`
+        assertType(file, "ObjectSummary");
+
+        assertTrue(file.exists());
+        file.delete();
+        
+        assertFalse(file.exists());
+        assertType(file, "NewObject");
+
+        // The object should be deleted
+        try {
+            bucket.getFile("junit/junit/4/4.12/bar.txt");
+            fail("Expected S3Exception");
+        } catch (final S3Exception e) {
+            assertEquals(404, e.statusCode());
+        }
     }
 
     @Test
@@ -155,7 +180,7 @@ public class S3FileNodeUpdatedObjectTest {
     @Test
     public void setValueAsStream() {
         // State before the update
-        assertType(file, "UpdatedObject");
+        assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -172,7 +197,7 @@ public class S3FileNodeUpdatedObjectTest {
     @Test
     public void upload() throws Exception {
         // State before the update
-        assertType(file, "UpdatedObject");
+        assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -190,7 +215,7 @@ public class S3FileNodeUpdatedObjectTest {
     @Test
     public void setValueAsFile() throws IOException {
         // State before the update
-        assertType(file, "UpdatedObject");
+        assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -211,7 +236,7 @@ public class S3FileNodeUpdatedObjectTest {
     @Test
     public void setValueAsString() {
         // State before the update
-        assertType(file, "UpdatedObject");
+        assertType(file, "ObjectSummary");
         assertEquals("green", file.getValueAsString());
         assertEquals("9f27410725ab8cc8854a2769c7a516b8", file.getETag());
         assertEquals(5, file.getSize());
@@ -236,13 +261,11 @@ public class S3FileNodeUpdatedObjectTest {
     }
 
     @Test
-    @Ignore("There might be a bug in MockS3 that prevents getSize data from arriving in S3ObjectSummary")
     public void getSize() {
         assertEquals(5, file.getSize());
     }
 
     @Test
-    @Ignore("There might be a bug in MockS3 that prevents getLastModified data from arriving in S3ObjectSummary")
     public void getLastModified() {
         final long time = file.getLastModified().toEpochMilli();
         final long tolerance = TimeUnit.SECONDS.toMillis(30);
