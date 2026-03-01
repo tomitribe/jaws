@@ -149,16 +149,8 @@ public class S3File {
         return node.get().walk(maxDepth);
     }
 
-    Stream<S3File> listDirs() {
-        return node.get().listDirs();
-    }
-
-    Stream<S3File> listFiles() {
-        return node.get().listFiles();
-    }
-
-    Stream<S3File> listAll() {
-        return node.get().listAll();
+    Stream<S3File> list() {
+        return node.get().list();
     }
 
     public String getAbsoluteName() {
@@ -379,15 +371,7 @@ public class S3File {
             return Stream.of();
         }
 
-        default Stream<S3File> listDirs() {
-            return Stream.of();
-        }
-
-        default Stream<S3File> listFiles() {
-            return Stream.of();
-        }
-
-        default Stream<S3File> listAll() {
+        default Stream<S3File> list() {
             return Stream.of();
         }
 
@@ -469,18 +453,8 @@ public class S3File {
         }
 
         @Override
-        public Stream<S3File> listDirs() {
-            return performSingleLevelListing(SingleLevelMode.DIRS_ONLY);
-        }
-
-        @Override
-        public Stream<S3File> listFiles() {
-            return performSingleLevelListing(SingleLevelMode.FILES_ONLY);
-        }
-
-        @Override
-        public Stream<S3File> listAll() {
-            return performSingleLevelListing(SingleLevelMode.BOTH);
+        public Stream<S3File> list() {
+            return performSingleLevelListing();
         }
 
         @Override
@@ -987,18 +961,8 @@ public class S3File {
         }
 
         @Override
-        public Stream<S3File> listDirs() {
-            return performSingleLevelListing(SingleLevelMode.DIRS_ONLY);
-        }
-
-        @Override
-        public Stream<S3File> listFiles() {
-            return performSingleLevelListing(SingleLevelMode.FILES_ONLY);
-        }
-
-        @Override
-        public Stream<S3File> listAll() {
-            return performSingleLevelListing(SingleLevelMode.BOTH);
+        public Stream<S3File> list() {
+            return performSingleLevelListing();
         }
 
         @Override
@@ -1227,14 +1191,8 @@ public class S3File {
         return asStream(new WalkingIterator(this, depth));
     }
 
-    enum SingleLevelMode {
-        DIRS_ONLY,
-        FILES_ONLY,
-        BOTH
-    }
-
-    private Stream<S3File> performSingleLevelListing(final SingleLevelMode mode) {
-        return asStream(new SingleLevelIterator(this, mode));
+    private Stream<S3File> performSingleLevelListing() {
+        return asStream(new SingleLevelIterator(this));
     }
 
     private Node resolve(final Node current) {
@@ -1393,13 +1351,11 @@ public class S3File {
 
     class SingleLevelIterator implements Iterator<S3File> {
 
-        private final SingleLevelMode mode;
         private Iterator<S3File> iterator;
         private ListObjectsResponse response;
         private ListObjectsRequest request;
 
-        public SingleLevelIterator(final S3File file, final SingleLevelMode mode) {
-            this.mode = mode;
+        public SingleLevelIterator(final S3File file) {
             this.request = ListObjectsRequest.builder()
                     .delimiter("/")
                     .prefix(file.getPath().getSearchPrefix())
@@ -1411,21 +1367,11 @@ public class S3File {
         }
 
         private Iterator<S3File> iteratorForResponse(final ListObjectsResponse response) {
-            switch (mode) {
-                case DIRS_ONLY:
-                    return new DirectoryIterator(response.commonPrefixes().stream()
-                            .map(CommonPrefix::prefix).iterator());
-                case FILES_ONLY:
-                    return new ObjectSummaryIterator(response.contents().iterator());
-                case BOTH:
-                    return new IteratorIterator<>(
-                            new ObjectSummaryIterator(response.contents().iterator()),
-                            new DirectoryIterator(response.commonPrefixes().stream()
-                                    .map(CommonPrefix::prefix).iterator())
-                    );
-                default:
-                    throw new IllegalStateException("Unknown mode: " + mode);
-            }
+            return new IteratorIterator<>(
+                    new ObjectSummaryIterator(response.contents().iterator()),
+                    new DirectoryIterator(response.commonPrefixes().stream()
+                            .map(CommonPrefix::prefix).iterator())
+            );
         }
 
         @Override

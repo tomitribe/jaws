@@ -45,16 +45,45 @@ public interface S3 {
 
     S3File parent();
 
+    /**
+     * Represents an S3 directory. User interfaces that need
+     * {@code file(String)}, {@code files()}, or {@code list()}
+     * should extend this interface.
+     *
+     * <p>When a proxy method returns {@code Stream<X>} where
+     * {@code X extends S3.Dir}, the library automatically uses
+     * a delimiter-based listing and returns only directories
+     * (commonPrefixes) at one level.
+     */
     interface Dir extends S3 {
+
+        /**
+         * Returns the child S3File with the given name.
+         */
         S3File file(String name);
 
+        /**
+         * Returns all objects under this directory recursively
+         * (flat listing, no delimiter).
+         */
         Stream<S3File> files();
 
-        Stream<S3File> dirs();
-
+        /**
+         * Returns both immediate child files and directories (one level deep).
+         * Uses a delimiter-based listing, returning both contents and commonPrefixes.
+         */
         Stream<S3File> list();
     }
 
+    /**
+     * Represents an S3 file (object). User interfaces that need
+     * content access or metadata should extend this interface.
+     *
+     * <p>When a proxy method returns {@code Stream<X>} where
+     * {@code X extends S3.File}, the library automatically uses
+     * a delimiter-based listing and returns only files
+     * (contents) at one level.
+     */
     interface File extends S3 {
         InputStream getValueAsStream();
 
@@ -113,7 +142,6 @@ public interface S3 {
             if (method.getDeclaringClass().equals(Dir.class)) {
                 if (method.getName().equals("file") && hasStringArg(method)) return file(args);
                 if (method.getName().equals("files")) return files();
-                if (method.getName().equals("dirs")) return dirs();
                 if (method.getName().equals("list")) return list();
                 throw new IllegalStateException("Unknown method " + method);
             }
@@ -203,12 +231,8 @@ public interface S3 {
             return dir.files();
         }
 
-        private Stream<S3File> dirs() {
-            return dir.listDirs();
-        }
-
         private Stream<S3File> list() {
-            return dir.listAll();
+            return dir.list();
         }
 
         private S3File file(final Object[] args) {
@@ -410,10 +434,10 @@ public interface S3 {
 
             final Class<?> elementType = getElementType(method);
             if (elementType != null && Dir.class.isAssignableFrom(elementType)) {
-                return dir.listDirs();
+                return dir.list().filter(S3File::isDirectory);
             }
             if (elementType != null && File.class.isAssignableFrom(elementType)) {
-                return dir.listFiles();
+                return dir.list().filter(S3File::isFile);
             }
 
             ListObjectsRequest.Builder builder = ListObjectsRequest.builder();
