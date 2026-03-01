@@ -26,9 +26,7 @@ import org.tomitribe.util.IO;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -215,10 +213,12 @@ public class S3FileNodeObjectTest {
         assertEquals("green", file.getValueAsString());
 
         final String value = "forrest";
-        final Map<String, String> userMetadata = new HashMap<>();
-        userMetadata.put("author", "tom");
-        userMetadata.put("version", "42");
-        final ObjectMetadata metadata = new ObjectMetadata(null, value.length(), null, "text/plain", userMetadata);
+        final ObjectMetadata metadata = ObjectMetadata.builder()
+                .contentLength(value.length())
+                .contentType("text/plain")
+                .userMetadata("author", "tom")
+                .userMetadata("version", "42")
+                .build();
 
         file.upload(IO.read(value), metadata).completionFuture().join();
 
@@ -239,7 +239,10 @@ public class S3FileNodeObjectTest {
         assertEquals("green", file.getValueAsString());
 
         final String value = "{\"color\":\"forrest\"}";
-        final ObjectMetadata metadata = new ObjectMetadata(null, value.length(), null, "application/json", null);
+        final ObjectMetadata metadata = ObjectMetadata.builder()
+                .contentLength(value.length())
+                .contentType("application/json")
+                .build();
 
         file.upload(IO.read(value), metadata).completionFuture().join();
 

@@ -231,7 +231,7 @@ public class S3File {
     }
 
     public Upload upload(final InputStream input, final long size, final TransferListener listener) {
-        return upload(input, new ObjectMetadata(null, size, null, null, null), listener);
+        return upload(input, ObjectMetadata.builder().contentLength(size).build(), listener);
     }
 
     public Upload upload(final InputStream input, final ObjectMetadata objectMetadata) {

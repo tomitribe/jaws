@@ -23,6 +23,7 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ObjectMetadata {
@@ -59,6 +60,55 @@ public class ObjectMetadata {
     public Map<String, String> getUserMetadata() {
         if (userMetadata == null) return Collections.emptyMap();
         return Collections.unmodifiableMap(userMetadata);
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String eTag;
+        private long contentLength;
+        private Instant lastModified;
+        private String contentType;
+        private Map<String, String> userMetadata;
+
+        public Builder eTag(final String eTag) {
+            this.eTag = eTag;
+            return this;
+        }
+
+        public Builder contentLength(final long contentLength) {
+            this.contentLength = contentLength;
+            return this;
+        }
+
+        public Builder lastModified(final Instant lastModified) {
+            this.lastModified = lastModified;
+            return this;
+        }
+
+        public Builder contentType(final String contentType) {
+            this.contentType = contentType;
+            return this;
+        }
+
+        public Builder userMetadata(final Map<String, String> userMetadata) {
+            this.userMetadata = userMetadata;
+            return this;
+        }
+
+        public Builder userMetadata(final String key, final String value) {
+            if (this.userMetadata == null) {
+                this.userMetadata = new HashMap<>();
+            }
+            this.userMetadata.put(key, value);
+            return this;
+        }
+
+        public ObjectMetadata build() {
+            return new ObjectMetadata(eTag, contentLength, lastModified, contentType, userMetadata);
+        }
     }
 
     public static ObjectMetadata fromHead(final HeadObjectResponse response) {
