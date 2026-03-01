@@ -16,8 +16,8 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,7 +43,7 @@ public class S3FileNodeUnknownTest {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        final S3Client s3Client = new S3Client(mockS3.getAmazonS3());
+        final S3Client s3Client = new S3Client(mockS3.getS3Client());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -105,7 +105,7 @@ public class S3FileNodeUnknownTest {
 
     @Test
     public void testFiles() {
-        final List<S3File> list = file.files(new ListObjectsRequest()).collect(Collectors.toList());
+        final List<S3File> list = file.files(ListObjectsRequest.builder().build()).collect(Collectors.toList());
         assertEquals(0, list.size());
     }
 
@@ -152,9 +152,9 @@ public class S3FileNodeUnknownTest {
         // The object should be deleted
         try {
             bucket.getFile("junit/junit/4/4.12/bar.txt");
-            fail("Expected AmazonS3Exception");
-        } catch (final AmazonS3Exception e) {
-            assertTrue(e.getMessage().contains("Not Found"));
+            fail("Expected S3Exception");
+        } catch (final S3Exception e) {
+            assertEquals(404, e.statusCode());
         }
     }
 
@@ -192,10 +192,10 @@ public class S3FileNodeUnknownTest {
         assertType(file, "Unknown");
 
         final String value = "forrest";
-        file.upload(IO.read(value), value.length()).waitForUploadResult();
+        file.upload(IO.read(value), value.length());
 
-        // type should be UploadingObject after the above call
-        assertType(file, "UploadingObject");
+        // type should be UpdatedObject after the above call
+        assertType(file, "UpdatedObject");
 
         // State after the update
         assertEquals("forrest", file.getValueAsString());
@@ -262,7 +262,7 @@ public class S3FileNodeUnknownTest {
 
     @Test
     public void getLastModified() {
-        final long time = file.getLastModified().getTime();
+        final long time = file.getLastModified().toEpochMilli();
         final long tolerance = TimeUnit.SECONDS.toMillis(30);
         assertTrue(time > System.currentTimeMillis() - tolerance);
         assertTrue(time < System.currentTimeMillis() + tolerance);

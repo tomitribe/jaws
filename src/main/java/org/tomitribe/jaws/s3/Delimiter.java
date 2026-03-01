@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * Sets the delimiter field of the ListObjectsRequest used
  * to query S3.
  *
- * @see com.amazonaws.services.s3.model.ListObjectsRequest
+ * @see software.amazon.awssdk.services.s3.model.ListObjectsRequest
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

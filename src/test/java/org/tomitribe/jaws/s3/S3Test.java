@@ -45,7 +45,7 @@ public class S3Test {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        this.s3Client = new S3Client(mockS3.getAmazonS3());
+        this.s3Client = new S3Client(mockS3.getS3Client());
 
         new Archive()
                 .add("project/pom.xml", "<xml>")

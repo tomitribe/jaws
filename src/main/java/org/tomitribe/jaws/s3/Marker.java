@@ -28,10 +28,10 @@ import java.lang.annotation.Target;
  * The marker indicates where in the bucket to begin listing. The
  * list will only include keys that occur lexicographically after the
  * marker. This enables pagination; to get the next page of results use the
- * current value from {@link com.amazonaws.services.s3.model.ObjectListing#getNextMarker()} as the marker
+ * current value from {@link software.amazon.awssdk.services.s3.model.ListObjectsResponse#nextMarker()} as the marker
  * for the next request to list objects.
  *
- * @see com.amazonaws.services.s3.model.ListObjectsRequest
+ * @see software.amazon.awssdk.services.s3.model.ListObjectsRequest
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

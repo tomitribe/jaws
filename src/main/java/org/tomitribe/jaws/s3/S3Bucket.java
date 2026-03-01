@@ -16,34 +16,35 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.Owner;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectResult;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.transfer.Download;
-import com.amazonaws.services.s3.transfer.Upload;
+import org.tomitribe.util.IO;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.Bucket;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
+import java.io.UncheckedIOException;
+import java.time.Instant;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class S3Bucket {
     private final S3Client client;
     private final Bucket bucket;
-    private final AmazonS3 s3;
+    private final software.amazon.awssdk.services.s3.S3Client s3;
 
     public S3Bucket(final S3Client client, final Bucket bucket) {
         this.client = client;
@@ -60,63 +61,68 @@ public class S3Bucket {
     }
 
     public Stream<S3File> objects() {
-        final ObjectListingIterator iterator = new ObjectListingIterator(bucket.getName());
+        final ObjectListingIterator iterator = new ObjectListingIterator(bucket.name());
         return S3Client.asStream(iterator)
-                .map(s3ObjectSummary -> new S3File(this, s3ObjectSummary));
+                .map(s3Object -> new S3File(this, s3Object));
     }
 
     public Stream<S3File> objects(final ListObjectsRequest request) {
-        request.setBucketName(bucket.getName());
-        final ObjectListingIterator iterator = new ObjectListingIterator(request);
+        final ListObjectsRequest adjusted = request.toBuilder()
+                .bucket(bucket.name())
+                .build();
+        final ObjectListingIterator iterator = new ObjectListingIterator(adjusted);
         return S3Client.asStream(iterator)
-                .map(s3ObjectSummary -> new S3File(this, s3ObjectSummary));
+                .map(s3Object -> new S3File(this, s3Object));
     }
 
-    public PutObjectResult putObject(final String key, final File file) throws SdkClientException, AmazonServiceException {
-        return s3.putObject(bucket.getName(), key, file);
+    public PutObjectResponse putObject(final String key, final File file) {
+        return s3.putObject(
+                PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                RequestBody.fromFile(file));
     }
 
-    public PutObjectResult putObject(final String key, final InputStream inputStream, final ObjectMetadata objectMetadata) throws SdkClientException, AmazonServiceException {
-        return s3.putObject(bucket.getName(), key, inputStream, objectMetadata);
+    public PutObjectResponse putObject(final String key, final InputStream inputStream, final long contentLength) {
+        return s3.putObject(
+                PutObjectRequest.builder().bucket(bucket.name()).key(key).contentLength(contentLength).build(),
+                RequestBody.fromInputStream(inputStream, contentLength));
     }
 
-    public PutObjectResult putObject(final String key, final String s2) throws AmazonServiceException, SdkClientException {
-        return s3.putObject(bucket.getName(), key, s2);
+    public PutObjectResponse putObject(final String key, final String content) {
+        return s3.putObject(
+                PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                RequestBody.fromString(content));
     }
 
-    public S3Object getObject(final String key) throws SdkClientException, AmazonServiceException {
-        return s3.getObject(bucket.getName(), key);
+    public ResponseInputStream<GetObjectResponse> getObject(final String key) {
+        return s3.getObject(GetObjectRequest.builder().bucket(bucket.name()).key(key).build());
     }
 
-    public ObjectMetadata getObjectMetadata(final String key) throws SdkClientException, AmazonServiceException {
-        return s3.getObjectMetadata(bucket.getName(), key);
+    public HeadObjectResponse getObjectMetadata(final String key) {
+        return s3.headObject(HeadObjectRequest.builder().bucket(bucket.name()).key(key).build());
     }
 
-    public S3File getFile(final String key) throws SdkClientException, AmazonServiceException {
+    public S3File getFile(final String key) {
         return new S3File(this, key, getObjectMetadata(key));
     }
 
     /**
      * Favor S3File.getValueAsStream() over this method.
      * <p>
-     * The AmazonS3.getObjectAsString method call that powers this method will
-     * issue 2 HTTP requests to fetch the content.  The first request will be to
-     * get the S3Object, the second call will use S3Object to request the content
-     * itself.
+     * The S3 getObject call that powers this method will
+     * issue an HTTP request to fetch the content.
      * <p>
-     * The S3File.getValueAsStream() will make the same 2 requests, however, the
-     * S3Object will be kept afterwards allowing for calls to get other information
-     * about the content such as lastModified or etag to be zero cost.  Additionally,
-     * any subsequent calls to get the content again will now be just 1 request.
+     * The S3File.getValueAsStream() will make the same request, however, the
+     * response metadata will be kept afterwards allowing for calls to get other
+     * information about the content such as lastModified or etag to be zero cost.
+     * Additionally, any subsequent calls to get the content again will now be
+     * just 1 request.
      */
-    public S3ObjectInputStream getObjectAsStream(final String key) throws SdkClientException, AmazonServiceException {
+    public InputStream getObjectAsStream(final String key) {
         try {
-            final S3Object object = s3.getObject(bucket.getName(), key);
-            if (object == null) throw new NoSuchS3ObjectException(bucket.getName(), key);
-            return object.getObjectContent();
-        } catch (AmazonS3Exception e) {
-            if (e.getMessage().contains("The specified key does not exist")) {
-                throw new NoSuchS3ObjectException(bucket.getName(), key, e);
+            return s3.getObject(GetObjectRequest.builder().bucket(bucket.name()).key(key).build());
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                throw new NoSuchS3ObjectException(bucket.name(), key, e);
             }
             throw e;
         }
@@ -125,120 +131,124 @@ public class S3Bucket {
     /**
      * Favor S3File.getValueAsString() over this method.
      * <p>
-     * The AmazonS3.getObjectAsString method call that powers this method will
-     * issue 2 HTTP requests to fetch the content.  The first request will be to
-     * get the S3Object, the second call will use S3Object to request the content
-     * itself.
+     * The S3 getObject call that powers this method will
+     * issue an HTTP request to fetch the content.
      * <p>
-     * The S3File.getValueAsString() will make the same 2 requests, however, the
-     * S3Object will be kept afterwards allowing for calls to get other information
-     * about the content such as lastModified or etag to be zero cost.  Additionally,
-     * any subsequent calls to get the content again will now be just 1 request.
+     * The S3File.getValueAsString() will make the same request, however, the
+     * response metadata will be kept afterwards allowing for calls to get other
+     * information about the content such as lastModified or etag to be zero cost.
+     * Additionally, any subsequent calls to get the content again will now be
+     * just 1 request.
      */
-    public String getObjectAsString(final String key) throws SdkClientException {
+    public String getObjectAsString(final String key) {
         try {
-            return s3.getObjectAsString(bucket.getName(), key);
-        } catch (AmazonS3Exception e) {
-            if (e.getMessage().contains("The specified key does not exist")) {
-                throw new NoSuchS3ObjectException(bucket.getName(), key, e);
+            final ResponseInputStream<GetObjectResponse> stream = s3.getObject(
+                    GetObjectRequest.builder().bucket(bucket.name()).key(key).build());
+            try (stream) {
+                return IO.slurp(stream);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                throw new NoSuchS3ObjectException(bucket.name(), key, e);
             }
             throw e;
         }
     }
 
-    public Upload upload(final String key, final InputStream input, final long size) {
-        final ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(size);
-        return upload(key, input, metadata);
+    public PutObjectResponse upload(final String key, final InputStream input, final long size) {
+        return s3.putObject(
+                PutObjectRequest.builder().bucket(bucket.name()).key(key).contentLength(size).build(),
+                RequestBody.fromInputStream(input, size));
     }
 
-    public Upload upload(final String key, final InputStream input, final ObjectMetadata objectMetadata) {
-        return upload(new PutObjectRequest(bucket.getName(), key, input, objectMetadata));
+    public PutObjectResponse upload(final String key, final File file) {
+        return s3.putObject(
+                PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                RequestBody.fromFile(file));
     }
 
-    public Upload upload(final String key, final File file) {
-        return upload(new PutObjectRequest(bucket.getName(), key, file));
+    public GetObjectResponse download(final String key, final File destination) {
+        return s3.getObject(
+                GetObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                destination.toPath());
     }
 
-    private Upload upload(PutObjectRequest putObjectRequest) {
-        return client.getTransferManager().upload(putObjectRequest);
+    public PutObjectResponse setObjectAsString(final String key, final String value) {
+        return s3.putObject(
+                PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                RequestBody.fromString(value));
     }
 
-    public Download download(final String key, final File destination) {
-        return client.getTransferManager().download(bucket.getName(), key, destination);
+    public PutObjectResponse setObjectAsFile(final String key, final File value) {
+        return s3.putObject(
+                PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                RequestBody.fromFile(value));
     }
 
-    public PutObjectResult setObjectAsString(final String key, final String value) {
-        final AmazonS3 s3 = getClient().getS3();
-        return s3.putObject(bucket.getName(), key, value);
-    }
-
-    public PutObjectResult setObjectAsFile(final String key, final File value) {
-        final AmazonS3 s3 = getClient().getS3();
-        return s3.putObject(bucket.getName(), key, value);
-    }
-
-    public PutObjectResult setObjectAsStream(final String key, final InputStream value) {
-        final AmazonS3 s3 = getClient().getS3();
-        return s3.putObject(bucket.getName(), key, value, new ObjectMetadata());
+    public PutObjectResponse setObjectAsStream(final String key, final InputStream value) {
+        try {
+            final byte[] bytes = value.readAllBytes();
+            return s3.putObject(
+                    PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                    RequestBody.fromBytes(bytes));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     public void deleteObject(final String key) {
-        s3.deleteObject(new DeleteObjectRequest(bucket.getName(), key));
+        s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket.name()).key(key).build());
     }
 
-    public Owner getOwner() {
-        return bucket.getOwner();
-    }
-
-    public void setOwner(final Owner owner) {
-        bucket.setOwner(owner);
-    }
-
-    public Date getCreationDate() {
-        return bucket.getCreationDate();
-    }
-
-    public void setCreationDate(final Date creationDate) {
-        bucket.setCreationDate(creationDate);
+    public Instant getCreationDate() {
+        return bucket.creationDate();
     }
 
     public String getName() {
-        return bucket.getName();
+        return bucket.name();
     }
 
-    public void setName(final String name) {
-        bucket.setName(name);
-    }
+    class ObjectListingIterator implements Iterator<S3Object> {
 
-    class ObjectListingIterator implements Iterator<S3ObjectSummary> {
-
-        private Iterator<S3ObjectSummary> iterator;
-        private ObjectListing objectListing;
+        private Iterator<S3Object> iterator;
+        private ListObjectsResponse response;
+        private ListObjectsRequest request;
 
         public ObjectListingIterator(final String bucketName) {
-            objectListing = client.getS3().listObjects(bucketName);
-            iterator = objectListing.getObjectSummaries().iterator();
+            this.request = ListObjectsRequest.builder().bucket(bucketName).build();
+            this.response = s3.listObjects(request);
+            this.iterator = response.contents().iterator();
         }
 
-        public ObjectListingIterator(final ListObjectsRequest bucketName) {
-            objectListing = client.getS3().listObjects(bucketName);
-            iterator = objectListing.getObjectSummaries().iterator();
+        public ObjectListingIterator(final ListObjectsRequest request) {
+            this.request = request;
+            this.response = s3.listObjects(request);
+            this.iterator = response.contents().iterator();
         }
 
         @Override
         public boolean hasNext() {
             if (iterator.hasNext()) return true;
-            if (!objectListing.isTruncated()) return false;
+            if (!response.isTruncated()) return false;
 
-            objectListing = client.getS3().listNextBatchOfObjects(objectListing);
-            iterator = objectListing.getObjectSummaries().iterator();
+            String marker = response.nextMarker();
+            if (marker == null) {
+                final List<S3Object> contents = response.contents();
+                if (!contents.isEmpty()) {
+                    marker = contents.get(contents.size() - 1).key();
+                }
+            }
+            request = request.toBuilder().marker(marker).build();
+            response = s3.listObjects(request);
+            iterator = response.contents().iterator();
 
             return hasNext();
         }
 
         @Override
-        public S3ObjectSummary next() {
+        public S3Object next() {
             return iterator.next();
         }
     }

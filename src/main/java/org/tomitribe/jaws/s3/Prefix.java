@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * The value is considered to be relative and will be appended
  * to the prefix of the underlying S3File.
  *
- * @see com.amazonaws.services.s3.model.ListObjectsRequest
+ * @see software.amazon.awssdk.services.s3.model.ListObjectsRequest
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

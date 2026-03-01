@@ -16,7 +16,7 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,7 +41,7 @@ public class S3FileNodeDirectoryTest {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        final S3Client s3Client = new S3Client(mockS3.getAmazonS3());
+        final S3Client s3Client = new S3Client(mockS3.getS3Client());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -121,7 +121,7 @@ public class S3FileNodeDirectoryTest {
 
     @Test
     public void testFiles() {
-        final List<S3File> list = file.files(new ListObjectsRequest()).collect(Collectors.toList());
+        final List<S3File> list = file.files(ListObjectsRequest.builder().build()).collect(Collectors.toList());
         assertEquals("" +
                 "org.color.bright/green/1/1.4/a\n" +
                 "org.color.bright/green/1/1.4/a/b\n" +

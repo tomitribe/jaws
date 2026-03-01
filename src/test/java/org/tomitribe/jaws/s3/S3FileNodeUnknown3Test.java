@@ -16,8 +16,8 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class S3FileNodeUnknown3Test {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        final S3Client s3Client = new S3Client(mockS3.getAmazonS3());
+        final S3Client s3Client = new S3Client(mockS3.getS3Client());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -118,7 +118,7 @@ public class S3FileNodeUnknown3Test {
 
     @Test
     public void testFiles() {
-        final List<S3File> list = file.files(new ListObjectsRequest()).collect(Collectors.toList());
+        final List<S3File> list = file.files(ListObjectsRequest.builder().build()).collect(Collectors.toList());
         assertEquals("" +
                 "org.color.bright/green/1/1.4\n" +
                 "org.color.bright/green/1/1.4/a\n" +
@@ -193,9 +193,9 @@ public class S3FileNodeUnknown3Test {
         // The object should be deleted
         try {
             bucket.getFile("junit/junit/4/4.12");
-            fail("Expected AmazonS3Exception");
-        } catch (final AmazonS3Exception e) {
-            assertTrue(e.getMessage().contains("Not Found"));
+            fail("Expected S3Exception");
+        } catch (final S3Exception e) {
+            assertEquals(404, e.statusCode());
         }
     }
 

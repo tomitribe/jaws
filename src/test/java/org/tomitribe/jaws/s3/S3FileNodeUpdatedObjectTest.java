@@ -16,14 +16,13 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +46,7 @@ public class S3FileNodeUpdatedObjectTest {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        final S3Client s3Client = new S3Client(mockS3.getAmazonS3());
+        final S3Client s3Client = new S3Client(mockS3.getS3Client());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -110,7 +109,7 @@ public class S3FileNodeUpdatedObjectTest {
 
     @Test
     public void testFiles() {
-        final List<S3File> list = file.files(new ListObjectsRequest()).collect(Collectors.toList());
+        final List<S3File> list = file.files(ListObjectsRequest.builder().build()).collect(Collectors.toList());
         assertEquals(0, list.size());
     }
 
@@ -179,10 +178,10 @@ public class S3FileNodeUpdatedObjectTest {
         assertEquals(5, file.getSize());
 
         final String value = "forrest";
-        file.upload(IO.read(value), value.length()).waitForUploadResult();
+        file.upload(IO.read(value), value.length());
 
         // State after the update
-        assertType(file, "UploadingObject");
+        assertType(file, "UpdatedObject");
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());
@@ -245,7 +244,7 @@ public class S3FileNodeUpdatedObjectTest {
     @Test
     @Ignore("There might be a bug in MockS3 that prevents getLastModified data from arriving in S3ObjectSummary")
     public void getLastModified() {
-        final long time = file.getLastModified().getTime();
+        final long time = file.getLastModified().toEpochMilli();
         final long tolerance = TimeUnit.SECONDS.toMillis(30);
         assertTrue(time > System.currentTimeMillis() - tolerance);
         assertTrue(time < System.currentTimeMillis() + tolerance);

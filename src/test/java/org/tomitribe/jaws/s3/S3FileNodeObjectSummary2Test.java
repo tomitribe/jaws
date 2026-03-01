@@ -39,7 +39,7 @@ public class S3FileNodeObjectSummary2Test {
 
     @Before
     public final void setUp() throws Exception {
-        this.s3Client = new S3Client(mockS3.getAmazonS3());
+        this.s3Client = new S3Client(mockS3.getS3Client());
     }
 
     @Test

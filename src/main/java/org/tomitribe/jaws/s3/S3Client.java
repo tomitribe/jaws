@@ -16,48 +16,21 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import org.tomitribe.jaws.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.Bucket;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class S3Client {
-    private final AmazonS3 s3;
+    private final software.amazon.awssdk.services.s3.S3Client s3;
 
-    private final TransferManager transferManager;
-
-    public S3Client(final AmazonS3 s3) {
+    public S3Client(final software.amazon.awssdk.services.s3.S3Client s3) {
         this.s3 = s3;
-        this.transferManager = TransferManagerBuilder.standard()
-                .withS3Client(s3)
-                .withExecutorFactory(S3Client::createDefaultExecutorService)
-                .build();
-    }
-
-    private static ThreadPoolExecutor createDefaultExecutorService() {
-        ThreadFactory threadFactory = new ThreadFactory() {
-            private int threadCount = 1;
-
-            public Thread newThread(Runnable r) {
-                Thread thread = new Thread(r);
-                thread.setDaemon(true);
-                thread.setName("s3-transfer-manager-worker-" + threadCount++);
-                return thread;
-            }
-        };
-        return (ThreadPoolExecutor) Executors.newFixedThreadPool(10, threadFactory);
     }
 
     public static <T> Stream<T> asStream(final Iterator<T> iterator) {
@@ -66,8 +39,9 @@ public class S3Client {
                 false);
     }
 
-    public S3Bucket createBucket(final String s) throws SdkClientException, AmazonServiceException {
-        final Bucket bucket = s3.createBucket(s);
+    public S3Bucket createBucket(final String s) {
+        s3.createBucket(CreateBucketRequest.builder().bucket(s).build());
+        final Bucket bucket = Bucket.builder().name(s).build();
         return new S3Bucket(this, bucket);
     }
 
@@ -76,8 +50,8 @@ public class S3Client {
          * There doesn't seem to be a way to get a bucket
          * directly by name.
          */
-        final Bucket bucket = s3.listBuckets().stream()
-                .filter(item -> name.equals(item.getName()))
+        final Bucket bucket = s3.listBuckets().buckets().stream()
+                .filter(item -> name.equals(item.name()))
                 .findAny()
                 .orElseThrow(() -> new NoSuchBucketException(name));
 
@@ -85,16 +59,12 @@ public class S3Client {
     }
 
     public Stream<S3Bucket> buckets() {
-        return s3.listBuckets().stream()
+        return s3.listBuckets().buckets().stream()
                 .map(bucket -> new S3Bucket(this, bucket));
 
     }
 
-    public AmazonS3 getS3() {
+    public software.amazon.awssdk.services.s3.S3Client getS3() {
         return s3;
-    }
-
-    public TransferManager getTransferManager() {
-        return transferManager;
     }
 }

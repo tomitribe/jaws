@@ -16,9 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,6 +23,9 @@ import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
 import org.tomitribe.util.Join;
 import org.tomitribe.util.dir.Dir;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class S3BucketTest {
     @Before
     public final void setUp() throws Exception {
         this.store = mockS3.getBlobStoreLocation();
-        this.s3Client = new S3Client(mockS3.getAmazonS3());
+        this.s3Client = new S3Client(mockS3.getS3Client());
     }
 
     @Test
@@ -103,8 +103,9 @@ public class S3BucketTest {
         final S3Bucket bucket = s3Client.getBucket("repository");
 
         // The bucket name is implied -- we do not need to fill it in
-        final ListObjectsRequest request = new ListObjectsRequest()
-                .withPrefix("org.color/");
+        final ListObjectsRequest request = ListObjectsRequest.builder()
+                .prefix("org.color/")
+                .build();
 
         final List<String> list = bucket.objects(request)
                 .map(S3File::getAbsoluteName)
@@ -187,10 +188,10 @@ public class S3BucketTest {
                 .toDir();
 
         final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", IO.read(new File(data, "red.txt")), new ObjectMetadata());
-        bucket.putObject("org.color.bright/green/1/1.4/foo.txt", IO.read(new File(data, "green.txt")), new ObjectMetadata());
-        bucket.putObject("junit/junit/4/4.12/bar.txt", IO.read(new File(data, "blue.txt")), new ObjectMetadata());
-        bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", IO.read(new File(data, "orange.txt")), new ObjectMetadata());
+        bucket.putObject("org.color/red/1/1.4/foo.txt", IO.read(new File(data, "red.txt")), new File(data, "red.txt").length());
+        bucket.putObject("org.color.bright/green/1/1.4/foo.txt", IO.read(new File(data, "green.txt")), new File(data, "green.txt").length());
+        bucket.putObject("junit/junit/4/4.12/bar.txt", IO.read(new File(data, "blue.txt")), new File(data, "blue.txt").length());
+        bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", IO.read(new File(data, "orange.txt")), new File(data, "orange.txt").length());
 
         final List<String> paths = paths(store);
 
@@ -316,10 +317,9 @@ public class S3BucketTest {
         assertEquals(orange, IO.slurp(new File(store, s)));
     }
 
-    public static void assertObject(final S3Bucket bucket, final String bucketName, final String path, final String red) throws IOException {
-        final S3Object object = bucket.getObject(path);
-        assertEquals(bucketName, object.getBucketName());
-        assertEquals(path, object.getKey());
-        assertEquals(red, IO.slurp(object.getObjectContent()));
+    public static void assertObject(final S3Bucket bucket, final String bucketName, final String path, final String expectedContent) throws IOException {
+        try (final ResponseInputStream<GetObjectResponse> object = bucket.getObject(path)) {
+            assertEquals(expectedContent, IO.slurp(object));
+        }
     }
 }

@@ -36,7 +36,7 @@ public class S3ParentTest {
     @Before
     public final void setUp() throws Exception {
         store = mockS3.getBlobStoreLocation();
-        this.s3Client = new S3Client(mockS3.getAmazonS3());
+        this.s3Client = new S3Client(mockS3.getS3Client());
     }
 
 

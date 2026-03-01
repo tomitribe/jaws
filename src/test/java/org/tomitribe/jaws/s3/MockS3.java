@@ -16,12 +16,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.gaul.s3proxy.junit.S3ProxyJunitCore;
 import org.gaul.s3proxy.junit.S3ProxyRule;
 import org.junit.rules.ExternalResource;
@@ -30,7 +24,6 @@ import org.junit.runners.model.Statement;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
 import java.io.File;
@@ -44,33 +37,16 @@ public class MockS3 extends ExternalResource {
             .withCredentials("access", "secret")
             .build();
 
-    public static AmazonS3 getAmazonS3(final S3ProxyRule s3Proxy) {
-        return AmazonS3ClientBuilder
-                .standard()
-                .withCredentials(
-                        new AWSStaticCredentialsProvider(
-                                new BasicAWSCredentials(
-                                        s3Proxy.getAccessKey(), s3Proxy.getSecretKey())))
-                .withEndpointConfiguration(
-                        new AwsClientBuilder.EndpointConfiguration(
-                                s3Proxy.getUri().toString(), Regions.US_EAST_1.getName()))
-                .build();
-    }
-
     @Override
     public Statement apply(final Statement base, final Description description) {
         return s3Proxy.apply(base, description);
     }
 
-    public AmazonS3 getAmazonS3() {
-        return getAmazonS3(s3Proxy);
-    }
-
-    public S3Client getS3Client() {
+    public software.amazon.awssdk.services.s3.S3Client getS3Client() {
         final AwsBasicCredentials awsCreds = AwsBasicCredentials.create("access", "secret");
 
         final URI uri = s3Proxy.getUri();
-        return S3Client.builder()
+        return software.amazon.awssdk.services.s3.S3Client.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
                 .endpointOverride(uri)
                 .region(Region.US_EAST_1)

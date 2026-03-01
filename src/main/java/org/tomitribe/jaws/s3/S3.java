@@ -16,17 +16,16 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.model.ListObjectsRequest;
 import org.tomitribe.util.dir.Name;
 import org.tomitribe.util.dir.Parent;
 import org.tomitribe.util.dir.Walk;
 import org.tomitribe.util.reflect.Generics;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 
 import java.io.FileNotFoundException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -188,27 +187,14 @@ public interface S3 {
         }
 
         private static Object invokeDefault(final Object proxy, final Method method, final Object[] args) throws Throwable {
-            final float version = Float.parseFloat(System.getProperty("java.class.version"));
-            if (version <= 52) { // Java 8
-                final Constructor<MethodHandles.Lookup> constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);
-                constructor.setAccessible(true);
-
-                final Class<?> clazz = method.getDeclaringClass();
-                return constructor.newInstance(clazz)
-                        .in(clazz)
-                        .unreflectSpecial(method, clazz)
-                        .bindTo(proxy)
-                        .invokeWithArguments(args);
-            } else { // Java 9 and later
-                return MethodHandles.lookup()
-                        .findSpecial(
-                                method.getDeclaringClass(),
-                                method.getName(),
-                                MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
-                                method.getDeclaringClass()
-                        ).bindTo(proxy)
-                        .invokeWithArguments(args);
-            }
+            return MethodHandles.lookup()
+                    .findSpecial(
+                            method.getDeclaringClass(),
+                            method.getName(),
+                            MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
+                            method.getDeclaringClass()
+                    ).bindTo(proxy)
+                    .invokeWithArguments(args);
         }
 
         private Object returnFile(final Method method, final S3File file) throws FileNotFoundException {
@@ -348,24 +334,24 @@ public interface S3 {
 
             if (walk != null) return walk(walk, dir);
 
-            final ListObjectsRequest request = new ListObjectsRequest();
+            ListObjectsRequest.Builder builder = ListObjectsRequest.builder();
 
             if (method.isAnnotationPresent(Prefix.class)) {
                 final Prefix prefix = method.getAnnotation(Prefix.class);
-                request.setPrefix(dir.getPath().getSearchPrefix() + prefix.value());
+                builder.prefix(dir.getPath().getSearchPrefix() + prefix.value());
             }
 
             if (method.isAnnotationPresent(Marker.class)) {
                 final Marker marker = method.getAnnotation(Marker.class);
-                request.setMarker(marker.value());
+                builder.marker(marker.value());
             }
 
             if (method.isAnnotationPresent(Delimiter.class)) {
                 final Delimiter delimiter = method.getAnnotation(Delimiter.class);
-                request.setDelimiter(delimiter.value());
+                builder.delimiter(delimiter.value());
             }
 
-            return dir.files(request);
+            return dir.files(builder.build());
         }
 
         private static Stream<S3File> walk(final Walk walk, final S3File dir) {

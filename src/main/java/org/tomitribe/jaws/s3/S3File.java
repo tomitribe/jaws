@@ -16,28 +16,27 @@
  */
 package org.tomitribe.jaws.s3;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectResult;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.transfer.Download;
-import com.amazonaws.services.s3.transfer.Upload;
-import com.amazonaws.services.s3.transfer.internal.S3ProgressListener;
 import org.tomitribe.util.IO;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.CommonPrefix;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -63,16 +62,24 @@ public class S3File {
     private final Path path;
     private final AtomicReference<Node> node = new AtomicReference<>();
 
-    S3File(final S3Bucket bucket, final S3ObjectSummary summary) {
+    static String stripQuotes(final String eTag) {
+        if (eTag == null) return null;
+        if (eTag.startsWith("\"") && eTag.endsWith("\"")) {
+            return eTag.substring(1, eTag.length() - 1);
+        }
+        return eTag;
+    }
+
+    S3File(final S3Bucket bucket, final S3Object summary) {
         this.bucket = bucket;
-        this.path = Path.fromKey(summary.getKey());
+        this.path = Path.fromKey(summary.key());
         this.node.set(new ObjectSummary(summary));
     }
 
-    S3File(final S3Bucket bucket, final String key, final ObjectMetadata object) {
+    S3File(final S3Bucket bucket, final String key, final HeadObjectResponse response) {
         this.bucket = bucket;
         this.path = Path.fromKey(key);
-        this.node.set(new Metadata(object));
+        this.node.set(new Metadata(response));
     }
 
     S3File(final S3Bucket bucket, final Path path, final Class<? extends Node> type) {
@@ -148,7 +155,7 @@ public class S3File {
         return bucket;
     }
 
-    public S3ObjectInputStream getValueAsStream() {
+    public InputStream getValueAsStream() {
         return node.get().getValueAsStream();
     }
 
@@ -180,11 +187,11 @@ public class S3File {
         return node.get().getSize();
     }
 
-    public Date getLastModified() {
+    public Instant getLastModified() {
         return node.get().getLastModified();
     }
 
-    public ObjectMetadata getObjectMetadata() {
+    public HeadObjectResponse getObjectMetadata() {
         return node.get().getObjectMetadata();
     }
 
@@ -213,41 +220,26 @@ public class S3File {
         node.get().delete(force);
     }
 
-    public Upload upload(final InputStream input, final long size) {
-        return upload(input, size, null);
+    public PutObjectResponse upload(final InputStream input, final long size) {
+        final PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(getBucketName())
+                .key(getAbsoluteName())
+                .contentLength(size)
+                .build();
+        final RequestBody body = input != null ? RequestBody.fromInputStream(input, size) : null;
+        return node.get().upload(request, body, size);
     }
 
-    public Upload upload(final InputStream input, final ObjectMetadata objectMetadata) {
-        return upload(input, objectMetadata, null);
+    public PutObjectResponse upload(final File file) {
+        final PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(getBucketName())
+                .key(getAbsoluteName())
+                .build();
+        final RequestBody body = file != null ? RequestBody.fromFile(file) : null;
+        return node.get().upload(request, body, file != null ? file.length() : 0);
     }
 
-    public Upload upload(final File file) {
-        return upload(file, null);
-    }
-
-    public Upload upload(final PutObjectRequest putObjectRequest) {
-        return upload(putObjectRequest, null);
-    }
-
-    public Upload upload(final InputStream input, final long size, final S3ProgressListener progressListener) {
-        final ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(size);
-        return upload(input, metadata, progressListener);
-    }
-
-    public Upload upload(final InputStream input, final ObjectMetadata objectMetadata, final S3ProgressListener progressListener) {
-        return upload(new PutObjectRequest(getBucketName(), getAbsoluteName(), input, objectMetadata), progressListener);
-    }
-
-    public Upload upload(final File file, final S3ProgressListener progressListener) {
-        return upload(new PutObjectRequest(getBucketName(), getAbsoluteName(), file), progressListener);
-    }
-
-    public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
-        return node.get().upload(putObjectRequest, progressListener);
-    }
-
-    public Download download(final File destination) {
+    public GetObjectResponse download(final File destination) {
         return node.get().download(destination);
     }
 
@@ -282,7 +274,7 @@ public class S3File {
 
         Stream<S3File> walk(final int maxDepth);
 
-        S3ObjectInputStream getValueAsStream();
+        InputStream getValueAsStream();
 
         String getValueAsString();
 
@@ -296,7 +288,7 @@ public class S3File {
 
         long getSize();
 
-        Date getLastModified();
+        Instant getLastModified();
 
         default void delete() {
             delete(false);
@@ -304,11 +296,11 @@ public class S3File {
 
         void delete(final boolean force);
 
-        Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener);
+        PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength);
 
-        Download download(File destination);
+        GetObjectResponse download(File destination);
 
-        ObjectMetadata getObjectMetadata();
+        HeadObjectResponse getObjectMetadata();
     }
 
     /**
@@ -340,7 +332,7 @@ public class S3File {
 
         @Override
         public Stream<S3File> files() {
-            return bucket.objects(new ListObjectsRequest().withPrefix(path.getSearchPrefix()));
+            return bucket.objects(ListObjectsRequest.builder().prefix(path.getSearchPrefix()).build());
         }
 
         @Override
@@ -360,7 +352,7 @@ public class S3File {
         }
 
         @Override
-        public S3ObjectInputStream getValueAsStream() {
+        public InputStream getValueAsStream() {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
@@ -395,7 +387,7 @@ public class S3File {
         }
 
         @Override
-        public Date getLastModified() {
+        public Instant getLastModified() {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
@@ -416,32 +408,40 @@ public class S3File {
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
+        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
         @Override
-        public Download download(final File destination) {
+        public GetObjectResponse download(final File destination) {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
         @Override
-        public ObjectMetadata getObjectMetadata() {
+        public HeadObjectResponse getObjectMetadata() {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
     }
 
     /**
      * When looking up a single object, the Amazon S3 API
-     * will return an S3Object instance.  This serves as
+     * will return metadata.  This serves as
      * the Node adapter for that form of representing the
      * common metadata.
      */
     private class Metadata implements Node {
-        private final ObjectMetadata metadata;
+        private final String eTag;
+        private final long contentLength;
+        private final Instant lastModified;
 
-        public Metadata(final ObjectMetadata metadata) {
-            this.metadata = metadata;
+        public Metadata(final String eTag, final long contentLength, final Instant lastModified) {
+            this.eTag = stripQuotes(eTag);
+            this.contentLength = contentLength;
+            this.lastModified = lastModified;
+        }
+
+        public Metadata(final HeadObjectResponse response) {
+            this(response.eTag(), response.contentLength(), response.lastModified());
         }
 
         @Override
@@ -481,7 +481,7 @@ public class S3File {
         }
 
         @Override
-        public S3ObjectInputStream getValueAsStream() {
+        public InputStream getValueAsStream() {
             return openStreamAndReplace(this);
         }
 
@@ -507,17 +507,17 @@ public class S3File {
 
         @Override
         public String getETag() {
-            return metadata.getETag();
+            return eTag;
         }
 
         @Override
         public long getSize() {
-            return metadata.getContentLength();
+            return contentLength;
         }
 
         @Override
-        public Date getLastModified() {
-            return metadata.getLastModified();
+        public Instant getLastModified() {
+            return lastModified;
         }
 
         @Override
@@ -527,29 +527,31 @@ public class S3File {
         }
 
         @Override
-        public ObjectMetadata getObjectMetadata() {
-            return metadata;
+        public HeadObjectResponse getObjectMetadata() {
+            return resolve(this).getObjectMetadata();
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
-            return uploadAndReplace(this, putObjectRequest, progressListener);
+        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
+            return uploadAndReplace(this, request, body, contentLength);
         }
 
-        public Download download(final File destination) {
-            return bucket.getClient().getTransferManager().download(bucket.getName(), getAbsoluteName(), destination);
+        public GetObjectResponse download(final File destination) {
+            return bucket.getClient().getS3().getObject(
+                    GetObjectRequest.builder().bucket(bucket.getName()).key(getAbsoluteName()).build(),
+                    destination.toPath());
         }
     }
 
     /**
      * When listing Objects in S3 via the AmazonS3 API you will
-     * get several S3ObjectSummary instances which have similar
-     * data as S3Object but of course in different places.
+     * get several S3Object instances which have similar
+     * data as a full object response but of course in different places.
      */
     private class ObjectSummary implements Node {
-        private final S3ObjectSummary summary;
+        private final S3Object summary;
 
-        public ObjectSummary(final S3ObjectSummary summary) {
+        public ObjectSummary(final S3Object summary) {
             this.summary = summary;
         }
 
@@ -590,7 +592,7 @@ public class S3File {
         }
 
         @Override
-        public S3ObjectInputStream getValueAsStream() {
+        public InputStream getValueAsStream() {
             return openStreamAndReplace(this);
         }
 
@@ -616,37 +618,39 @@ public class S3File {
 
         @Override
         public String getETag() {
-            return summary.getETag();
+            return stripQuotes(summary.eTag());
         }
 
         @Override
         public long getSize() {
-            return summary.getSize();
+            return summary.size();
         }
 
         @Override
-        public Date getLastModified() {
-            return summary.getLastModified();
+        public Instant getLastModified() {
+            return summary.lastModified();
         }
 
         @Override
         public void delete(final boolean ignore) {
-            bucket.deleteObject(summary.getKey());
+            bucket.deleteObject(summary.key());
             node.compareAndSet(this, new NewObject());
         }
 
         @Override
-        public ObjectMetadata getObjectMetadata() {
+        public HeadObjectResponse getObjectMetadata() {
             return resolve(this).getObjectMetadata();
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
-            return uploadAndReplace(this, putObjectRequest, progressListener);
+        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
+            return uploadAndReplace(this, request, body, contentLength);
         }
 
-        public Download download(final File destination) {
-            return bucket.getClient().getTransferManager().download(bucket.getName(), getAbsoluteName(), destination);
+        public GetObjectResponse download(final File destination) {
+            return bucket.getClient().getS3().getObject(
+                    GetObjectRequest.builder().bucket(bucket.getName()).key(getAbsoluteName()).build(),
+                    destination.toPath());
         }
 
     }
@@ -657,10 +661,12 @@ public class S3File {
      * Node with a new one that represents the updated data.
      */
     private class UpdatedObject implements Node {
-        private final PutObjectResult result;
+        private final PutObjectResponse result;
+        private final long contentLength;
 
-        public UpdatedObject(final PutObjectResult result) {
+        public UpdatedObject(final PutObjectResponse result, final long contentLength) {
             this.result = result;
+            this.contentLength = contentLength;
         }
 
         @Override
@@ -700,7 +706,7 @@ public class S3File {
         }
 
         @Override
-        public S3ObjectInputStream getValueAsStream() {
+        public InputStream getValueAsStream() {
             return openStreamAndReplace(this);
         }
 
@@ -726,121 +732,16 @@ public class S3File {
 
         @Override
         public String getETag() {
-            return result.getETag();
+            return stripQuotes(result.eTag());
         }
 
         @Override
         public long getSize() {
-            return result.getMetadata().getContentLength();
+            return contentLength;
         }
 
         @Override
-        public Date getLastModified() {
-            return result.getMetadata().getLastModified();
-        }
-
-        @Override
-        public void delete(final boolean ignore) {
-            bucket.deleteObject(path.getAbsoluteName());
-            node.compareAndSet(this, new NewObject());
-        }
-
-        @Override
-        public ObjectMetadata getObjectMetadata() {
-            return result.getMetadata();
-        }
-
-        @Override
-        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
-            return uploadAndReplace(this, putObjectRequest, progressListener);
-        }
-
-        public Download download(final File destination) {
-            return bucket.getClient().getTransferManager().download(bucket.getName(), getAbsoluteName(), destination);
-        }
-    }
-
-    /**
-     * Represents an object that is being uploaded.
-     */
-    private class UploadingObject implements Node {
-
-        public UploadingObject() {
-        }
-
-        @Override
-        public boolean exists() {
-            return true;
-        }
-
-        @Override
-        public boolean isFile() {
-            return true;
-        }
-
-        @Override
-        public boolean isDirectory() {
-            return false;
-        }
-
-        @Override
-        public S3File getFile(final String name) {
-            final String message = String.format("S3File '%s' is a not directory and cannot have child '%s'", path.getAbsoluteName(), name);
-            throw new UnsupportedOperationException(message);
-        }
-
-        @Override
-        public Stream<S3File> files() {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> files(final ListObjectsRequest request) {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> walk(final int maxDepth) {
-            return Stream.of();
-        }
-
-        @Override
-        public S3ObjectInputStream getValueAsStream() {
-            return openStreamAndReplace(this);
-        }
-
-        @Override
-        public String getValueAsString() {
-            return readAndReplace(this);
-        }
-
-        @Override
-        public void setValueAsStream(final InputStream inputStream) {
-            writeStreamAndReplace(this, inputStream);
-        }
-
-        @Override
-        public void setValueAsString(final String value) {
-            writeStringAndReplace(this, value);
-        }
-
-        @Override
-        public void setValueAsFile(final File value) {
-            writeFileAndReplace(this, value);
-        }
-
-        @Override
-        public String getETag() {
-            return resolve(this).getETag();
-        }
-
-        @Override
-        public long getSize() {
-            return resolve(this).getSize();
-        }
-
-        @Override
-        public Date getLastModified() {
+        public Instant getLastModified() {
             return resolve(this).getLastModified();
         }
 
@@ -851,17 +752,19 @@ public class S3File {
         }
 
         @Override
-        public ObjectMetadata getObjectMetadata() {
+        public HeadObjectResponse getObjectMetadata() {
             return resolve(this).getObjectMetadata();
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
-            return uploadAndReplace(this, putObjectRequest, progressListener);
+        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
+            return uploadAndReplace(this, request, body, contentLength);
         }
 
-        public Download download(final File destination) {
-            return bucket.getClient().getTransferManager().download(bucket.getName(), getAbsoluteName(), destination);
+        public GetObjectResponse download(final File destination) {
+            return bucket.getClient().getS3().getObject(
+                    GetObjectRequest.builder().bucket(bucket.getName()).key(getAbsoluteName()).build(),
+                    destination.toPath());
         }
     }
 
@@ -895,7 +798,7 @@ public class S3File {
 
         @Override
         public Stream<S3File> files() {
-            return bucket.objects(new ListObjectsRequest().withPrefix(path.getSearchPrefix()));
+            return bucket.objects(ListObjectsRequest.builder().prefix(path.getSearchPrefix()).build());
         }
 
         @Override
@@ -915,7 +818,7 @@ public class S3File {
         }
 
         @Override
-        public S3ObjectInputStream getValueAsStream() {
+        public InputStream getValueAsStream() {
             return openStreamAndReplace(this);
         }
 
@@ -950,7 +853,7 @@ public class S3File {
         }
 
         @Override
-        public Date getLastModified() {
+        public Instant getLastModified() {
             return resolve(this).getLastModified();
         }
 
@@ -960,16 +863,16 @@ public class S3File {
         }
 
         @Override
-        public ObjectMetadata getObjectMetadata() {
+        public HeadObjectResponse getObjectMetadata() {
             return resolve(this).getObjectMetadata();
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
-            return uploadAndReplace(this, putObjectRequest, progressListener);
+        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
+            return uploadAndReplace(this, request, body, contentLength);
         }
 
-        public Download download(final File destination) {
+        public GetObjectResponse download(final File destination) {
             return resolve(this).download(destination);
         }
 
@@ -1027,7 +930,7 @@ public class S3File {
         }
 
         @Override
-        public S3ObjectInputStream getValueAsStream() {
+        public InputStream getValueAsStream() {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
 
@@ -1062,7 +965,7 @@ public class S3File {
         }
 
         @Override
-        public Date getLastModified() {
+        public Instant getLastModified() {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
 
@@ -1072,41 +975,39 @@ public class S3File {
         }
 
         @Override
-        public ObjectMetadata getObjectMetadata() {
+        public HeadObjectResponse getObjectMetadata() {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
 
         @Override
-        public Upload upload(final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
-            return uploadAndReplace(this, putObjectRequest, progressListener);
+        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
+            return uploadAndReplace(this, request, body, contentLength);
         }
 
-        public Download download(final File destination) {
+        public GetObjectResponse download(final File destination) {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
     }
 
     private void writeStringAndReplace(final Node current, final String value) {
-        final PutObjectResult result = bucket.setObjectAsString(path.getAbsoluteName(), value);
-        node.compareAndSet(current, new UpdatedObject(result));
+        final PutObjectResponse result = bucket.setObjectAsString(path.getAbsoluteName(), value);
+        node.compareAndSet(current, new UpdatedObject(result, 0));
     }
 
     private void writeFileAndReplace(final Node current, final File value) {
-        final PutObjectResult result = bucket.setObjectAsFile(path.getAbsoluteName(), value);
-        node.compareAndSet(current, new UpdatedObject(result));
+        final PutObjectResponse result = bucket.setObjectAsFile(path.getAbsoluteName(), value);
+        node.compareAndSet(current, new UpdatedObject(result, 0));
     }
 
     private void writeStreamAndReplace(final Node current, final InputStream inputStream) {
-        final PutObjectResult result = bucket.setObjectAsStream(path.getAbsoluteName(), inputStream);
-        node.compareAndSet(current, new UpdatedObject(result));
+        final PutObjectResponse result = bucket.setObjectAsStream(path.getAbsoluteName(), inputStream);
+        node.compareAndSet(current, new UpdatedObject(result, 0));
     }
 
-    private Upload uploadAndReplace(final Node current, final PutObjectRequest putObjectRequest, final S3ProgressListener progressListener) {
-        try {
-            return bucket.getClient().getTransferManager().upload(putObjectRequest, progressListener);
-        } finally {
-            node.compareAndSet(current, new UploadingObject());
-        }
+    private PutObjectResponse uploadAndReplace(final Node current, final PutObjectRequest request, final RequestBody body, final long contentLength) {
+        final PutObjectResponse response = bucket.getClient().getS3().putObject(request, body);
+        node.compareAndSet(current, new UpdatedObject(response, contentLength));
+        return response;
     }
 
     /**
@@ -1117,22 +1018,20 @@ public class S3File {
      * cause a connection leak that will eventually prevent further S3 calls
      * of any kind.
      */
-    private S3ObjectInputStream openStreamAndReplace(final Node current) {
-        final S3Object object;
+    private InputStream openStreamAndReplace(final Node current) {
+        final ResponseInputStream<GetObjectResponse> responseStream;
         try {
-            object = bucket.getObject(path.getAbsoluteName());
-        } catch (AmazonS3Exception e) {
-            if (e.getMessage().contains("Status Code: 404;")) {
+            responseStream = bucket.getObject(path.getAbsoluteName());
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
                 throw new NoSuchS3ObjectException(bucket.getName(), path.getAbsoluteName(), e);
             }
-            throw new RuntimeException(e);
+            throw e;
         }
-        try {
-            return object.getObjectContent();
-        } finally {
-            final Metadata metadata = new Metadata(object.getObjectMetadata());
-            node.compareAndSet(current, metadata);
-        }
+        final GetObjectResponse response = responseStream.response();
+        final Metadata metadata = new Metadata(response.eTag(), response.contentLength(), response.lastModified());
+        node.compareAndSet(current, metadata);
+        return responseStream;
     }
 
     private String readAndReplace(final Node current) {
@@ -1150,13 +1049,13 @@ public class S3File {
     }
 
     private Node resolve(final Node current) {
-        final ObjectMetadata object;
+        final HeadObjectResponse response;
 
         try {
             final String absoluteName = path.getAbsoluteName();
-            object = bucket.getObjectMetadata(absoluteName);
-        } catch (final AmazonS3Exception e) {
-            if ("NoSuchKey".equals(e.getErrorCode()) || "404 Not Found".equals(e.getErrorCode())) {
+            response = bucket.getObjectMetadata(absoluteName);
+        } catch (final S3Exception e) {
+            if (e.statusCode() == 404) {
                 final NewObject newObject = new NewObject();
                 if (node.compareAndSet(current, newObject)) {
                     return newObject;
@@ -1168,7 +1067,7 @@ public class S3File {
         }
 
 
-        final Metadata newNode = new Metadata(object);
+        final Metadata newNode = new Metadata(response);
 
         if (node.compareAndSet(current, newNode)) {
             return newNode;
@@ -1179,8 +1078,8 @@ public class S3File {
 
     private Stream<S3File> listRequest(final ListObjectsRequest request) {
         Objects.requireNonNull(request);
-        if (request.getPrefix() == null) {
-            return bucket.objects(request.withPrefix(path.getSearchPrefix()));
+        if (request.prefix() == null) {
+            return bucket.objects(request.toBuilder().prefix(path.getSearchPrefix()).build());
         } else {
             return bucket.objects(request);
         }
@@ -1205,14 +1104,15 @@ public class S3File {
         private final ListObjectsRequest request;
 
         public WalkingIterator(final S3File file, final int depth) {
-            this(new ListObjectsRequest(), file, depth);
+            this(ListObjectsRequest.builder().build(), file, depth);
         }
 
         public WalkingIterator(final ListObjectsRequest request, final S3File file, final int depth) {
-            this.request = request
-                    .withDelimiter("/")
-                    .withPrefix(file.getPath().getSearchPrefix())
-                    .withBucketName(bucket.getName());
+            this.request = request.toBuilder()
+                    .delimiter("/")
+                    .prefix(file.getPath().getSearchPrefix())
+                    .bucket(bucket.getName())
+                    .build();
 
             iterator = new Listing(getS3().listObjects(this.request));
             remaining = depth == INFINITE ? INFINITE : depth - 1;
@@ -1220,40 +1120,49 @@ public class S3File {
 
         class Listing implements Iterator<S3File> {
 
-            private final ObjectListing objectListing;
+            private final ListObjectsResponse response;
             private final Iterator<S3File> objectListingIterator;
 
-            public Listing(final ObjectListing objectListing) {
-                this.objectListing = objectListing;
-                this.objectListingIterator = iterator(objectListing);
+            public Listing(final ListObjectsResponse response) {
+                this.response = response;
+                this.objectListingIterator = iterator(response);
             }
 
-            private Iterator<S3File> iterator(final ObjectListing objectListing) {
+            private Iterator<S3File> iterator(final ListObjectsResponse response) {
                 return new IteratorIterator<>(
-                        new ObjectSummaryIterator(objectListing.getObjectSummaries().iterator()),
-                        new DirectoryIterator(objectListing.getCommonPrefixes().iterator())
+                        new ObjectSummaryIterator(response.contents().iterator()),
+                        new DirectoryIterator(response.commonPrefixes().stream()
+                                .map(CommonPrefix::prefix).iterator())
                 );
             }
 
             @Override
             public boolean hasNext() {
                 /*
-                 * Drain out anything from the current objectListing
+                 * Drain out anything from the current response
                  */
                 if (objectListingIterator.hasNext()) {
                     return true;
                 }
 
                 /*
-                 * Replace this iterator with one for the next objectListing
+                 * Replace this iterator with one for the next response
                  */
-                if (objectListing.isTruncated()) {
-                    iterator = new Listing(getS3().listNextBatchOfObjects(objectListing));
+                if (response.isTruncated()) {
+                    String marker = response.nextMarker();
+                    if (marker == null) {
+                        final java.util.List<S3Object> contents = response.contents();
+                        if (!contents.isEmpty()) {
+                            marker = contents.get(contents.size() - 1).key();
+                        }
+                    }
+                    final ListObjectsRequest nextRequest = request.toBuilder().marker(marker).build();
+                    iterator = new Listing(getS3().listObjects(nextRequest));
                     return iterator.hasNext();
                 }
 
                 /*
-                 * If we're done with all objectListings, now descend into the
+                 * If we're done with all responses, now descend into the
                  * children if there are any.
                  *
                  * Replace this iterator with one for the children
@@ -1288,7 +1197,7 @@ public class S3File {
             return iterator.next();
         }
 
-        private AmazonS3 getS3() {
+        private software.amazon.awssdk.services.s3.S3Client getS3() {
             return bucket.getClient().getS3();
         }
     }
@@ -1312,9 +1221,9 @@ public class S3File {
     }
 
     class ObjectSummaryIterator implements Iterator<S3File> {
-        private final Iterator<S3ObjectSummary> iterator;
+        private final Iterator<S3Object> iterator;
 
-        public ObjectSummaryIterator(final Iterator<S3ObjectSummary> iterator) {
+        public ObjectSummaryIterator(final Iterator<S3Object> iterator) {
             this.iterator = iterator;
         }
 
