@@ -19,7 +19,8 @@ package org.tomitribe.jaws.s3;
 import org.tomitribe.util.IO;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
-import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.async.AsyncResponseTransformer;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -49,7 +50,7 @@ import java.util.stream.Stream;
 public class S3Bucket {
     private final S3Client client;
     private final Bucket bucket;
-    private final software.amazon.awssdk.services.s3.S3Client s3;
+    private final S3AsyncClient s3;
 
     public S3Bucket(final S3Client client, final Bucket bucket) {
         this.client = client;
@@ -81,29 +82,30 @@ public class S3Bucket {
     }
 
     public PutObjectResponse putObject(final String key, final File file) {
-        return s3.putObject(
+        return S3Client.join(s3.putObject(
                 PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
-                RequestBody.fromFile(file));
+                AsyncRequestBody.fromFile(file)));
     }
 
     public PutObjectResponse putObject(final String key, final InputStream inputStream, final long contentLength) {
-        return s3.putObject(
+        return S3Client.join(s3.putObject(
                 PutObjectRequest.builder().bucket(bucket.name()).key(key).contentLength(contentLength).build(),
-                RequestBody.fromInputStream(inputStream, contentLength));
+                AsyncRequestBody.fromInputStream(inputStream, contentLength, client.getExecutor())));
     }
 
     public PutObjectResponse putObject(final String key, final String content) {
-        return s3.putObject(
+        return S3Client.join(s3.putObject(
                 PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
-                RequestBody.fromString(content));
+                AsyncRequestBody.fromString(content)));
     }
 
     public ResponseInputStream<GetObjectResponse> getObject(final String key) {
-        return s3.getObject(GetObjectRequest.builder().bucket(bucket.name()).key(key).build());
+        return S3Client.join(s3.getObject(GetObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                AsyncResponseTransformer.toBlockingInputStream()));
     }
 
     public HeadObjectResponse getObjectMetadata(final String key) {
-        return s3.headObject(HeadObjectRequest.builder().bucket(bucket.name()).key(key).build());
+        return S3Client.join(s3.headObject(HeadObjectRequest.builder().bucket(bucket.name()).key(key).build()));
     }
 
     public S3File getFile(final String key) {
@@ -124,7 +126,8 @@ public class S3Bucket {
      */
     public InputStream getObjectAsStream(final String key) {
         try {
-            return s3.getObject(GetObjectRequest.builder().bucket(bucket.name()).key(key).build());
+            return S3Client.join(s3.getObject(GetObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                    AsyncResponseTransformer.toBlockingInputStream()));
         } catch (S3Exception e) {
             if (e.statusCode() == 404) {
                 throw new NoSuchS3ObjectException(bucket.name(), key, e);
@@ -147,8 +150,9 @@ public class S3Bucket {
      */
     public String getObjectAsString(final String key) {
         try {
-            final ResponseInputStream<GetObjectResponse> stream = s3.getObject(
-                    GetObjectRequest.builder().bucket(bucket.name()).key(key).build());
+            final ResponseInputStream<GetObjectResponse> stream = S3Client.join(s3.getObject(
+                    GetObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                    AsyncResponseTransformer.toBlockingInputStream()));
             try (stream) {
                 return IO.slurp(stream);
             } catch (IOException e) {
@@ -194,30 +198,30 @@ public class S3Bucket {
     }
 
     public PutObjectResponse setObjectAsString(final String key, final String value) {
-        return s3.putObject(
+        return S3Client.join(s3.putObject(
                 PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
-                RequestBody.fromString(value));
+                AsyncRequestBody.fromString(value)));
     }
 
     public PutObjectResponse setObjectAsFile(final String key, final File value) {
-        return s3.putObject(
+        return S3Client.join(s3.putObject(
                 PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
-                RequestBody.fromFile(value));
+                AsyncRequestBody.fromFile(value)));
     }
 
     public PutObjectResponse setObjectAsStream(final String key, final InputStream value) {
         try {
             final byte[] bytes = value.readAllBytes();
-            return s3.putObject(
+            return S3Client.join(s3.putObject(
                     PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
-                    RequestBody.fromBytes(bytes));
+                    AsyncRequestBody.fromBytes(bytes)));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
     public void deleteObject(final String key) {
-        s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket.name()).key(key).build());
+        S3Client.join(s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket.name()).key(key).build()));
     }
 
     public Instant getCreationDate() {
@@ -236,13 +240,13 @@ public class S3Bucket {
 
         public ObjectListingIterator(final String bucketName) {
             this.request = ListObjectsRequest.builder().bucket(bucketName).build();
-            this.response = s3.listObjects(request);
+            this.response = S3Client.join(s3.listObjects(request));
             this.iterator = response.contents().iterator();
         }
 
         public ObjectListingIterator(final ListObjectsRequest request) {
             this.request = request;
-            this.response = s3.listObjects(request);
+            this.response = S3Client.join(s3.listObjects(request));
             this.iterator = response.contents().iterator();
         }
 
@@ -259,7 +263,7 @@ public class S3Bucket {
                 }
             }
             request = request.toBuilder().marker(marker).build();
-            response = s3.listObjects(request);
+            response = S3Client.join(s3.listObjects(request));
             iterator = response.contents().iterator();
 
             return hasNext();

@@ -46,7 +46,7 @@ public class S3BucketTest {
     @Before
     public final void setUp() throws Exception {
         this.store = mockS3.getBlobStoreLocation();
-        this.s3Client = new S3Client(mockS3.getS3Client(), mockS3.getS3AsyncClient());
+        this.s3Client = new S3Client(mockS3.getS3Client());
     }
 
     @Test

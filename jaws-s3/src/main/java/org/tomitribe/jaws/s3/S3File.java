@@ -19,6 +19,7 @@ package org.tomitribe.jaws.s3;
 import org.tomitribe.util.IO;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -1308,7 +1309,7 @@ public class S3File {
                     .bucket(bucket.getName())
                     .build();
 
-            iterator = new Listing(getS3().listObjects(this.request));
+            iterator = new Listing(S3Client.join(getS3().listObjects(this.request)));
             remaining = depth == INFINITE ? INFINITE : depth - 1;
         }
 
@@ -1351,7 +1352,7 @@ public class S3File {
                         }
                     }
                     final ListObjectsRequest nextRequest = request.toBuilder().marker(marker).build();
-                    iterator = new Listing(getS3().listObjects(nextRequest));
+                    iterator = new Listing(S3Client.join(getS3().listObjects(nextRequest)));
                     return iterator.hasNext();
                 }
 
@@ -1391,7 +1392,7 @@ public class S3File {
             return iterator.next();
         }
 
-        private software.amazon.awssdk.services.s3.S3Client getS3() {
+        private S3AsyncClient getS3() {
             return bucket.getClient().getS3();
         }
     }

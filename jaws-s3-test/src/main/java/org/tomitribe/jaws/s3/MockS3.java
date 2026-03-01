@@ -23,7 +23,6 @@ import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
 import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Configuration;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -43,23 +42,7 @@ public class MockS3 {
         core.afterEach();
     }
 
-    public software.amazon.awssdk.services.s3.S3Client getS3Client() {
-        final AwsBasicCredentials awsCreds = AwsBasicCredentials.create("access", "secret");
-
-        final URI uri = core.getUri();
-        return software.amazon.awssdk.services.s3.S3Client.builder()
-                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
-                .endpointOverride(uri)
-                .region(Region.US_EAST_1)
-                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
-                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
-                .serviceConfiguration(S3Configuration.builder()
-                        .pathStyleAccessEnabled(true)
-                        .build())
-                .build();
-    }
-
-    public S3AsyncClient getS3AsyncClient() {
+    public S3AsyncClient getS3Client() {
         final AwsBasicCredentials awsCreds = AwsBasicCredentials.create("access", "secret");
 
         final URI uri = core.getUri();

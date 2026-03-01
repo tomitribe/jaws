@@ -25,6 +25,8 @@ import software.amazon.awssdk.transfer.s3.S3TransferManager;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -33,15 +35,15 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class S3Client {
-    private final software.amazon.awssdk.services.s3.S3Client s3;
+    private final S3AsyncClient s3;
     private final S3TransferManager transferManager;
     private final ExecutorService executor;
 
-    public S3Client(final software.amazon.awssdk.services.s3.S3Client s3, final S3AsyncClient asyncS3) {
+    public S3Client(final S3AsyncClient s3) {
         this.s3 = s3;
         this.executor = createDefaultExecutorService();
         this.transferManager = S3TransferManager.builder()
-                .s3Client(asyncS3)
+                .s3Client(s3)
                 .build();
     }
 
@@ -66,7 +68,7 @@ public class S3Client {
     }
 
     public S3Bucket createBucket(final String s) {
-        s3.createBucket(CreateBucketRequest.builder().bucket(s).build());
+        join(s3.createBucket(CreateBucketRequest.builder().bucket(s).build()));
         final Bucket bucket = Bucket.builder().name(s).build();
         return new S3Bucket(this, bucket);
     }
@@ -76,7 +78,7 @@ public class S3Client {
          * There doesn't seem to be a way to get a bucket
          * directly by name.
          */
-        final Bucket bucket = s3.listBuckets().buckets().stream()
+        final Bucket bucket = join(s3.listBuckets()).buckets().stream()
                 .filter(item -> name.equals(item.name()))
                 .findAny()
                 .orElseThrow(() -> new NoSuchBucketException(name));
@@ -85,12 +87,12 @@ public class S3Client {
     }
 
     public Stream<S3Bucket> buckets() {
-        return s3.listBuckets().buckets().stream()
+        return join(s3.listBuckets()).buckets().stream()
                 .map(bucket -> new S3Bucket(this, bucket));
 
     }
 
-    public software.amazon.awssdk.services.s3.S3Client getS3() {
+    public S3AsyncClient getS3() {
         return s3;
     }
 
@@ -100,5 +102,16 @@ public class S3Client {
 
     public ExecutorService getExecutor() {
         return executor;
+    }
+
+    static <T> T join(final CompletableFuture<T> future) {
+        try {
+            return future.join();
+        } catch (CompletionException e) {
+            final Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+            if (cause instanceof Error) throw (Error) cause;
+            throw e;
+        }
     }
 }

@@ -46,7 +46,7 @@ public class S3FileNodeUpdatedObjectTest {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        final S3Client s3Client = new S3Client(mockS3.getS3Client(), mockS3.getS3AsyncClient());
+        final S3Client s3Client = new S3Client(mockS3.getS3Client());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")

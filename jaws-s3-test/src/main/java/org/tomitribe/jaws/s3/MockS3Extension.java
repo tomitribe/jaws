@@ -37,12 +37,8 @@ public class MockS3Extension implements BeforeEachCallback, AfterEachCallback {
         mockS3.stop();
     }
 
-    public software.amazon.awssdk.services.s3.S3Client getS3Client() {
+    public S3AsyncClient getS3Client() {
         return mockS3.getS3Client();
-    }
-
-    public S3AsyncClient getS3AsyncClient() {
-        return mockS3.getS3AsyncClient();
     }
 
     public File getBlobStoreLocation() {
