@@ -16,27 +16,35 @@
  */
 package org.tomitribe.jaws.s3;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.function.Predicate;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
-/**
- * Filters results on the client side.  Allows a query
- * to be further refined once the data is requested and
- * returned.
- *
- * When possible use @Prefix as this will perform the
- * filtering on the server side and result in a smaller
- * http payload.
- *
- * @see Prefix
- */
-@Repeatable(Filters.class)
-@Target({ElementType.METHOD, ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Filter {
-    Class<? extends Predicate<S3File>> value();
+class IteratorIterator<T> implements Iterator<T> {
+    private final Iterator<Iterator<T>> iterators;
+    private Iterator<T> current;
+
+    public IteratorIterator(final Iterator<T>... iterators) {
+        this(Arrays.asList(iterators));
+    }
+
+    public IteratorIterator(final List<Iterator<T>> iterators) {
+        this.iterators = iterators.iterator();
+        current = this.iterators.next();
+    }
+
+    @Override
+    public boolean hasNext() {
+        if (current.hasNext()) return true;
+        if (!iterators.hasNext()) return false;
+
+        current = iterators.next();
+
+        return hasNext();
+    }
+
+    @Override
+    public T next() {
+        return current.next();
+    }
 }

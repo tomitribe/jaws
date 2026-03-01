@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -370,13 +371,21 @@ public interface S3 {
         }
 
         private Predicate<S3File> getFilter(final Method method) {
-            if (method.isAnnotationPresent(Filter.class)) {
-                final Filter filter = method.getAnnotation(Filter.class);
+            // Interface-level filters apply first, then method-level filters
+            final Class<?> elementType = getElementType(method);
+            return getAnnotationFilter(elementType).and(getAnnotationFilter(method));
+        }
+
+        private Predicate<S3File> getAnnotationFilter(final AnnotatedElement element) {
+            if (element == null) return file -> true;
+
+            if (element.isAnnotationPresent(Filter.class)) {
+                final Filter filter = element.getAnnotation(Filter.class);
                 return asPredicate(filter);
             }
 
-            if (method.isAnnotationPresent(Filters.class)) {
-                final Filters filters = method.getAnnotation(Filters.class);
+            if (element.isAnnotationPresent(Filters.class)) {
+                final Filters filters = element.getAnnotation(Filters.class);
                 Predicate<S3File> predicate = file -> true;
                 for (final Filter filter : filters.value()) {
                     predicate = predicate.and(asPredicate(filter));
@@ -384,7 +393,7 @@ public interface S3 {
                 return predicate;
             }
 
-            return pathname -> true;
+            return file -> true;
         }
 
         private Predicate<S3File> asPredicate(final Filter filter) {

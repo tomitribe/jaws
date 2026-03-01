@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -286,6 +287,63 @@ public class S3DirFileTest {
     }
 
     // ---------------------------------------------------------------
+    // Type-level @Filter
+    // ---------------------------------------------------------------
+
+    /**
+     * @Filter on the element type interface applies to stream results
+     */
+    @Test
+    public void typeFilterOnDir() throws Exception {
+        final FilteredPalette palette = S3.of(FilteredPalette.class,
+                s3Client.getBucket("colors").asFile());
+
+        final List<String> list = palette.colorGroups()
+                .map(RedOnlyGroup::toString)
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals("red", Join.join("\n", list));
+    }
+
+    /**
+     * @Filter on the element type interface applies to stream of S3.File
+     */
+    @Test
+    public void typeFilterOnFile() throws Exception {
+        final ColorGroup red = S3.of(ColorPalette.class,
+                s3Client.getBucket("colors").asFile()).colorGroup("red");
+
+        final List<String> list = red.lightFiles()
+                .map(f -> f.file().getAbsoluteName())
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals("red/light.txt", Join.join("\n", list));
+    }
+
+    /**
+     * When both type-level and method-level @Filter are present,
+     * the type-level filter applies first, then the method-level filter.
+     */
+    @Test
+    public void typeAndMethodFilterCombined() throws Exception {
+        final CombinedFilterPalette palette = S3.of(CombinedFilterPalette.class,
+                s3Client.getBucket("colors").asFile());
+
+        // DarkItem has @Filter(IsDark) on the type.
+        // The method darkRedItems() also has @Filter(IsRed) on it.
+        // Type filter (IsDark) runs first, then method filter (IsRed).
+        // Result: only red/dark.txt
+        final List<String> list = palette.darkRedItems()
+                .map(f -> f.file().getAbsoluteName())
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals("red/dark.txt", Join.join("\n", list));
+    }
+
+    // ---------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------
 
@@ -307,8 +365,55 @@ public class S3DirFileTest {
     }
 
     public interface ColorGroup extends S3.Dir {
+        Stream<LightOnlyFile> lightFiles();
     }
 
     public interface ColorFile extends S3.File {
+    }
+
+    @Filter(IsRed.class)
+    public interface RedOnlyGroup extends S3.Dir {
+    }
+
+    @Filter(IsLight.class)
+    public interface LightOnlyFile extends S3.File {
+    }
+
+    @Filter(IsDark.class)
+    public interface DarkItem extends S3 {
+    }
+
+    public interface FilteredPalette extends S3.Dir {
+        Stream<RedOnlyGroup> colorGroups();
+    }
+
+    public interface CombinedFilterPalette extends S3.Dir {
+        @Filter(IsRed.class)
+        Stream<DarkItem> darkRedItems();
+    }
+
+    // ---------------------------------------------------------------
+    // Filter predicates
+    // ---------------------------------------------------------------
+
+    public static class IsRed implements Predicate<S3File> {
+        @Override
+        public boolean test(final S3File s3File) {
+            return s3File.getAbsoluteName().contains("red");
+        }
+    }
+
+    public static class IsLight implements Predicate<S3File> {
+        @Override
+        public boolean test(final S3File s3File) {
+            return s3File.getName().contains("light");
+        }
+    }
+
+    public static class IsDark implements Predicate<S3File> {
+        @Override
+        public boolean test(final S3File s3File) {
+            return s3File.getName().contains("dark");
+        }
     }
 }
