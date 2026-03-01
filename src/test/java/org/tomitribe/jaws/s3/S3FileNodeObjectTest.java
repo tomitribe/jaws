@@ -26,7 +26,9 @@ import org.tomitribe.util.IO;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -199,6 +201,51 @@ public class S3FileNodeObjectTest {
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());
+    }
+
+    /**
+     * Upload with ObjectMetadata containing contentType and userMetadata.
+     * Note: s3proxy does not round-trip contentType or userMetadata,
+     * so we verify the upload succeeds and content is correct.
+     */
+    @Test
+    public void uploadWithObjectMetadata() throws Exception {
+        // State before the update
+        assertType(file, "Metadata");
+        assertEquals("green", file.getValueAsString());
+
+        final String value = "forrest";
+        final Map<String, String> userMetadata = new HashMap<>();
+        userMetadata.put("author", "tom");
+        userMetadata.put("version", "42");
+        final ObjectMetadata metadata = new ObjectMetadata(null, value.length(), null, "text/plain", userMetadata);
+
+        file.upload(IO.read(value), metadata).completionFuture().join();
+
+        // State after the update
+        assertType(file, "UploadingObject");
+        assertEquals("forrest", file.getValueAsString());
+        assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
+        assertEquals(7, file.getSize());
+    }
+
+    /**
+     * Upload with ObjectMetadata containing only contentLength and contentType.
+     */
+    @Test
+    public void uploadWithObjectMetadataContentTypeOnly() throws Exception {
+        // State before the update
+        assertType(file, "Metadata");
+        assertEquals("green", file.getValueAsString());
+
+        final String value = "{\"color\":\"forrest\"}";
+        final ObjectMetadata metadata = new ObjectMetadata(null, value.length(), null, "application/json", null);
+
+        file.upload(IO.read(value), metadata).completionFuture().join();
+
+        // State after the update
+        assertType(file, "UploadingObject");
+        assertEquals("{\"color\":\"forrest\"}", file.getValueAsString());
     }
 
     @Test

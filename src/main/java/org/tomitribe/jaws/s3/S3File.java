@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -84,7 +85,7 @@ public class S3File {
     S3File(final S3Bucket bucket, final String key, final HeadObjectResponse response) {
         this.bucket = bucket;
         this.path = Path.fromKey(key);
-        this.node.set(new Metadata(response));
+        this.node.set(new Metadata(response.eTag(), response.contentLength(), response.lastModified(), response.contentType(), response.metadata()));
     }
 
     S3File(final S3Bucket bucket, final Path path, final Class<? extends Node> type) {
@@ -196,7 +197,7 @@ public class S3File {
         return node.get().getLastModified();
     }
 
-    public HeadObjectResponse getObjectMetadata() {
+    public ObjectMetadata getObjectMetadata() {
         return node.get().getObjectMetadata();
     }
 
@@ -230,18 +231,36 @@ public class S3File {
     }
 
     public Upload upload(final InputStream input, final long size, final TransferListener listener) {
-        final PutObjectRequest putRequest = PutObjectRequest.builder()
+        return upload(input, new ObjectMetadata(null, size, null, null, null), listener);
+    }
+
+    public Upload upload(final InputStream input, final ObjectMetadata objectMetadata) {
+        return upload(input, objectMetadata, null);
+    }
+
+    public Upload upload(final InputStream input, final ObjectMetadata objectMetadata, final TransferListener listener) {
+        final long size = objectMetadata.getContentLength();
+
+        final PutObjectRequest.Builder putBuilder = PutObjectRequest.builder()
                 .bucket(getBucketName())
                 .key(getAbsoluteName())
-                .contentLength(size)
-                .build();
+                .contentLength(size);
+
+        if (objectMetadata.getContentType() != null) {
+            putBuilder.contentType(objectMetadata.getContentType());
+        }
+
+        final Map<String, String> userMetadata = objectMetadata.getUserMetadata();
+        if (!userMetadata.isEmpty()) {
+            putBuilder.metadata(userMetadata);
+        }
 
         final AsyncRequestBody body = input != null
                 ? AsyncRequestBody.fromInputStream(input, size, bucket.getClient().getExecutor())
                 : AsyncRequestBody.empty();
 
         final UploadRequest.Builder builder = UploadRequest.builder()
-                .putObjectRequest(putRequest)
+                .putObjectRequest(putBuilder.build())
                 .requestBody(body);
 
         if (listener != null) {
@@ -368,7 +387,7 @@ public class S3File {
 
         FileDownload download(DownloadFileRequest request);
 
-        HeadObjectResponse getObjectMetadata();
+        ObjectMetadata getObjectMetadata();
     }
 
     /**
@@ -486,7 +505,7 @@ public class S3File {
         }
 
         @Override
-        public HeadObjectResponse getObjectMetadata() {
+        public ObjectMetadata getObjectMetadata() {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
     }
@@ -501,15 +520,15 @@ public class S3File {
         private final String eTag;
         private final long contentLength;
         private final Instant lastModified;
+        private final String contentType;
+        private final Map<String, String> userMetadata;
 
-        public Metadata(final String eTag, final long contentLength, final Instant lastModified) {
+        public Metadata(final String eTag, final long contentLength, final Instant lastModified, final String contentType, final Map<String, String> userMetadata) {
             this.eTag = stripQuotes(eTag);
             this.contentLength = contentLength;
             this.lastModified = lastModified;
-        }
-
-        public Metadata(final HeadObjectResponse response) {
-            this(response.eTag(), response.contentLength(), response.lastModified());
+            this.contentType = contentType;
+            this.userMetadata = userMetadata;
         }
 
         @Override
@@ -595,8 +614,8 @@ public class S3File {
         }
 
         @Override
-        public HeadObjectResponse getObjectMetadata() {
-            return resolve(this).getObjectMetadata();
+        public ObjectMetadata getObjectMetadata() {
+            return new ObjectMetadata(eTag, contentLength, lastModified, contentType, userMetadata);
         }
 
         @Override
@@ -705,8 +724,8 @@ public class S3File {
         }
 
         @Override
-        public HeadObjectResponse getObjectMetadata() {
-            return resolve(this).getObjectMetadata();
+        public ObjectMetadata getObjectMetadata() {
+            return ObjectMetadata.fromListing(summary);
         }
 
         @Override
@@ -818,8 +837,8 @@ public class S3File {
         }
 
         @Override
-        public HeadObjectResponse getObjectMetadata() {
-            return resolve(this).getObjectMetadata();
+        public ObjectMetadata getObjectMetadata() {
+            return ObjectMetadata.fromPut(result, contentLength);
         }
 
         @Override
@@ -924,7 +943,7 @@ public class S3File {
         }
 
         @Override
-        public HeadObjectResponse getObjectMetadata() {
+        public ObjectMetadata getObjectMetadata() {
             return resolve(this).getObjectMetadata();
         }
 
@@ -1034,7 +1053,7 @@ public class S3File {
         }
 
         @Override
-        public HeadObjectResponse getObjectMetadata() {
+        public ObjectMetadata getObjectMetadata() {
             return resolve(this).getObjectMetadata();
         }
 
@@ -1147,7 +1166,7 @@ public class S3File {
         }
 
         @Override
-        public HeadObjectResponse getObjectMetadata() {
+        public ObjectMetadata getObjectMetadata() {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
 
@@ -1204,7 +1223,7 @@ public class S3File {
             throw e;
         }
         final GetObjectResponse response = responseStream.response();
-        final Metadata metadata = new Metadata(response.eTag(), response.contentLength(), response.lastModified());
+        final Metadata metadata = new Metadata(response.eTag(), response.contentLength(), response.lastModified(), response.contentType(), response.metadata());
         node.compareAndSet(current, metadata);
         return responseStream;
     }
@@ -1242,7 +1261,7 @@ public class S3File {
         }
 
 
-        final Metadata newNode = new Metadata(response);
+        final Metadata newNode = new Metadata(response.eTag(), response.contentLength(), response.lastModified(), response.contentType(), response.metadata());
 
         if (node.compareAndSet(current, newNode)) {
             return newNode;
