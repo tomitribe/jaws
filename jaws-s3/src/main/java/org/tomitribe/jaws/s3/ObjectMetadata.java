@@ -21,6 +21,10 @@ import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
+import java.io.File;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,6 +70,15 @@ public class ObjectMetadata {
         return new Builder();
     }
 
+    public Builder toBuilder() {
+        return new Builder()
+                .eTag(eTag)
+                .contentLength(contentLength)
+                .lastModified(lastModified)
+                .contentType(contentType)
+                .userMetadata(userMetadata != null ? new HashMap<>(userMetadata) : null);
+    }
+
     public static class Builder {
         private String eTag;
         private long contentLength;
@@ -109,6 +122,46 @@ public class ObjectMetadata {
         public ObjectMetadata build() {
             return new ObjectMetadata(eTag, contentLength, lastModified, contentType, userMetadata);
         }
+    }
+
+    public static ObjectMetadata from(final File file) {
+        return from(file.toPath());
+    }
+
+    public static ObjectMetadata from(final Path path) {
+        final String contentType = contentType(path.getFileName().toString(), "application/octet-stream");
+        try {
+            return new ObjectMetadata(
+                    null,
+                    Files.size(path),
+                    Files.getLastModifiedTime(path).toInstant(),
+                    contentType,
+                    null
+            );
+        } catch (final java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
+    public static String contentType(final String fileName, final String defaultType) {
+        // Types the JDK doesn't know or gets wrong
+        if (fileName.endsWith(".tar.gz")) return "application/x-gzip";
+        if (fileName.endsWith(".jar")) return "application/java-archive";
+        if (fileName.endsWith(".war")) return "application/java-archive";
+        if (fileName.endsWith(".ear")) return "application/java-archive";
+        if (fileName.endsWith(".rar")) return "application/java-archive";
+        if (fileName.endsWith(".pom")) return "application/xml";
+        if (fileName.endsWith(".md5")) return "text/plain";
+        if (fileName.endsWith(".sha1")) return "text/plain";
+        if (fileName.endsWith(".sha256")) return "text/plain";
+        if (fileName.endsWith(".sha512")) return "text/plain";
+        if (fileName.endsWith(".asc")) return "text/plain";
+
+        // Let the JDK handle common types (.html, .txt, .xml, .json, .png, .jpg, etc.)
+        final String guessed = URLConnection.guessContentTypeFromName(fileName);
+        if (guessed != null) return guessed;
+
+        return defaultType;
     }
 
     public static ObjectMetadata fromHead(final HeadObjectResponse response) {
