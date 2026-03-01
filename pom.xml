@@ -28,7 +28,7 @@
 
   <artifactId>tomitribe-jaws</artifactId>
   <packaging>jar</packaging>
-  <version>0.16-SNAPSHOT</version>
+  <version>2.0-SNAPSHOT</version>
   <name>Tomitribe :: JAWS</name>
 
   <scm>
@@ -47,12 +47,12 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
-      <version>2.25.17</version>
+      <version>2.42.4</version>
     </dependency>
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3-transfer-manager</artifactId>
-      <version>2.25.17</version>
+      <version>2.42.4</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

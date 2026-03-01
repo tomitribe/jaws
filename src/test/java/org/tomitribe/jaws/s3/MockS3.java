@@ -23,6 +23,8 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Configuration;
@@ -51,6 +53,8 @@ public class MockS3 extends ExternalResource {
                 .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
                 .endpointOverride(uri)
                 .region(Region.US_EAST_1)
+                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(true)
                         .build())
@@ -65,6 +69,8 @@ public class MockS3 extends ExternalResource {
                 .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
                 .endpointOverride(uri)
                 .region(Region.US_EAST_1)
+                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                 .forcePathStyle(true)
                 .build();
     }
