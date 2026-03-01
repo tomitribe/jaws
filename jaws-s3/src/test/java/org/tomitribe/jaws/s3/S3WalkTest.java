@@ -307,7 +307,7 @@ public class S3WalkTest {
                 .collect(Collectors.toList());
     }
 
-    public interface Work extends S3 {
+    public interface Work extends S3.Dir {
         @Walk
         Stream<S3File> nofilter();
 

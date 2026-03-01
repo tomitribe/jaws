@@ -456,7 +456,7 @@ public class S3Test {
         assertEquals("pom.xml", Join.join("\n", S3File::getAbsoluteName, data));
     }
 
-    public interface Project extends S3 {
+    public interface Project extends S3.Dir {
         Src src();
 
         S3File target();
@@ -465,7 +465,7 @@ public class S3Test {
         S3File pomXml();
     }
 
-    public interface Src extends S3 {
+    public interface Src extends S3.Dir {
         Section main();
 
         Section test();
@@ -563,7 +563,7 @@ public class S3Test {
         }
     }
 
-    public interface DefaultMethods extends S3 {
+    public interface DefaultMethods extends S3.Dir {
 
         default Stream<S3File> getTextFiles() {
             return files().filter(s3File -> s3File.getName().endsWith(".txt"));

@@ -42,7 +42,6 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -148,6 +147,18 @@ public class S3File {
 
     public Stream<S3File> walk(final int maxDepth) {
         return node.get().walk(maxDepth);
+    }
+
+    Stream<S3File> listDirs() {
+        return node.get().listDirs();
+    }
+
+    Stream<S3File> listFiles() {
+        return node.get().listFiles();
+    }
+
+    Stream<S3File> listAll() {
+        return node.get().listAll();
     }
 
     public String getAbsoluteName() {
@@ -356,11 +367,29 @@ public class S3File {
 
         S3File getFile(final String name);
 
-        Stream<S3File> files();
+        default Stream<S3File> files() {
+            return Stream.of();
+        }
 
-        Stream<S3File> files(final ListObjectsRequest request);
+        default Stream<S3File> files(final ListObjectsRequest request) {
+            return Stream.of();
+        }
 
-        Stream<S3File> walk(final int maxDepth);
+        default Stream<S3File> walk(final int maxDepth) {
+            return Stream.of();
+        }
+
+        default Stream<S3File> listDirs() {
+            return Stream.of();
+        }
+
+        default Stream<S3File> listFiles() {
+            return Stream.of();
+        }
+
+        default Stream<S3File> listAll() {
+            return Stream.of();
+        }
 
         InputStream getValueAsStream();
 
@@ -437,6 +466,21 @@ public class S3File {
         @Override
         public Stream<S3File> walk(final int maxDepth) {
             return performWalk(maxDepth);
+        }
+
+        @Override
+        public Stream<S3File> listDirs() {
+            return performSingleLevelListing(SingleLevelMode.DIRS_ONLY);
+        }
+
+        @Override
+        public Stream<S3File> listFiles() {
+            return performSingleLevelListing(SingleLevelMode.FILES_ONLY);
+        }
+
+        @Override
+        public Stream<S3File> listAll() {
+            return performSingleLevelListing(SingleLevelMode.BOTH);
         }
 
         @Override
@@ -554,21 +598,6 @@ public class S3File {
         }
 
         @Override
-        public Stream<S3File> files() {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> files(final ListObjectsRequest request) {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> walk(final int maxDepth) {
-            return Stream.of();
-        }
-
-        @Override
         public InputStream getValueAsStream() {
             return openStreamAndReplace(this);
         }
@@ -661,21 +690,6 @@ public class S3File {
         public S3File getFile(final String name) {
             final String message = String.format("S3File '%s' is a not directory and cannot have child '%s'", path.getAbsoluteName(), name);
             throw new UnsupportedOperationException(message);
-        }
-
-        @Override
-        public Stream<S3File> files() {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> files(final ListObjectsRequest request) {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> walk(final int maxDepth) {
-            return Stream.of();
         }
 
         @Override
@@ -777,21 +791,6 @@ public class S3File {
         }
 
         @Override
-        public Stream<S3File> files() {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> files(final ListObjectsRequest request) {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> walk(final int maxDepth) {
-            return Stream.of();
-        }
-
-        @Override
         public InputStream getValueAsStream() {
             return openStreamAndReplace(this);
         }
@@ -880,21 +879,6 @@ public class S3File {
         public S3File getFile(final String name) {
             final String message = String.format("S3File '%s' is a not directory and cannot have child '%s'", path.getAbsoluteName(), name);
             throw new UnsupportedOperationException(message);
-        }
-
-        @Override
-        public Stream<S3File> files() {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> files(final ListObjectsRequest request) {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> walk(final int maxDepth) {
-            return Stream.of();
         }
 
         @Override
@@ -1003,6 +987,21 @@ public class S3File {
         }
 
         @Override
+        public Stream<S3File> listDirs() {
+            return performSingleLevelListing(SingleLevelMode.DIRS_ONLY);
+        }
+
+        @Override
+        public Stream<S3File> listFiles() {
+            return performSingleLevelListing(SingleLevelMode.FILES_ONLY);
+        }
+
+        @Override
+        public Stream<S3File> listAll() {
+            return performSingleLevelListing(SingleLevelMode.BOTH);
+        }
+
+        @Override
         public S3File getFile(final String name) {
             final Path child = path.getChild(name);
             return new S3File(bucket, child, Unknown.class);
@@ -1098,21 +1097,6 @@ public class S3File {
         @Override
         public boolean isDirectory() {
             return false;
-        }
-
-        @Override
-        public Stream<S3File> files() {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> files(final ListObjectsRequest request) {
-            return Stream.of();
-        }
-
-        @Override
-        public Stream<S3File> walk(final int maxDepth) {
-            return Stream.of();
         }
 
         @Override
@@ -1241,6 +1225,16 @@ public class S3File {
 
     private Stream<S3File> performWalk(final int depth) {
         return asStream(new WalkingIterator(this, depth));
+    }
+
+    enum SingleLevelMode {
+        DIRS_ONLY,
+        FILES_ONLY,
+        BOTH
+    }
+
+    private Stream<S3File> performSingleLevelListing(final SingleLevelMode mode) {
+        return asStream(new SingleLevelIterator(this, mode));
     }
 
     private Node resolve(final Node current) {
@@ -1397,6 +1391,68 @@ public class S3File {
         }
     }
 
+    class SingleLevelIterator implements Iterator<S3File> {
+
+        private final SingleLevelMode mode;
+        private Iterator<S3File> iterator;
+        private ListObjectsResponse response;
+        private ListObjectsRequest request;
+
+        public SingleLevelIterator(final S3File file, final SingleLevelMode mode) {
+            this.mode = mode;
+            this.request = ListObjectsRequest.builder()
+                    .delimiter("/")
+                    .prefix(file.getPath().getSearchPrefix())
+                    .bucket(bucket.getName())
+                    .build();
+
+            this.response = S3Client.join(bucket.getClient().getS3().listObjects(this.request));
+            this.iterator = iteratorForResponse(this.response);
+        }
+
+        private Iterator<S3File> iteratorForResponse(final ListObjectsResponse response) {
+            switch (mode) {
+                case DIRS_ONLY:
+                    return new DirectoryIterator(response.commonPrefixes().stream()
+                            .map(CommonPrefix::prefix).iterator());
+                case FILES_ONLY:
+                    return new ObjectSummaryIterator(response.contents().iterator());
+                case BOTH:
+                    return new IteratorIterator<>(
+                            new ObjectSummaryIterator(response.contents().iterator()),
+                            new DirectoryIterator(response.commonPrefixes().stream()
+                                    .map(CommonPrefix::prefix).iterator())
+                    );
+                default:
+                    throw new IllegalStateException("Unknown mode: " + mode);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (iterator.hasNext()) return true;
+            if (!response.isTruncated()) return false;
+
+            String marker = response.nextMarker();
+            if (marker == null) {
+                final java.util.List<S3Object> contents = response.contents();
+                if (!contents.isEmpty()) {
+                    marker = contents.get(contents.size() - 1).key();
+                }
+            }
+            request = request.toBuilder().marker(marker).build();
+            response = S3Client.join(bucket.getClient().getS3().listObjects(request));
+            iterator = iteratorForResponse(response);
+
+            return hasNext();
+        }
+
+        @Override
+        public S3File next() {
+            return iterator.next();
+        }
+    }
+
     class DirectoryIterator implements Iterator<S3File> {
         private final Iterator<String> iterator;
 
@@ -1430,35 +1486,6 @@ public class S3File {
         @Override
         public S3File next() {
             return new S3File(bucket, iterator.next());
-        }
-    }
-
-    static class IteratorIterator<T> implements Iterator<T> {
-        private final Iterator<Iterator<T>> iterators;
-        private Iterator<T> current;
-
-        public IteratorIterator(final Iterator<T>... iterators) {
-            this(Arrays.asList(iterators));
-        }
-
-        public IteratorIterator(final List<Iterator<T>> iterators) {
-            this.iterators = iterators.iterator();
-            current = this.iterators.next();
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (current.hasNext()) return true;
-            if (!iterators.hasNext()) return false;
-
-            current = iterators.next();
-
-            return hasNext();
-        }
-
-        @Override
-        public T next() {
-            return current.next();
         }
     }
 

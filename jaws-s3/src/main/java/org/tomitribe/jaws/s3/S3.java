@@ -23,12 +23,14 @@ import org.tomitribe.util.reflect.Generics;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -43,9 +45,35 @@ public interface S3 {
 
     S3File parent();
 
-    S3File file(String name);
+    interface Dir extends S3 {
+        S3File file(String name);
 
-    Stream<S3File> files();
+        Stream<S3File> files();
+
+        Stream<S3File> dirs();
+
+        Stream<S3File> list();
+    }
+
+    interface File extends S3 {
+        InputStream getValueAsStream();
+
+        String getValueAsString();
+
+        void setValueAsStream(InputStream is);
+
+        void setValueAsString(String value);
+
+        void setValueAsFile(java.io.File file);
+
+        String getETag();
+
+        long getSize();
+
+        Instant getLastModified();
+
+        ObjectMetadata getObjectMetadata();
+    }
 
     static <T> T of(final Class<T> clazz, final S3Bucket bucket) {
         return of(clazz, bucket.asFile());
@@ -80,8 +108,34 @@ public interface S3 {
             if (method.getDeclaringClass().equals(S3.class)) {
                 if (method.getName().equals("get")) return dir;
                 if (method.getName().equals("parent")) return dir.getParentFile();
-                if (method.getName().equals("files")) return files();
+                throw new IllegalStateException("Unknown method " + method);
+            }
+            if (method.getDeclaringClass().equals(Dir.class)) {
                 if (method.getName().equals("file") && hasStringArg(method)) return file(args);
+                if (method.getName().equals("files")) return files();
+                if (method.getName().equals("dirs")) return dirs();
+                if (method.getName().equals("list")) return list();
+                throw new IllegalStateException("Unknown method " + method);
+            }
+            if (method.getDeclaringClass().equals(File.class)) {
+                if (method.getName().equals("getValueAsStream")) return dir.getValueAsStream();
+                if (method.getName().equals("getValueAsString")) return dir.getValueAsString();
+                if (method.getName().equals("setValueAsStream")) {
+                    dir.setValueAsStream((InputStream) args[0]);
+                    return null;
+                }
+                if (method.getName().equals("setValueAsString")) {
+                    dir.setValueAsString((String) args[0]);
+                    return null;
+                }
+                if (method.getName().equals("setValueAsFile")) {
+                    dir.setValueAsFile((java.io.File) args[0]);
+                    return null;
+                }
+                if (method.getName().equals("getETag")) return dir.getETag();
+                if (method.getName().equals("getSize")) return dir.getSize();
+                if (method.getName().equals("getLastModified")) return dir.getLastModified();
+                if (method.getName().equals("getObjectMetadata")) return dir.getObjectMetadata();
                 throw new IllegalStateException("Unknown method " + method);
             }
 
@@ -147,6 +201,14 @@ public interface S3 {
 
         private Stream<S3File> files() {
             return dir.files();
+        }
+
+        private Stream<S3File> dirs() {
+            return dir.listDirs();
+        }
+
+        private Stream<S3File> list() {
+            return dir.listAll();
         }
 
         private S3File file(final Object[] args) {
@@ -328,11 +390,31 @@ public interface S3 {
             throw new UnsupportedOperationException(method.toGenericString());
         }
 
+        private Class<?> getElementType(final Method method) {
+            final Class<?> returnType = method.getReturnType();
+            if (returnType.isArray()) {
+                return returnType.getComponentType();
+            }
+            if (Stream.class.equals(returnType) || List.class.equals(returnType)
+                    || Set.class.equals(returnType) || Collection.class.equals(returnType)) {
+                return (Class<?>) Generics.getReturnType(method);
+            }
+            return null;
+        }
+
         private Stream<S3File> stream(final Method method) {
 
             final Walk walk = method.getAnnotation(Walk.class);
 
             if (walk != null) return walk(walk, dir);
+
+            final Class<?> elementType = getElementType(method);
+            if (elementType != null && Dir.class.isAssignableFrom(elementType)) {
+                return dir.listDirs();
+            }
+            if (elementType != null && File.class.isAssignableFrom(elementType)) {
+                return dir.listFiles();
+            }
 
             ListObjectsRequest.Builder builder = ListObjectsRequest.builder();
 
