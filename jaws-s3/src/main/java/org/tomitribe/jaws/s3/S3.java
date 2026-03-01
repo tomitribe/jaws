@@ -16,6 +16,9 @@
  */
 package org.tomitribe.jaws.s3;
 
+import software.amazon.awssdk.transfer.s3.model.Upload;
+import software.amazon.awssdk.transfer.s3.progress.TransferListener;
+
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.stream.Stream;
@@ -54,6 +57,25 @@ public interface S3 {
          * Uses a delimiter-based listing, returning both contents and commonPrefixes.
          */
         Stream<S3File> list();
+
+        /**
+         * Convenience method for file(file.getName()).upload(file)
+         * @param file
+         * @return
+         */
+        default Upload upload(final java.io.File file) {
+            return file(file.getName()).upload(file);
+        }
+
+        /**
+         * Convenience method for file(file.getName()).upload(file, listener)
+         * @param file
+         * @param listener
+         * @return
+         */
+        default Upload upload(final java.io.File file, final TransferListener listener) {
+            return file(file.getName()).upload(file, listener);
+        }
     }
 
     /**

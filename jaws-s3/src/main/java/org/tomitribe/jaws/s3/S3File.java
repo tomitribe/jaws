@@ -253,11 +253,55 @@ public class S3File {
 
     public Upload upload(final InputStream input, final ObjectMetadata objectMetadata, final TransferListener listener) {
         final long size = objectMetadata.getContentLength();
+        final AsyncRequestBody body = input != null
+                ? AsyncRequestBody.fromInputStream(input, size, bucket.getClient().getExecutor())
+                : AsyncRequestBody.empty();
+        return upload(body, objectMetadata, listener);
+    }
 
+    public Upload upload(final File file) {
+        return upload(file, (TransferListener) null);
+    }
+
+    public Upload upload(final File file, final TransferListener listener) {
+        return upload(file, ObjectMetadata.from(file), listener);
+    }
+
+    public Upload upload(final File file, final ObjectMetadata objectMetadata) {
+        return upload(file, objectMetadata, null);
+    }
+
+    public Upload upload(final File file, final ObjectMetadata objectMetadata, final TransferListener listener) {
+        final AsyncRequestBody body = file != null
+                ? AsyncRequestBody.fromFile(file)
+                : AsyncRequestBody.empty();
+        return upload(body, objectMetadata, listener);
+    }
+
+    public Upload upload(final java.nio.file.Path path) {
+        return upload(path, (TransferListener) null);
+    }
+
+    public Upload upload(final java.nio.file.Path path, final TransferListener listener) {
+        return upload(path, ObjectMetadata.from(path), listener);
+    }
+
+    public Upload upload(final java.nio.file.Path path, final ObjectMetadata objectMetadata) {
+        return upload(path, objectMetadata, null);
+    }
+
+    public Upload upload(final java.nio.file.Path path, final ObjectMetadata objectMetadata, final TransferListener listener) {
+        final AsyncRequestBody body = path != null
+                ? AsyncRequestBody.fromFile(path)
+                : AsyncRequestBody.empty();
+        return upload(body, objectMetadata, listener);
+    }
+
+    private Upload upload(final AsyncRequestBody body, final ObjectMetadata objectMetadata, final TransferListener listener) {
         final PutObjectRequest.Builder putBuilder = PutObjectRequest.builder()
                 .bucket(getBucketName())
                 .key(getAbsoluteName())
-                .contentLength(size);
+                .contentLength(objectMetadata.getContentLength());
 
         if (objectMetadata.getContentType() != null) {
             putBuilder.contentType(objectMetadata.getContentType());
@@ -268,37 +312,8 @@ public class S3File {
             putBuilder.metadata(userMetadata);
         }
 
-        final AsyncRequestBody body = input != null
-                ? AsyncRequestBody.fromInputStream(input, size, bucket.getClient().getExecutor())
-                : AsyncRequestBody.empty();
-
         final UploadRequest.Builder builder = UploadRequest.builder()
                 .putObjectRequest(putBuilder.build())
-                .requestBody(body);
-
-        if (listener != null) {
-            builder.addTransferListener(listener);
-        }
-
-        return node.get().upload(builder.build());
-    }
-
-    public Upload upload(final File file) {
-        return upload(file, null);
-    }
-
-    public Upload upload(final File file, final TransferListener listener) {
-        final PutObjectRequest putRequest = PutObjectRequest.builder()
-                .bucket(getBucketName())
-                .key(getAbsoluteName())
-                .build();
-
-        final AsyncRequestBody body = file != null
-                ? AsyncRequestBody.fromFile(file)
-                : AsyncRequestBody.empty();
-
-        final UploadRequest.Builder builder = UploadRequest.builder()
-                .putObjectRequest(putRequest)
                 .requestBody(body);
 
         if (listener != null) {
