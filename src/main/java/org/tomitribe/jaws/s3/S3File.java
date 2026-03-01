@@ -18,7 +18,7 @@ package org.tomitribe.jaws.s3;
 
 import org.tomitribe.util.IO;
 import software.amazon.awssdk.core.ResponseInputStream;
-import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -29,6 +29,11 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.transfer.s3.model.DownloadFileRequest;
+import software.amazon.awssdk.transfer.s3.model.FileDownload;
+import software.amazon.awssdk.transfer.s3.model.Upload;
+import software.amazon.awssdk.transfer.s3.model.UploadRequest;
+import software.amazon.awssdk.transfer.s3.progress.TransferListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -220,27 +225,90 @@ public class S3File {
         node.get().delete(force);
     }
 
-    public PutObjectResponse upload(final InputStream input, final long size) {
-        final PutObjectRequest request = PutObjectRequest.builder()
+    public Upload upload(final InputStream input, final long size) {
+        return upload(input, size, null);
+    }
+
+    public Upload upload(final InputStream input, final long size, final TransferListener listener) {
+        final PutObjectRequest putRequest = PutObjectRequest.builder()
                 .bucket(getBucketName())
                 .key(getAbsoluteName())
                 .contentLength(size)
                 .build();
-        final RequestBody body = input != null ? RequestBody.fromInputStream(input, size) : null;
-        return node.get().upload(request, body, size);
+
+        final AsyncRequestBody body = input != null
+                ? AsyncRequestBody.fromInputStream(input, size, bucket.getClient().getExecutor())
+                : AsyncRequestBody.empty();
+
+        final UploadRequest.Builder builder = UploadRequest.builder()
+                .putObjectRequest(putRequest)
+                .requestBody(body);
+
+        if (listener != null) {
+            builder.addTransferListener(listener);
+        }
+
+        return node.get().upload(builder.build());
     }
 
-    public PutObjectResponse upload(final File file) {
-        final PutObjectRequest request = PutObjectRequest.builder()
+    public Upload upload(final File file) {
+        return upload(file, null);
+    }
+
+    public Upload upload(final File file, final TransferListener listener) {
+        final PutObjectRequest putRequest = PutObjectRequest.builder()
                 .bucket(getBucketName())
                 .key(getAbsoluteName())
                 .build();
-        final RequestBody body = file != null ? RequestBody.fromFile(file) : null;
-        return node.get().upload(request, body, file != null ? file.length() : 0);
+
+        final AsyncRequestBody body = file != null
+                ? AsyncRequestBody.fromFile(file)
+                : AsyncRequestBody.empty();
+
+        final UploadRequest.Builder builder = UploadRequest.builder()
+                .putObjectRequest(putRequest)
+                .requestBody(body);
+
+        if (listener != null) {
+            builder.addTransferListener(listener);
+        }
+
+        return node.get().upload(builder.build());
     }
 
-    public GetObjectResponse download(final File destination) {
-        return node.get().download(destination);
+    public Upload upload(final UploadRequest uploadRequest) {
+        return upload(uploadRequest, null);
+    }
+
+    public Upload upload(final UploadRequest uploadRequest, final TransferListener listener) {
+        if (listener == null) {
+            return node.get().upload(uploadRequest);
+        }
+
+        final UploadRequest withListener = uploadRequest.toBuilder()
+                .addTransferListener(listener)
+                .build();
+
+        return node.get().upload(withListener);
+    }
+
+    public FileDownload download(final File destination) {
+        return download(destination, null);
+    }
+
+    public FileDownload download(final File destination, final TransferListener listener) {
+        final DownloadFileRequest.Builder builder = DownloadFileRequest.builder()
+                .getObjectRequest(GetObjectRequest.builder()
+                        .bucket(getBucketName())
+                        .key(getAbsoluteName())
+                        .build())
+                .destination(destination.toPath());
+
+        if (listener != null) {
+            builder.addTransferListener(listener);
+        }
+
+        return node.get().download(builder.build());
     }
 
     /**
@@ -296,9 +364,9 @@ public class S3File {
 
         void delete(final boolean force);
 
-        PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength);
+        Upload upload(UploadRequest request);
 
-        GetObjectResponse download(File destination);
+        FileDownload download(DownloadFileRequest request);
 
         HeadObjectResponse getObjectMetadata();
     }
@@ -408,12 +476,12 @@ public class S3File {
         }
 
         @Override
-        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
+        public Upload upload(final UploadRequest request) {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
         @Override
-        public GetObjectResponse download(final File destination) {
+        public FileDownload download(final DownloadFileRequest request) {
             throw new UnsupportedOperationException("S3File refers to a directory");
         }
 
@@ -532,14 +600,13 @@ public class S3File {
         }
 
         @Override
-        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
-            return uploadAndReplace(this, request, body, contentLength);
+        public Upload upload(final UploadRequest request) {
+            return uploadAndReplace(this, request);
         }
 
-        public GetObjectResponse download(final File destination) {
-            return bucket.getClient().getS3().getObject(
-                    GetObjectRequest.builder().bucket(bucket.getName()).key(getAbsoluteName()).build(),
-                    destination.toPath());
+        @Override
+        public FileDownload download(final DownloadFileRequest request) {
+            return bucket.getClient().getTransferManager().downloadFile(request);
         }
     }
 
@@ -643,14 +710,13 @@ public class S3File {
         }
 
         @Override
-        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
-            return uploadAndReplace(this, request, body, contentLength);
+        public Upload upload(final UploadRequest request) {
+            return uploadAndReplace(this, request);
         }
 
-        public GetObjectResponse download(final File destination) {
-            return bucket.getClient().getS3().getObject(
-                    GetObjectRequest.builder().bucket(bucket.getName()).key(getAbsoluteName()).build(),
-                    destination.toPath());
+        @Override
+        public FileDownload download(final DownloadFileRequest request) {
+            return bucket.getClient().getTransferManager().downloadFile(request);
         }
 
     }
@@ -757,14 +823,119 @@ public class S3File {
         }
 
         @Override
-        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
-            return uploadAndReplace(this, request, body, contentLength);
+        public Upload upload(final UploadRequest request) {
+            return uploadAndReplace(this, request);
         }
 
-        public GetObjectResponse download(final File destination) {
-            return bucket.getClient().getS3().getObject(
-                    GetObjectRequest.builder().bucket(bucket.getName()).key(getAbsoluteName()).build(),
-                    destination.toPath());
+        @Override
+        public FileDownload download(final DownloadFileRequest request) {
+            return bucket.getClient().getTransferManager().downloadFile(request);
+        }
+    }
+
+    /**
+     * Represents an object that is being uploaded.
+     */
+    private class UploadingObject implements Node {
+
+        public UploadingObject() {
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public boolean isFile() {
+            return true;
+        }
+
+        @Override
+        public boolean isDirectory() {
+            return false;
+        }
+
+        @Override
+        public S3File getFile(final String name) {
+            final String message = String.format("S3File '%s' is a not directory and cannot have child '%s'", path.getAbsoluteName(), name);
+            throw new UnsupportedOperationException(message);
+        }
+
+        @Override
+        public Stream<S3File> files() {
+            return Stream.of();
+        }
+
+        @Override
+        public Stream<S3File> files(final ListObjectsRequest request) {
+            return Stream.of();
+        }
+
+        @Override
+        public Stream<S3File> walk(final int maxDepth) {
+            return Stream.of();
+        }
+
+        @Override
+        public InputStream getValueAsStream() {
+            return openStreamAndReplace(this);
+        }
+
+        @Override
+        public String getValueAsString() {
+            return readAndReplace(this);
+        }
+
+        @Override
+        public void setValueAsStream(final InputStream inputStream) {
+            writeStreamAndReplace(this, inputStream);
+        }
+
+        @Override
+        public void setValueAsString(final String value) {
+            writeStringAndReplace(this, value);
+        }
+
+        @Override
+        public void setValueAsFile(final File value) {
+            writeFileAndReplace(this, value);
+        }
+
+        @Override
+        public String getETag() {
+            return resolve(this).getETag();
+        }
+
+        @Override
+        public long getSize() {
+            return resolve(this).getSize();
+        }
+
+        @Override
+        public Instant getLastModified() {
+            return resolve(this).getLastModified();
+        }
+
+        @Override
+        public void delete(final boolean ignore) {
+            bucket.deleteObject(path.getAbsoluteName());
+            node.compareAndSet(this, new NewObject());
+        }
+
+        @Override
+        public HeadObjectResponse getObjectMetadata() {
+            return resolve(this).getObjectMetadata();
+        }
+
+        @Override
+        public Upload upload(final UploadRequest request) {
+            return uploadAndReplace(this, request);
+        }
+
+        @Override
+        public FileDownload download(final DownloadFileRequest request) {
+            return bucket.getClient().getTransferManager().downloadFile(request);
         }
     }
 
@@ -868,12 +1039,13 @@ public class S3File {
         }
 
         @Override
-        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
-            return uploadAndReplace(this, request, body, contentLength);
+        public Upload upload(final UploadRequest request) {
+            return uploadAndReplace(this, request);
         }
 
-        public GetObjectResponse download(final File destination) {
-            return resolve(this).download(destination);
+        @Override
+        public FileDownload download(final DownloadFileRequest request) {
+            return resolve(this).download(request);
         }
 
     }
@@ -980,11 +1152,12 @@ public class S3File {
         }
 
         @Override
-        public PutObjectResponse upload(final PutObjectRequest request, final RequestBody body, final long contentLength) {
-            return uploadAndReplace(this, request, body, contentLength);
+        public Upload upload(final UploadRequest request) {
+            return uploadAndReplace(this, request);
         }
 
-        public GetObjectResponse download(final File destination) {
+        @Override
+        public FileDownload download(final DownloadFileRequest request) {
             throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName());
         }
     }
@@ -1004,10 +1177,12 @@ public class S3File {
         node.compareAndSet(current, new UpdatedObject(result, 0));
     }
 
-    private PutObjectResponse uploadAndReplace(final Node current, final PutObjectRequest request, final RequestBody body, final long contentLength) {
-        final PutObjectResponse response = bucket.getClient().getS3().putObject(request, body);
-        node.compareAndSet(current, new UpdatedObject(response, contentLength));
-        return response;
+    private Upload uploadAndReplace(final Node current, final UploadRequest request) {
+        try {
+            return bucket.getClient().getTransferManager().upload(request);
+        } finally {
+            node.compareAndSet(current, new UploadingObject());
+        }
     }
 
     /**

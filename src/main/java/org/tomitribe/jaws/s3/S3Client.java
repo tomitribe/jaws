@@ -17,20 +17,46 @@
 package org.tomitribe.jaws.s3;
 
 import org.tomitribe.jaws.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.transfer.s3.S3TransferManager;
 
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class S3Client {
     private final software.amazon.awssdk.services.s3.S3Client s3;
+    private final S3TransferManager transferManager;
+    private final ExecutorService executor;
 
-    public S3Client(final software.amazon.awssdk.services.s3.S3Client s3) {
+    public S3Client(final software.amazon.awssdk.services.s3.S3Client s3, final S3AsyncClient asyncS3) {
         this.s3 = s3;
+        this.executor = createDefaultExecutorService();
+        this.transferManager = S3TransferManager.builder()
+                .s3Client(asyncS3)
+                .build();
+    }
+
+    private static ThreadPoolExecutor createDefaultExecutorService() {
+        final ThreadFactory threadFactory = new ThreadFactory() {
+            private int threadCount = 1;
+
+            public Thread newThread(final Runnable r) {
+                final Thread thread = new Thread(r);
+                thread.setDaemon(true);
+                thread.setName("s3-transfer-manager-worker-" + threadCount++);
+                return thread;
+            }
+        };
+        return (ThreadPoolExecutor) Executors.newFixedThreadPool(10, threadFactory);
     }
 
     public static <T> Stream<T> asStream(final Iterator<T> iterator) {
@@ -66,5 +92,13 @@ public class S3Client {
 
     public software.amazon.awssdk.services.s3.S3Client getS3() {
         return s3;
+    }
+
+    public S3TransferManager getTransferManager() {
+        return transferManager;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 }

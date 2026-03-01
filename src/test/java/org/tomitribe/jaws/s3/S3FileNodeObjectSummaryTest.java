@@ -46,7 +46,7 @@ public class S3FileNodeObjectSummaryTest {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        final S3Client s3Client = new S3Client(mockS3.getS3Client());
+        final S3Client s3Client = new S3Client(mockS3.getS3Client(), mockS3.getS3AsyncClient());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -203,10 +203,10 @@ public class S3FileNodeObjectSummaryTest {
         assertEquals(5, file.getSize());
 
         final String value = "forrest";
-        file.upload(IO.read(value), value.length());
+        file.upload(IO.read(value), value.length()).completionFuture().join();
 
         // State after the update
-        assertType(file, "UpdatedObject");
+        assertType(file, "UploadingObject");
         assertEquals("forrest", file.getValueAsString());
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());

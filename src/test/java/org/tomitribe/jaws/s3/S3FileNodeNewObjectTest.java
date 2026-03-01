@@ -18,7 +18,6 @@ package org.tomitribe.jaws.s3;
 
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,7 +45,7 @@ public class S3FileNodeNewObjectTest {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        final S3Client s3Client = new S3Client(mockS3.getS3Client());
+        final S3Client s3Client = new S3Client(mockS3.getS3Client(), mockS3.getS3AsyncClient());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -203,10 +202,10 @@ public class S3FileNodeNewObjectTest {
         assertType(file, "NewObject");
 
         final String value = "forrest";
-        file.upload(IO.read(value), value.length());
+        file.upload(IO.read(value), value.length()).completionFuture().join();
 
-        // type should be UpdatedObject after the above call
-        assertType(file, "UpdatedObject");
+        // type should be UploadingObject after the above call
+        assertType(file, "UploadingObject");
 // State after the update
         assertEquals("c09321dbfe6dd09c81a36b9a31384dd3", file.getETag());
         assertEquals(7, file.getSize());

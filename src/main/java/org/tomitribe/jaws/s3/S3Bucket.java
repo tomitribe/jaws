@@ -18,6 +18,7 @@ package org.tomitribe.jaws.s3;
 
 import org.tomitribe.util.IO;
 import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -31,6 +32,10 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.transfer.s3.model.DownloadFileRequest;
+import software.amazon.awssdk.transfer.s3.model.FileDownload;
+import software.amazon.awssdk.transfer.s3.model.Upload;
+import software.amazon.awssdk.transfer.s3.model.UploadRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -157,22 +162,35 @@ public class S3Bucket {
         }
     }
 
-    public PutObjectResponse upload(final String key, final InputStream input, final long size) {
-        return s3.putObject(
-                PutObjectRequest.builder().bucket(bucket.name()).key(key).contentLength(size).build(),
-                RequestBody.fromInputStream(input, size));
+    public Upload upload(final String key, final InputStream input, final long size) {
+        return client.getTransferManager().upload(UploadRequest.builder()
+                .putObjectRequest(PutObjectRequest.builder()
+                        .bucket(bucket.name())
+                        .key(key)
+                        .contentLength(size)
+                        .build())
+                .requestBody(AsyncRequestBody.fromInputStream(input, size, client.getExecutor()))
+                .build());
     }
 
-    public PutObjectResponse upload(final String key, final File file) {
-        return s3.putObject(
-                PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
-                RequestBody.fromFile(file));
+    public Upload upload(final String key, final File file) {
+        return client.getTransferManager().upload(UploadRequest.builder()
+                .putObjectRequest(PutObjectRequest.builder()
+                        .bucket(bucket.name())
+                        .key(key)
+                        .build())
+                .requestBody(AsyncRequestBody.fromFile(file))
+                .build());
     }
 
-    public GetObjectResponse download(final String key, final File destination) {
-        return s3.getObject(
-                GetObjectRequest.builder().bucket(bucket.name()).key(key).build(),
-                destination.toPath());
+    public FileDownload download(final String key, final File destination) {
+        return client.getTransferManager().downloadFile(DownloadFileRequest.builder()
+                .getObjectRequest(GetObjectRequest.builder()
+                        .bucket(bucket.name())
+                        .key(key)
+                        .build())
+                .destination(destination.toPath())
+                .build());
     }
 
     public PutObjectResponse setObjectAsString(final String key, final String value) {

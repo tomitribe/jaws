@@ -43,7 +43,7 @@ public class S3FileNodeUnknownTest {
     @Before
     public final void setUp() throws Exception {
         final File store = mockS3.getBlobStoreLocation();
-        final S3Client s3Client = new S3Client(mockS3.getS3Client());
+        final S3Client s3Client = new S3Client(mockS3.getS3Client(), mockS3.getS3AsyncClient());
 
         new Archive()
                 .add("repository/org.color/green/2/2.3/foo.txt", "red")
@@ -192,10 +192,10 @@ public class S3FileNodeUnknownTest {
         assertType(file, "Unknown");
 
         final String value = "forrest";
-        file.upload(IO.read(value), value.length());
+        file.upload(IO.read(value), value.length()).completionFuture().join();
 
-        // type should be UpdatedObject after the above call
-        assertType(file, "UpdatedObject");
+        // type should be UploadingObject after the above call
+        assertType(file, "UploadingObject");
 
         // State after the update
         assertEquals("forrest", file.getValueAsString());

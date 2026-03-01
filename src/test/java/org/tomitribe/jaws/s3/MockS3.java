@@ -24,6 +24,7 @@ import org.junit.runners.model.Statement;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
 import java.io.File;
@@ -53,6 +54,18 @@ public class MockS3 extends ExternalResource {
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(true)
                         .build())
+                .build();
+    }
+
+    public S3AsyncClient getS3AsyncClient() {
+        final AwsBasicCredentials awsCreds = AwsBasicCredentials.create("access", "secret");
+
+        final URI uri = s3Proxy.getUri();
+        return S3AsyncClient.builder()
+                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
+                .endpointOverride(uri)
+                .region(Region.US_EAST_1)
+                .forcePathStyle(true)
                 .build();
     }
 
