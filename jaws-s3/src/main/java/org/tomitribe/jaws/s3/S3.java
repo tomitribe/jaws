@@ -66,23 +66,42 @@ public interface S3 {
      * (contents) at one level.
      */
     interface File extends S3 {
-        InputStream getValueAsStream();
 
-        String getValueAsString();
+        default InputStream getValueAsStream() {
+            return file().getValueAsStream();
+        }
 
-        void setValueAsStream(InputStream is);
+        default String getValueAsString() {
+            return file().getValueAsString();
+        }
 
-        void setValueAsString(String value);
+        default void setValueAsStream(InputStream is) {
+            file().setValueAsStream(is);
+        }
 
-        void setValueAsFile(java.io.File file);
+        default void setValueAsString(String value) {
+            file().setValueAsString(value);
+        }
 
-        String getETag();
+        default void setValueAsFile(java.io.File file) {
+            file().setValueAsFile(file);
+        }
 
-        long getSize();
+        default String getETag() {
+            return file().getETag();
+        }
 
-        Instant getLastModified();
+        default long getSize() {
+            return file().getSize();
+        }
 
-        ObjectMetadata getObjectMetadata();
+        default Instant getLastModified() {
+            return file().getLastModified();
+        }
+
+        default ObjectMetadata getObjectMetadata() {
+            return file().getObjectMetadata();
+        }
     }
 
 }
