@@ -57,7 +57,7 @@ public class S3ParentTest {
         final Src src = module.src();
         final Module parent = src.module();
 
-        assertEquals(module.get().getPath().getAbsoluteName(), parent.get().getPath().getAbsoluteName());
+        assertEquals(module.file().getPath().getAbsoluteName(), parent.file().getPath().getAbsoluteName());
     }
 
     @Test
@@ -78,11 +78,11 @@ public class S3ParentTest {
         final Section main = src.main();
         final Java java = main.java();
 
-        final String expected = module.get().getPath().getAbsoluteName();
+        final String expected = module.file().getPath().getAbsoluteName();
 
-        assertEquals(expected, src.module().get().getPath().getAbsoluteName());
-        assertEquals(expected, main.module().get().getPath().getAbsoluteName());
-        assertEquals(expected, java.module().get().getPath().getAbsoluteName());
+        assertEquals(expected, src.module().file().getPath().getAbsoluteName());
+        assertEquals(expected, main.module().file().getPath().getAbsoluteName());
+        assertEquals(expected, java.module().file().getPath().getAbsoluteName());
     }
 
     @Test

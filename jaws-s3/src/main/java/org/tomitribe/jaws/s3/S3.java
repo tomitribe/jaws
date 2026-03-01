@@ -41,7 +41,7 @@ import java.util.stream.Stream;
 
 public interface S3 {
 
-    S3File get();
+    S3File file();
 
     S3File parent();
 
@@ -135,7 +135,7 @@ public interface S3 {
                 if (method.getName().equals("hashCode")) return hashCode();
             }
             if (method.getDeclaringClass().equals(S3.class)) {
-                if (method.getName().equals("get")) return dir;
+                if (method.getName().equals("file")) return dir;
                 if (method.getName().equals("parent")) return dir.getParentFile();
                 throw new IllegalStateException("Unknown method " + method);
             }

@@ -81,21 +81,21 @@ public class S3Test {
 
     @Test
     public void objectHashCode() throws Exception {
-        final S3File s3File = project.get();
+        final S3File s3File = project.file();
         assertEquals(project.hashCode(), s3File.hashCode());
     }
 
     @Test
     public void s3Get() throws Exception {
         final S3File expected = s3Client.getBucket("project").asFile();
-        final S3File actual = this.project.get();
+        final S3File actual = this.project.file();
         assertEquals(expected, actual);
     }
 
     @Test
     public void s3Parent() throws Exception {
         final S3File expected = s3Client.getBucket("project").asFile();
-        final S3File actual = this.project.src().get();
+        final S3File actual = this.project.src().file();
         assertEquals(expected, actual.getParentFile());
     }
 
@@ -139,7 +139,7 @@ public class S3Test {
     public void returnInterface() throws Exception {
         final Src src = project.src();
         assertNotNull(src);
-        assertEquals("src", src.get().getAbsoluteName());
+        assertEquals("src", src.file().getAbsoluteName());
     }
 
     @Test
@@ -377,7 +377,7 @@ public class S3Test {
     @Test
     public void filtersAnnotation() throws Exception {
 
-        final MultipleFilteredReturns multipleFilteredReturns = S3.of(MultipleFilteredReturns.class, project.get());
+        final MultipleFilteredReturns multipleFilteredReturns = S3.of(MultipleFilteredReturns.class, project.file());
 
         final S3File[] data = multipleFilteredReturns.multipleFilters();
         assertEquals("" +
@@ -395,7 +395,7 @@ public class S3Test {
 
     @Test
     public void defaultMethod() throws Exception {
-        final DefaultMethods defaultMethods = S3.of(DefaultMethods.class, project.get());
+        final DefaultMethods defaultMethods = S3.of(DefaultMethods.class, project.file());
 
         final List<S3File> data = defaultMethods.getTextFiles().collect(Collectors.toList());
         assertEquals("" +
@@ -409,7 +409,7 @@ public class S3Test {
 
     @Test
     public void defaultMethodWithArgs() throws Exception {
-        final DefaultMethods defaultMethods = S3.of(DefaultMethods.class, project.get());
+        final DefaultMethods defaultMethods = S3.of(DefaultMethods.class, project.file());
 
         final List<S3File> data = defaultMethods.getFilesWithExtension("txt").collect(Collectors.toList());
         assertEquals("" +
@@ -437,7 +437,7 @@ public class S3Test {
 
     @Test
     public void markerAnnotation() throws Exception {
-        final RequestAnnotations dir = S3.of(RequestAnnotations.class, project.get());
+        final RequestAnnotations dir = S3.of(RequestAnnotations.class, project.file());
 
         final List<S3File> data = dir.afterRedTest().collect(Collectors.toList());
         assertEquals("src/test/resources\n" +
@@ -450,7 +450,7 @@ public class S3Test {
 
     @Test
     public void delimiterAnnotation() throws Exception {
-        final RequestAnnotations dir = S3.of(RequestAnnotations.class, this.project.get());
+        final RequestAnnotations dir = S3.of(RequestAnnotations.class, this.project.file());
 
         final List<S3File> data = dir.slash().collect(Collectors.toList());
         assertEquals("pom.xml", Join.join("\n", S3File::getAbsoluteName, data));
