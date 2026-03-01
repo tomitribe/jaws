@@ -50,12 +50,12 @@ public class S3FileTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        file = bucket.asFile().getFile("org.color.bright/green/1/1.4/foo.txt");
+        file = bucket.root().getFile("org.color.bright/green/1/1.4/foo.txt");
     }
 
     @Test
     public void walk() {
-        final List<String> list = file.getBucket().asFile().walk()
+        final List<String> list = file.getBucket().root().walk()
                 .map(S3File::getAbsoluteName)
                 .sorted()
                 .collect(Collectors.toList());
@@ -87,7 +87,7 @@ public class S3FileTest {
 
     @Test
     public void walkDepth2() {
-        final List<String> list = file.getBucket().asFile().walk(2)
+        final List<String> list = file.getBucket().root().walk(2)
                 .map(S3File::getAbsoluteName)
                 .sorted()
                 .collect(Collectors.toList());
@@ -127,7 +127,7 @@ public class S3FileTest {
 
     @Test
     public void equals() {
-        final S3File repository = this.file.getBucket().asFile();
+        final S3File repository = this.file.getBucket().root();
         assertEquals(file, repository.getFile("org.color.bright/green/1/1.4/foo.txt"));
         assertNotEquals(file, repository.getFile("org.color.bright/green/1/1.4/bar.txt"));
         assertNotEquals(file, "org.color.bright/green/1/1.4/bar.txt");

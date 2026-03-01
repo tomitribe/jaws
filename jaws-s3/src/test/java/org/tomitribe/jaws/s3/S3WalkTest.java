@@ -57,7 +57,7 @@ public class S3WalkTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        final Work work = S3.of(Work.class, bucket.asFile());
+        final Work work = bucket.as(Work.class);
 
         final List<S3File> list = work.nofilter().collect(Collectors.toList());
 
@@ -96,7 +96,7 @@ public class S3WalkTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        final Work work = S3.of(Work.class, bucket.asFile());
+        final Work work = bucket.as(Work.class);
         final List<S3File> list = work.maxOne().collect(Collectors.toList());
 
         final List<String> paths = paths(list);
@@ -118,7 +118,7 @@ public class S3WalkTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        final Work work = S3.of(Work.class, bucket.asFile());
+        final Work work = bucket.as(Work.class);
         final List<S3File> list = work.maxTwo().collect(Collectors.toList());
 
         final List<String> paths = paths(list);
@@ -144,7 +144,7 @@ public class S3WalkTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        final Work work = S3.of(Work.class, bucket.asFile());
+        final Work work = bucket.as(Work.class);
         final List<S3File> list = work.minOne().collect(Collectors.toList());
 
         final List<String> paths = paths(list);
@@ -182,7 +182,7 @@ public class S3WalkTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        final Work work = S3.of(Work.class, bucket.asFile());
+        final Work work = bucket.as(Work.class);
         final List<S3File> list = work.minTwo().collect(Collectors.toList());
 
         final List<String> paths = paths(list);
@@ -216,7 +216,7 @@ public class S3WalkTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        final Work work = S3.of(Work.class, bucket.asFile());
+        final Work work = bucket.as(Work.class);
         final List<S3File> list = work.minOneMaxTwo().collect(Collectors.toList());
 
         final List<String> paths = paths(list);
@@ -242,7 +242,7 @@ public class S3WalkTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        final Work work = S3.of(Work.class, bucket.asFile());
+        final Work work = bucket.as(Work.class);
         final List<S3File> list = work.minTwoMaxTwo().collect(Collectors.toList());
 
         final List<String> paths = paths(list);
@@ -264,7 +264,7 @@ public class S3WalkTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        final Work work = S3.of(Work.class, bucket.asFile());
+        final Work work = bucket.as(Work.class);
         final List<S3File> list = work.files().collect(Collectors.toList());
 
         final List<String> paths = paths(list);

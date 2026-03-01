@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Proxy;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -203,6 +204,14 @@ public class S3File {
 
     public ObjectMetadata getObjectMetadata() {
         return node.get().getObjectMetadata();
+    }
+
+    public <T> T as(final Class<T> clazz) {
+        return (T) Proxy.newProxyInstance(
+                Thread.currentThread().getContextClassLoader(),
+                new Class[]{clazz},
+                new S3Handler(this)
+        );
     }
 
     @Override

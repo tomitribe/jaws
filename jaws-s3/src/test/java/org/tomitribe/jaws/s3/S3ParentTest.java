@@ -52,7 +52,7 @@ public class S3ParentTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("orange");
-        final Module module = S3.of(Module.class, bucket.asFile());
+        final Module module = bucket.as(Module.class);
 
         final Src src = module.src();
         final Module parent = src.module();
@@ -72,7 +72,7 @@ public class S3ParentTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("orange");
-        final Module module = S3.of(Module.class, bucket.asFile());
+        final Module module = bucket.as(Module.class);
 
         final Src src = module.src();
         final Section main = src.main();
@@ -97,7 +97,7 @@ public class S3ParentTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("orange");
-        final Module module = S3.of(Module.class, bucket.asFile());
+        final Module module = bucket.as(Module.class);
 
         try {
             module.module();

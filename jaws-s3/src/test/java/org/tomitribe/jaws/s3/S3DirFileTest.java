@@ -66,7 +66,7 @@ public class S3DirFileTest {
      */
     @Test
     public void s3File() throws Exception {
-        final ColorPalette palette = S3.of(ColorPalette.class, s3Client.getBucket("colors").asFile());
+        final ColorPalette palette = s3Client.getBucket("colors").as(ColorPalette.class);
         final S3File file = palette.file();
 
         assertNotNull(file);
@@ -74,11 +74,38 @@ public class S3DirFileTest {
     }
 
     /**
+     * S3File.as(Class) converts to a strongly-typed proxy
+     */
+    @Test
+    public void s3FileAs() throws Exception {
+        final S3File file = s3Client.getBucket("colors").getFile("readme.txt");
+        final ColorFile colorFile = file.as(ColorFile.class);
+
+        assertNotNull(colorFile);
+        assertEquals("about colors", colorFile.getValueAsString());
+    }
+
+    /**
+     * S3Bucket.as(Class) converts the bucket root to a strongly-typed proxy
+     */
+    @Test
+    public void s3BucketAs() throws Exception {
+        final ColorPalette palette = s3Client.getBucket("colors").as(ColorPalette.class);
+
+        final List<String> list = palette.colorGroups()
+                .map(ColorGroup::toString)
+                .sorted()
+                .collect(Collectors.toList());
+
+        assertEquals("blue\ngreen\nred", Join.join("\n", list));
+    }
+
+    /**
      * S3.parent() returns the parent S3File
      */
     @Test
     public void s3Parent() throws Exception {
-        final ColorPalette palette = S3.of(ColorPalette.class, s3Client.getBucket("colors").asFile());
+        final ColorPalette palette = s3Client.getBucket("colors").as(ColorPalette.class);
         final ColorGroup red = palette.colorGroup("red");
         final S3File parent = red.parent();
 
@@ -95,7 +122,7 @@ public class S3DirFileTest {
      */
     @Test
     public void dirFile() throws Exception {
-        final ColorPalette palette = S3.of(ColorPalette.class, s3Client.getBucket("colors").asFile());
+        final ColorPalette palette = s3Client.getBucket("colors").as(ColorPalette.class);
         final S3File file = palette.file("readme.txt");
 
         assertNotNull(file);
@@ -108,7 +135,7 @@ public class S3DirFileTest {
      */
     @Test
     public void dirFiles() throws Exception {
-        final ColorPalette palette = S3.of(ColorPalette.class, s3Client.getBucket("colors").asFile());
+        final ColorPalette palette = s3Client.getBucket("colors").as(ColorPalette.class);
 
         final List<String> list = palette.files()
                 .map(S3File::getAbsoluteName)
@@ -133,7 +160,7 @@ public class S3DirFileTest {
      */
     @Test
     public void dirList() throws Exception {
-        final ColorPalette palette = S3.of(ColorPalette.class, s3Client.getBucket("colors").asFile());
+        final ColorPalette palette = s3Client.getBucket("colors").as(ColorPalette.class);
 
         final List<String> list = palette.list()
                 .map(S3File::getAbsoluteName)
@@ -261,7 +288,7 @@ public class S3DirFileTest {
      */
     @Test
     public void streamOfDir() throws Exception {
-        final ColorPalette palette = S3.of(ColorPalette.class, s3Client.getBucket("colors").asFile());
+        final ColorPalette palette = s3Client.getBucket("colors").as(ColorPalette.class);
 
         final List<String> list = palette.colorGroups()
                 .map(ColorGroup::toString)
@@ -276,7 +303,7 @@ public class S3DirFileTest {
      */
     @Test
     public void streamOfFile() throws Exception {
-        final ColorPalette palette = S3.of(ColorPalette.class, s3Client.getBucket("colors").asFile());
+        final ColorPalette palette = s3Client.getBucket("colors").as(ColorPalette.class);
 
         final List<String> list = palette.topLevelFiles()
                 .map(f -> f.file().getAbsoluteName())
@@ -295,8 +322,7 @@ public class S3DirFileTest {
      */
     @Test
     public void typeFilterOnDir() throws Exception {
-        final FilteredPalette palette = S3.of(FilteredPalette.class,
-                s3Client.getBucket("colors").asFile());
+        final FilteredPalette palette = s3Client.getBucket("colors").as(FilteredPalette.class);
 
         final List<String> list = palette.colorGroups()
                 .map(RedOnlyGroup::toString)
@@ -311,8 +337,8 @@ public class S3DirFileTest {
      */
     @Test
     public void typeFilterOnFile() throws Exception {
-        final ColorGroup red = S3.of(ColorPalette.class,
-                s3Client.getBucket("colors").asFile()).colorGroup("red");
+        final ColorGroup red = s3Client.getBucket("colors")
+                .as(ColorPalette.class).colorGroup("red");
 
         final List<String> list = red.lightFiles()
                 .map(f -> f.file().getAbsoluteName())
@@ -328,8 +354,7 @@ public class S3DirFileTest {
      */
     @Test
     public void typeAndMethodFilterCombined() throws Exception {
-        final CombinedFilterPalette palette = S3.of(CombinedFilterPalette.class,
-                s3Client.getBucket("colors").asFile());
+        final CombinedFilterPalette palette = s3Client.getBucket("colors").as(CombinedFilterPalette.class);
 
         // DarkItem has @Filter(IsDark) on the type.
         // The method darkRedItems() also has @Filter(IsRed) on it.
@@ -349,7 +374,7 @@ public class S3DirFileTest {
 
     private ColorFile colorFile(final String key) {
         final S3Bucket bucket = s3Client.getBucket("colors");
-        return S3.of(ColorFile.class, bucket.getFile(key));
+        return bucket.getFile(key).as(ColorFile.class);
     }
 
     // ---------------------------------------------------------------

@@ -62,8 +62,12 @@ public class S3Bucket {
         return client;
     }
 
-    public S3File asFile() {
+    public S3File root() {
         return S3File.rootFile(this);
+    }
+
+    public <T> T as(final Class<T> clazz) {
+        return root().as(clazz);
     }
 
     public Stream<S3File> objects() {

@@ -57,7 +57,7 @@ public class S3FileNodeUpdatedObjectTest {
 
         final S3Bucket bucket = s3Client.getBucket("repository");
 
-        file = bucket.asFile().getFile("org.color.bright/green/3/updated.txt");
+        file = bucket.root().getFile("org.color.bright/green/3/updated.txt");
 
         assertFalse(file.exists());
         assertType(file, "NewObject");

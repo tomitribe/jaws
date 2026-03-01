@@ -59,7 +59,7 @@ public class S3FileNodeUnknown2Test {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        file = bucket.asFile().getFile("org.color.bright/green/does/not/exist.txt");
+        file = bucket.root().getFile("org.color.bright/green/does/not/exist.txt");
 
         // Check to ensure our current node type is `Object`
         assertType(file, "Unknown");
@@ -146,7 +146,7 @@ public class S3FileNodeUnknown2Test {
     public void delete() {
         final S3Bucket bucket = file.getBucket();
 
-        final S3File file = bucket.asFile().getFile("org.color.bright/blue/does/not/exist.txt");
+        final S3File file = bucket.root().getFile("org.color.bright/blue/does/not/exist.txt");
 
         assertType(file, "Unknown");
 

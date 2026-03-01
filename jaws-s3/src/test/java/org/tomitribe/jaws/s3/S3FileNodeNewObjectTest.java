@@ -55,7 +55,7 @@ public class S3FileNodeNewObjectTest {
                 .toDir(store);
 
         final S3Bucket bucket = s3Client.getBucket("repository");
-        file = bucket.asFile().getFile("org.color.bright/green/does/not/exist.txt");
+        file = bucket.root().getFile("org.color.bright/green/does/not/exist.txt");
 
         assertFalse(file.exists());
 
@@ -144,7 +144,7 @@ public class S3FileNodeNewObjectTest {
     public void delete() {
         final S3Bucket bucket = file.getBucket();
 
-        final S3File file = bucket.asFile().getFile("org.color.bright/blue/does/not/exist.txt");
+        final S3File file = bucket.root().getFile("org.color.bright/blue/does/not/exist.txt");
         assertFalse(file.exists());
 
         // Check to ensure our current node type

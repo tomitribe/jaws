@@ -61,7 +61,7 @@ public class S3Test {
                 .add("project/target/foo.txt", "foofoo")
                 .toDir(store);
 
-        project = S3.of(Project.class, s3Client.getBucket("project").asFile());
+        project = s3Client.getBucket("project").as(Project.class);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class S3Test {
 
     @Test
     public void objectEquals() throws Exception {
-        final Project project2 = S3.of(Project.class, s3Client.getBucket("project").asFile());
+        final Project project2 = s3Client.getBucket("project").as(Project.class);
 
         assertEquals(project, project2);
         assertNotEquals(project, project.src());
@@ -87,14 +87,14 @@ public class S3Test {
 
     @Test
     public void s3Get() throws Exception {
-        final S3File expected = s3Client.getBucket("project").asFile();
+        final S3File expected = s3Client.getBucket("project").root();
         final S3File actual = this.project.file();
         assertEquals(expected, actual);
     }
 
     @Test
     public void s3Parent() throws Exception {
-        final S3File expected = s3Client.getBucket("project").asFile();
+        final S3File expected = s3Client.getBucket("project").root();
         final S3File actual = this.project.src().file();
         assertEquals(expected, actual.getParentFile());
     }
@@ -157,7 +157,7 @@ public class S3Test {
 
     @Test
     public void returnArrayOfInterface() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final Java[] data = returns.returnArrayOfInterface();
         assertEquals("" +
@@ -170,7 +170,7 @@ public class S3Test {
 
     @Test
     public void returnArrayOfS3File() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final S3File[] data = returns.returnArrayOfS3File();
         assertEquals("" +
@@ -183,7 +183,7 @@ public class S3Test {
 
     @Test
     public void returnStreamOfInterface() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final List<Java> data = returns.returnStreamOfInterface().collect(Collectors.toList());
         assertEquals("" +
@@ -196,7 +196,7 @@ public class S3Test {
 
     @Test
     public void returnStreamOfS3File() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final List<S3File> data = returns.returnStreamOfS3File().collect(Collectors.toList());
         assertEquals("" +
@@ -209,7 +209,7 @@ public class S3Test {
 
     @Test
     public void returnListOfInterface() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final List<Java> data = returns.returnListOfInterface();
         assertEquals("" +
@@ -222,7 +222,7 @@ public class S3Test {
 
     @Test
     public void returnListOfS3File() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final List<S3File> data = returns.returnListOfS3File();
         assertEquals("" +
@@ -235,7 +235,7 @@ public class S3Test {
 
     @Test
     public void returnSetOfInterface() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final Set<Java> data = returns.returnSetOfInterface();
         assertEquals("" +
@@ -248,7 +248,7 @@ public class S3Test {
 
     @Test
     public void returnSetOfS3File() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final Set<S3File> data = returns.returnSetOfS3File();
         assertEquals("src/main/java/org/supertribe\n" +
@@ -260,7 +260,7 @@ public class S3Test {
 
     @Test
     public void returnCollectionOfInterface() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final Collection<Java> data = returns.returnCollectionOfInterface();
         assertEquals("" +
@@ -273,7 +273,7 @@ public class S3Test {
 
     @Test
     public void returnCollectionOfS3File() throws Exception {
-        final Returns returns = S3.of(Returns.class, project.src().main().java());
+        final Returns returns = project.src().main().java().as(Returns.class);
 
         final Collection<S3File> data = returns.returnCollectionOfS3File();
         assertEquals("" +
@@ -286,7 +286,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredArrayOfInterface() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final Java[] data = returns.returnArrayOfInterface();
         assertEquals("" +
@@ -295,7 +295,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredArrayOfS3File() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final S3File[] data = returns.returnArrayOfS3File();
         assertEquals("" +
@@ -304,7 +304,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredStreamOfInterface() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final List<Java> data = returns.returnStreamOfInterface().collect(Collectors.toList());
         assertEquals("" +
@@ -313,7 +313,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredStreamOfS3File() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final List<S3File> data = returns.returnStreamOfS3File().collect(Collectors.toList());
         assertEquals("" +
@@ -322,7 +322,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredListOfInterface() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final List<Java> data = returns.returnListOfInterface();
         assertEquals("" +
@@ -331,7 +331,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredListOfS3File() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final List<S3File> data = returns.returnListOfS3File();
         assertEquals("" +
@@ -340,7 +340,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredSetOfInterface() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final Set<Java> data = returns.returnSetOfInterface();
         assertEquals("" +
@@ -349,7 +349,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredSetOfS3File() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final Set<S3File> data = returns.returnSetOfS3File();
         assertEquals("" +
@@ -358,7 +358,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredCollectionOfInterface() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final Collection<Java> data = returns.returnCollectionOfInterface();
         assertEquals("" +
@@ -367,7 +367,7 @@ public class S3Test {
 
     @Test
     public void returnFilteredCollectionOfS3File() throws Exception {
-        final FilteredReturns returns = S3.of(FilteredReturns.class, project.src().main().java());
+        final FilteredReturns returns = project.src().main().java().as(FilteredReturns.class);
 
         final Collection<S3File> data = returns.returnCollectionOfS3File();
         assertEquals("" +
@@ -377,7 +377,7 @@ public class S3Test {
     @Test
     public void filtersAnnotation() throws Exception {
 
-        final MultipleFilteredReturns multipleFilteredReturns = S3.of(MultipleFilteredReturns.class, project.file());
+        final MultipleFilteredReturns multipleFilteredReturns = project.file().as(MultipleFilteredReturns.class);
 
         final S3File[] data = multipleFilteredReturns.multipleFilters();
         assertEquals("" +
@@ -395,7 +395,7 @@ public class S3Test {
 
     @Test
     public void defaultMethod() throws Exception {
-        final DefaultMethods defaultMethods = S3.of(DefaultMethods.class, project.file());
+        final DefaultMethods defaultMethods = project.file().as(DefaultMethods.class);
 
         final List<S3File> data = defaultMethods.getTextFiles().collect(Collectors.toList());
         assertEquals("" +
@@ -409,7 +409,7 @@ public class S3Test {
 
     @Test
     public void defaultMethodWithArgs() throws Exception {
-        final DefaultMethods defaultMethods = S3.of(DefaultMethods.class, project.file());
+        final DefaultMethods defaultMethods = project.file().as(DefaultMethods.class);
 
         final List<S3File> data = defaultMethods.getFilesWithExtension("txt").collect(Collectors.toList());
         assertEquals("" +
@@ -423,7 +423,7 @@ public class S3Test {
 
     @Test
     public void prefixAnnotation() throws Exception {
-        final RequestAnnotations dir = S3.of(RequestAnnotations.class, project.src().main().java().getParentFile());
+        final RequestAnnotations dir = project.src().main().java().getParentFile().as(RequestAnnotations.class);
 
         final List<S3File> data = dir.javaFiles().collect(Collectors.toList());
         assertEquals("" +
@@ -437,7 +437,7 @@ public class S3Test {
 
     @Test
     public void markerAnnotation() throws Exception {
-        final RequestAnnotations dir = S3.of(RequestAnnotations.class, project.file());
+        final RequestAnnotations dir = project.file().as(RequestAnnotations.class);
 
         final List<S3File> data = dir.afterRedTest().collect(Collectors.toList());
         assertEquals("src/test/resources\n" +
@@ -450,7 +450,7 @@ public class S3Test {
 
     @Test
     public void delimiterAnnotation() throws Exception {
-        final RequestAnnotations dir = S3.of(RequestAnnotations.class, this.project.file());
+        final RequestAnnotations dir = this.project.file().as(RequestAnnotations.class);
 
         final List<S3File> data = dir.slash().collect(Collectors.toList());
         assertEquals("pom.xml", Join.join("\n", S3File::getAbsoluteName, data));

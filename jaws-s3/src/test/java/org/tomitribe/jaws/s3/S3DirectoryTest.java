@@ -58,7 +58,7 @@ public class S3DirectoryTest {
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
                 .toDir(store);
 
-        final S3File repository = s3Client.getBucket("repository").asFile();
+        final S3File repository = s3Client.getBucket("repository").root();
 
         {
             final List<String> list = repository.files()
@@ -149,12 +149,12 @@ public class S3DirectoryTest {
     public void putObjectString() throws IOException {
         final S3Bucket bucket = s3Client.createBucket("repository");
 
-        bucket.asFile()
+        bucket.root()
                 .getFile("org.color/")
                 .getFile("red/1/1.4/foo.txt")
                 .setValueAsString("red");
 
-        bucket.asFile()
+        bucket.root()
                 .getFile("org.color.bright/")
                 .getFile("green/")
                 .getFile("1/1.4/foo.txt").setValueAsString("green");
@@ -172,12 +172,12 @@ public class S3DirectoryTest {
 
         final S3Bucket bucket = s3Client.createBucket("repository");
 
-        bucket.asFile()
+        bucket.root()
                 .getFile("org.color/")
                 .getFile("red/1/1.4/foo.txt")
                 .setValueAsFile(new File(data, "red.txt"));
 
-        bucket.asFile()
+        bucket.root()
                 .getFile("org.color.bright/")
                 .getFile("green/")
                 .getFile("1/1.4/foo.txt")
@@ -196,12 +196,12 @@ public class S3DirectoryTest {
 
         final S3Bucket bucket = s3Client.createBucket("repository");
 
-        bucket.asFile()
+        bucket.root()
                 .getFile("org.color/")
                 .getFile("red/1/1.4/foo.txt")
                 .setValueAsStream(IO.read(new File(data, "red.txt")));
 
-        bucket.asFile()
+        bucket.root()
                 .getFile("org.color.bright/")
                 .getFile("green/")
                 .getFile("1/1.4/foo.txt").setValueAsStream(IO.read(new File(data, "green.txt")));
@@ -218,7 +218,7 @@ public class S3DirectoryTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final S3File directory = bucket.asFile().getFile("org.color/");
+        final S3File directory = bucket.root().getFile("org.color/");
 
         assertEquals("red", IO.slurp(directory.getFile("red/1/1.4/foo.txt").getValueAsStream()));
     }
@@ -231,7 +231,7 @@ public class S3DirectoryTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final S3File directory = bucket.asFile().getFile("org.color/");
+        final S3File directory = bucket.root().getFile("org.color/");
 
         assertEquals("red", directory.getFile("red/1/1.4/foo.txt").getValueAsString());
     }
@@ -249,7 +249,7 @@ public class S3DirectoryTest {
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
                 .toDir(store);
 
-        final S3File repository = s3Client.getBucket("repository").asFile();
+        final S3File repository = s3Client.getBucket("repository").root();
 
         final S3File directory = repository.getFile("junit/");
         assertNotNull(directory);
@@ -269,7 +269,7 @@ public class S3DirectoryTest {
                 .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
                 .toDir(store);
 
-        final S3File directory = s3Client.getBucket("repository").asFile()
+        final S3File directory = s3Client.getBucket("repository").root()
                 .getFile("io.tomitribe/")
                 .getFile("crest/");
 
@@ -282,7 +282,7 @@ public class S3DirectoryTest {
 
     @Test
     public void getName() {
-        final S3File directory = s3Client.createBucket("repository").asFile()
+        final S3File directory = s3Client.createBucket("repository").root()
                 .getFile("org.colors/")
                 .getFile("green/");
 
@@ -291,7 +291,7 @@ public class S3DirectoryTest {
 
     @Test
     public void getAbsoluteName() {
-        final S3File directory = s3Client.createBucket("repository").asFile()
+        final S3File directory = s3Client.createBucket("repository").root()
                 .getFile("org.colors/")
                 .getFile("green/");
 
