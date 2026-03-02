@@ -333,7 +333,12 @@ public class S3Handler implements InvocationHandler {
 
         final Walk walk = method.getAnnotation(Walk.class);
 
-        if (walk != null) return walk(walk, dir);
+        if (walk != null) {
+            final String delimiter = method.isAnnotationPresent(Delimiter.class)
+                    ? method.getAnnotation(Delimiter.class).value()
+                    : "/";
+            return walk(walk, dir, delimiter);
+        }
 
         final Class<?> elementType = getElementType(method);
         if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
@@ -363,17 +368,17 @@ public class S3Handler implements InvocationHandler {
         return dir.files(builder.build());
     }
 
-    private static Stream<S3File> walk(final Walk walk, final S3File dir) {
-        return walk(dir, walk.maxDepth(), walk.minDepth());
+    private static Stream<S3File> walk(final Walk walk, final S3File dir, final String delimiter) {
+        return walk(dir, walk.maxDepth(), walk.minDepth(), delimiter);
     }
 
-    private static Stream<S3File> walk(final S3File dir, final int maxDepth, final int minDepth) {
+    private static Stream<S3File> walk(final S3File dir, final int maxDepth, final int minDepth, final String delimiter) {
         final Predicate<S3File> min = minDepth <= 0 ? s3File -> true : minDepth(dir, minDepth);
 
         if (maxDepth != -1) {
-            return dir.walk(maxDepth).filter(min);
+            return dir.walk(maxDepth, delimiter).filter(min);
         } else {
-            return dir.walk().filter(min);
+            return dir.walk(delimiter).filter(min);
         }
     }
 

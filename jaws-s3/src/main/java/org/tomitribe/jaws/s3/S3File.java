@@ -199,22 +199,47 @@ public class S3File {
     }
 
     /**
-     * Walks the directory tree rooted at this S3File with no depth limit.
+     * Walks the directory tree rooted at this S3File with no depth limit,
+     * using {@code "/"} as the delimiter.
      *
      * @return a stream of all descendant S3Files including directories
      */
     public Stream<S3File> walk() {
-        return node.get().walk(WalkingIterator.INFINITE);
+        return node.get().walk(WalkingIterator.INFINITE, "/");
     }
 
     /**
-     * Walks the directory tree rooted at this S3File up to the given depth.
+     * Walks the directory tree rooted at this S3File up to the given depth,
+     * using {@code "/"} as the delimiter.
      *
      * @param maxDepth the maximum depth to traverse
      * @return a stream of descendant S3Files up to the specified depth
      */
     public Stream<S3File> walk(final int maxDepth) {
-        return node.get().walk(maxDepth);
+        return node.get().walk(maxDepth, "/");
+    }
+
+    /**
+     * Walks the directory tree rooted at this S3File with no depth limit,
+     * using the given delimiter.
+     *
+     * @param delimiter the delimiter for splitting the key hierarchy
+     * @return a stream of all descendant S3Files including directories
+     */
+    Stream<S3File> walk(final String delimiter) {
+        return node.get().walk(WalkingIterator.INFINITE, delimiter);
+    }
+
+    /**
+     * Walks the directory tree rooted at this S3File up to the given depth,
+     * using the given delimiter.
+     *
+     * @param maxDepth  the maximum depth to traverse
+     * @param delimiter the delimiter for splitting the key hierarchy
+     * @return a stream of descendant S3Files up to the specified depth
+     */
+    Stream<S3File> walk(final int maxDepth, final String delimiter) {
+        return node.get().walk(maxDepth, delimiter);
     }
 
     /**
@@ -674,7 +699,7 @@ public class S3File {
             return Stream.of();
         }
 
-        default Stream<S3File> walk(final int maxDepth) {
+        default Stream<S3File> walk(final int maxDepth, final String delimiter) {
             return Stream.of();
         }
 
@@ -755,8 +780,8 @@ public class S3File {
         }
 
         @Override
-        public Stream<S3File> walk(final int maxDepth) {
-            return performWalk(maxDepth);
+        public Stream<S3File> walk(final int maxDepth, final String delimiter) {
+            return performWalk(maxDepth, delimiter);
         }
 
         @Override
@@ -1263,8 +1288,8 @@ public class S3File {
         }
 
         @Override
-        public Stream<S3File> walk(final int maxDepth) {
-            return performWalk(maxDepth);
+        public Stream<S3File> walk(final int maxDepth, final String delimiter) {
+            return performWalk(maxDepth, delimiter);
         }
 
         @Override
@@ -1494,8 +1519,8 @@ public class S3File {
         }
     }
 
-    private Stream<S3File> performWalk(final int depth) {
-        return asStream(new WalkingIterator(this, depth));
+    private Stream<S3File> performWalk(final int depth, final String delimiter) {
+        return asStream(new WalkingIterator(this, depth, delimiter));
     }
 
     private Stream<S3File> performSingleLevelListing() {
@@ -1557,13 +1582,13 @@ public class S3File {
 
         private final ListObjectsRequest request;
 
-        public WalkingIterator(final S3File file, final int depth) {
-            this(ListObjectsRequest.builder().build(), file, depth);
+        public WalkingIterator(final S3File file, final int depth, final String delimiter) {
+            this(ListObjectsRequest.builder().build(), file, depth, delimiter);
         }
 
-        public WalkingIterator(final ListObjectsRequest request, final S3File file, final int depth) {
+        public WalkingIterator(final ListObjectsRequest request, final S3File file, final int depth, final String delimiter) {
             this.request = request.toBuilder()
-                    .delimiter("/")
+                    .delimiter(delimiter)
                     .prefix(file.getPath().getSearchPrefix())
                     .bucket(bucket.getName())
                     .build();
@@ -1634,7 +1659,7 @@ public class S3File {
                 final S3File next = objectListingIterator.next();
 
                 if (next.isDirectory() && (remaining == INFINITE || remaining > 0)) {
-                    children.add(new WalkingIterator(request, next, remaining));
+                    children.add(new WalkingIterator(request, next, remaining, request.delimiter()));
                 }
 
                 return next;

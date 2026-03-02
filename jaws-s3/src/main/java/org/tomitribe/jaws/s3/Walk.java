@@ -47,6 +47,45 @@ import java.lang.annotation.Target;
  * <p>Without {@code @Walk}, stream-returning methods use a
  * single-level delimiter-based listing. With {@code @Walk},
  * the listing descends recursively into child prefixes.
+ *
+ * <h3>AWS request cost</h3>
+ *
+ * <p>Each level of the walk issues one {@code ListObjects} request
+ * per prefix (directory) visited, using {@code delimiter="/"} to
+ * discover both objects and child prefixes at that level. If a
+ * single response is truncated (more than 1,000 keys), additional
+ * paginated requests are made automatically for that prefix.
+ *
+ * <p>The total number of requests is therefore:
+ * <pre>
+ *   requests = sum of ceil(entries / 1000) for each prefix visited
+ * </pre>
+ *
+ * <p>For example, a bucket with the structure:
+ * <pre>
+ *   photos/
+ *     2024/
+ *       jan/   (50 files)
+ *       feb/   (50 files)
+ *     2025/
+ *       jan/   (50 files)
+ * </pre>
+ *
+ * <p>An unlimited {@code @Walk} from {@code photos/} issues
+ * <b>5 requests</b>: one for {@code photos/}, one each for
+ * {@code 2024/} and {@code 2025/}, and one each for the three
+ * month prefixes. Each request returns both the files (contents)
+ * and subdirectories (commonPrefixes) at that level.
+ *
+ * <p>Limiting depth with {@code maxDepth} reduces the number of
+ * prefixes descended into and therefore the number of requests.
+ * {@code minDepth} does <em>not</em> reduce requests — all levels
+ * are still traversed; results are simply filtered before being
+ * returned to the caller.
+ *
+ * <p>By contrast, a method <em>without</em> {@code @Walk} issues
+ * a single {@code ListObjects} request (plus pagination if needed)
+ * for the immediate level only.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
