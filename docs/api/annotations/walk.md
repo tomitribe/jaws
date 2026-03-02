@@ -30,6 +30,21 @@ similar to `java.nio.file.Files.walk()`.
 The annotated method must return `Stream<S3File>`, `List<S3File>`, `S3File[]`,
 or a collection type whose element type is `S3File` or an interface extending `S3`.
 
+### Applicable return types
+
+`@Walk` is designed for use with `S3File` or `S3.Dir` element types:
+
+- **`Stream<S3File>`** — returns all objects and directories recursively
+- **`Stream<X extends S3.Dir>`** — returns only directories, useful for
+  discovering the tree structure or targeting a specific depth with
+  `maxDepth`/`minDepth`
+
+If the element type extends `S3.File`, **omit `@Walk`** for best performance.
+A walk visits every prefix (one `ListObjects` request per directory) only to
+discard the directories from the results. A plain listing without `@Walk`
+returns the same files with a single request (plus pagination), because
+the return type already filters to files only.
+
 ## Examples
 
 ### Unlimited walk

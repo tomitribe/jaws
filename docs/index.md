@@ -44,9 +44,11 @@ repository/
 ```
 
 With JAWS, you define interfaces that mirror this structure — each directory level
-becomes a typed interface, each file becomes an `S3.File` or  `S3.`:
+becomes a typed interface, each file becomes an `S3.File` or  `S3.Dir`:
 
 ```java
+import org.tomitribe.jaws.S3;
+
 public interface Repository extends S3.Dir {
     Stream<GroupId> groups();
     GroupId group(String name);
@@ -76,6 +78,10 @@ public interface Artifact extends S3.File {
 Now navigate the repository like a typed filesystem:
 
 ```java
+import software.amazon.awssdk.services.s3.S3AsyncClient;
+import org.tomitribe.jaws.S3Client;
+import org.tomitribe.jaws.S3Bucket;
+        
 S3Client s3 = new S3Client(S3AsyncClient.builder().build());
 S3Bucket bucket = s3.getBucket("repository");
 Repository repo = bucket.as(Repository.class);
@@ -96,8 +102,8 @@ v.artifacts().forEach(artifact -> {
 // maven-core-3.9.6.pom (12841 bytes)
 // maven-core-3.9.6-sources.jar (1987654 bytes)
 
-// Stream every artifact under org/apache/
-repo.group("org").group("apache").artifacts().forEach(artifactId -> {
+// Stream every artifact under org/apache/maven
+repo.group("org/apache/maven").artifacts().forEach(artifactId -> {
     System.out.println(artifactId.file().getName());
     artifactId.versions().forEach(version -> {
         System.out.println("  " + version.file().getName());

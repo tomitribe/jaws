@@ -30,6 +30,26 @@ import java.lang.annotation.Target;
  * whose element type is {@link S3File} or an interface extending
  * {@link S3}.
  *
+ * <h3>Applicable return types</h3>
+ *
+ * <p>{@code @Walk} is designed for use with {@link S3File} or
+ * {@link S3.Dir} element types:
+ *
+ * <ul>
+ *   <li>{@code Stream<S3File>} — returns all objects and directories
+ *       recursively</li>
+ *   <li>{@code Stream<X extends S3.Dir>} — returns only directories,
+ *       useful for discovering the tree structure or targeting a
+ *       specific depth with {@code maxDepth}/{@code minDepth}</li>
+ * </ul>
+ *
+ * <p>If the element type extends {@link S3.File}, <strong>omit
+ * {@code @Walk}</strong> for best performance. A walk visits every
+ * prefix (one {@code ListObjects} request per directory) only to
+ * discard the directories from the results. A plain listing without
+ * {@code @Walk} returns the same files with a single request (plus
+ * pagination), because the return type already filters to files only.
+ *
  * <h3>Example</h3>
  * <pre>{@code
  * public interface Work extends S3.Dir {
@@ -41,6 +61,10 @@ import java.lang.annotation.Target;
  *
  *     @Walk(minDepth = 2, maxDepth = 2)
  *     Stream<S3File> exactlyTwoLevelsDeep();
+ *
+ *     // Walk returns only directories here
+ *     @Walk(maxDepth = 1)
+ *     Stream<YearDir> years();
  * }
  * }</pre>
  *

@@ -344,15 +344,31 @@ public class S3Handler implements InvocationHandler {
             } else {
                 prefix = null;
             }
-            return walk(walk, dir, delimiter, prefix);
+            Stream<S3File> walked = walk(walk, dir, delimiter, prefix);
+
+            final Class<?> elementType = getElementType(method);
+            if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
+                walked = walked.filter(S3File::isDirectory);
+            } else if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
+                walked = walked.filter(S3File::isFile);
+            }
+
+            return walked;
         }
 
         final Class<?> elementType = getElementType(method);
-        if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
-            return dir.list().filter(S3File::isDirectory);
-        }
-        if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
-            return dir.list().filter(S3File::isFile);
+        final boolean hasListAnnotations = method.isAnnotationPresent(Prefix.class)
+                || method.isAnnotationPresent(Marker.class)
+                || method.isAnnotationPresent(Delimiter.class);
+
+        // Simple case: no listing annotations, just filter by type
+        if (!hasListAnnotations) {
+            if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
+                return dir.list().filter(S3File::isDirectory);
+            }
+            if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
+                return dir.list().filter(S3File::isFile);
+            }
         }
 
         ListObjectsRequest.Builder builder = ListObjectsRequest.builder();
@@ -364,7 +380,8 @@ public class S3Handler implements InvocationHandler {
 
         if (method.isAnnotationPresent(Marker.class)) {
             final Marker marker = method.getAnnotation(Marker.class);
-            builder.marker(marker.value());
+            final String searchPrefix = dir.getPath().getSearchPrefix();
+            builder.marker((searchPrefix != null ? searchPrefix : "") + marker.value());
         }
 
         if (method.isAnnotationPresent(Delimiter.class)) {
@@ -372,7 +389,15 @@ public class S3Handler implements InvocationHandler {
             builder.delimiter(delimiter.value());
         }
 
-        return dir.files(builder.build());
+        Stream<S3File> result = dir.files(builder.build());
+
+        if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
+            result = result.filter(S3File::isDirectory);
+        } else if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
+            result = result.filter(S3File::isFile);
+        }
+
+        return result;
     }
 
     private static Stream<S3File> walk(final Walk walk, final S3File dir, final String delimiter, final String prefix) {

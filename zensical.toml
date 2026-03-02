@@ -24,6 +24,13 @@ nav = [
         {"Filtering" = "guide/filtering.md"},
         {"Uploads & Downloads" = "guide/uploads-and-downloads.md"},
     ]},
+    {"Examples" = [
+        {"Maven Project" = "examples/maven-project.md"},
+        {"Static Website" = "examples/static-website.md"},
+        {"Log Archives" = "examples/log-archives.md"},
+        {"Data Lake" = "examples/data-lake.md"},
+        {"Container Registry" = "examples/container-registry.md"},
+    ]},
     {"API Reference" = [
         {"S3Client" = "api/s3client.md"},
         {"S3Bucket" = "api/s3bucket.md"},

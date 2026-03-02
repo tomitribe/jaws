@@ -24,7 +24,17 @@ bucket has more than 1,000 matching keys).
 ## Recursive Walk
 
 The `@Walk` annotation switches to recursive traversal. JAWS descends into each
-child prefix, issuing a separate `ListObjects` request per prefix visited:
+child prefix, issuing a separate `ListObjects` request per prefix visited.
+`@Walk` only makes sense when the element type is `S3File` or `S3.Dir`:
+
+- **`Stream<S3File>`** — returns all objects and directories recursively
+- **`Stream<X extends S3.Dir>`** — returns only directories, useful for discovering
+  the tree structure or targeting a specific depth
+
+If the element type extends `S3.File`, **omit `@Walk`** for best performance.
+A walk visits every prefix (one request per directory) only to discard the
+directories from the results. A plain listing without `@Walk` returns the same
+files in a single request, because the return type already filters to files only.
 
 ```java
 public interface Repository extends S3.Dir {
