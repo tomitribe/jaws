@@ -389,11 +389,16 @@ public class S3Handler implements InvocationHandler {
             builder.delimiter(delimiter.value());
         }
 
-        Stream<S3File> result = dir.files(builder.build());
+        final ListObjectsRequest request = builder.build();
 
+        // S3.Dir subtypes need delimiter-based listing to discover directories
         if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
-            result = result.filter(S3File::isDirectory);
-        } else if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
+            return dir.list(request).filter(S3File::isDirectory);
+        }
+
+        Stream<S3File> result = dir.files(request);
+
+        if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
             result = result.filter(S3File::isFile);
         }
 

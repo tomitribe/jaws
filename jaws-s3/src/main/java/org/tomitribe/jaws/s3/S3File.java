@@ -278,6 +278,18 @@ public class S3File {
     }
 
     /**
+     * Returns immediate child files and directories (one level deep)
+     * using a delimiter-based listing with the given request parameters.
+     * The bucket and delimiter are set automatically if not present.
+     *
+     * @param request the listing request with prefix, marker, etc.
+     * @return a stream of matching immediate child S3Files
+     */
+    Stream<S3File> list(final ListObjectsRequest request) {
+        return node.get().list(request);
+    }
+
+    /**
      * Returns the full key of this object within its bucket.
      * For the bucket root this returns an empty string.
      *
@@ -736,6 +748,10 @@ public class S3File {
             return Stream.of();
         }
 
+        default Stream<S3File> list(final ListObjectsRequest request) {
+            return Stream.of();
+        }
+
         InputStream getValueAsStream();
 
         String getValueAsString();
@@ -821,6 +837,11 @@ public class S3File {
         @Override
         public Stream<S3File> list() {
             return performSingleLevelListing();
+        }
+
+        @Override
+        public Stream<S3File> list(final ListObjectsRequest request) {
+            return performSingleLevelListing(request);
         }
 
         @Override
@@ -1337,6 +1358,11 @@ public class S3File {
         }
 
         @Override
+        public Stream<S3File> list(final ListObjectsRequest request) {
+            return performSingleLevelListing(request);
+        }
+
+        @Override
         public S3File getFile(final String name) {
             final Path child = path.getChild(name);
             return new S3File(bucket, child, Unknown.class);
@@ -1570,6 +1596,10 @@ public class S3File {
         return asStream(new SingleLevelIterator(this));
     }
 
+    private Stream<S3File> performSingleLevelListing(final ListObjectsRequest request) {
+        return asStream(new SingleLevelIterator(request));
+    }
+
     private Node resolve(final Node current) {
         final HeadObjectResponse response;
 
@@ -1735,11 +1765,23 @@ public class S3File {
         private ListObjectsRequest request;
 
         public SingleLevelIterator(final S3File file) {
-            this.request = ListObjectsRequest.builder()
+            this(ListObjectsRequest.builder()
                     .delimiter("/")
                     .prefix(file.getPath().getSearchPrefix())
                     .bucket(bucket.getName())
-                    .build();
+                    .build());
+        }
+
+        public SingleLevelIterator(final ListObjectsRequest request) {
+            final ListObjectsRequest.Builder builder = request.toBuilder()
+                    .bucket(bucket.getName());
+            if (request.delimiter() == null) {
+                builder.delimiter("/");
+            }
+            if (request.prefix() == null) {
+                builder.prefix(path.getSearchPrefix());
+            }
+            this.request = builder.build();
 
             this.response = S3Client.join(bucket.getClient().getS3().listObjects(this.request));
             this.iterator = iteratorForResponse(this.response);
