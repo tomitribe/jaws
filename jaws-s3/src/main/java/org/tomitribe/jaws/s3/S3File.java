@@ -243,6 +243,31 @@ public class S3File {
     }
 
     /**
+     * Walks the directory tree with no depth limit, using the given
+     * delimiter and request (which may carry a prefix to narrow results).
+     *
+     * @param request   the base listing request (prefix, etc.)
+     * @param delimiter the delimiter for splitting the key hierarchy
+     * @return a stream of all descendant S3Files including directories
+     */
+    Stream<S3File> walk(final ListObjectsRequest request, final String delimiter) {
+        return node.get().walk(request, WalkingIterator.INFINITE, delimiter);
+    }
+
+    /**
+     * Walks the directory tree up to the given depth, using the given
+     * delimiter and request (which may carry a prefix to narrow results).
+     *
+     * @param request   the base listing request (prefix, etc.)
+     * @param maxDepth  the maximum depth to traverse
+     * @param delimiter the delimiter for splitting the key hierarchy
+     * @return a stream of descendant S3Files up to the specified depth
+     */
+    Stream<S3File> walk(final ListObjectsRequest request, final int maxDepth, final String delimiter) {
+        return node.get().walk(request, maxDepth, delimiter);
+    }
+
+    /**
      * Returns immediate child files and directories (one level deep)
      * using a delimiter-based listing.
      *
@@ -703,6 +728,10 @@ public class S3File {
             return Stream.of();
         }
 
+        default Stream<S3File> walk(final ListObjectsRequest request, final int maxDepth, final String delimiter) {
+            return Stream.of();
+        }
+
         default Stream<S3File> list() {
             return Stream.of();
         }
@@ -782,6 +811,11 @@ public class S3File {
         @Override
         public Stream<S3File> walk(final int maxDepth, final String delimiter) {
             return performWalk(maxDepth, delimiter);
+        }
+
+        @Override
+        public Stream<S3File> walk(final ListObjectsRequest request, final int maxDepth, final String delimiter) {
+            return performWalk(request, maxDepth, delimiter);
         }
 
         @Override
@@ -1293,6 +1327,11 @@ public class S3File {
         }
 
         @Override
+        public Stream<S3File> walk(final ListObjectsRequest request, final int maxDepth, final String delimiter) {
+            return performWalk(request, maxDepth, delimiter);
+        }
+
+        @Override
         public Stream<S3File> list() {
             return performSingleLevelListing();
         }
@@ -1523,6 +1562,10 @@ public class S3File {
         return asStream(new WalkingIterator(this, depth, delimiter));
     }
 
+    private Stream<S3File> performWalk(final ListObjectsRequest request, final int depth, final String delimiter) {
+        return asStream(new WalkingIterator(request, this, depth, delimiter));
+    }
+
     private Stream<S3File> performSingleLevelListing() {
         return asStream(new SingleLevelIterator(this));
     }
@@ -1587,11 +1630,15 @@ public class S3File {
         }
 
         public WalkingIterator(final ListObjectsRequest request, final S3File file, final int depth, final String delimiter) {
-            this.request = request.toBuilder()
+            final ListObjectsRequest.Builder builder = request.toBuilder()
                     .delimiter(delimiter)
-                    .prefix(file.getPath().getSearchPrefix())
-                    .bucket(bucket.getName())
-                    .build();
+                    .bucket(bucket.getName());
+
+            if (request.prefix() == null) {
+                builder.prefix(file.getPath().getSearchPrefix());
+            }
+
+            this.request = builder.build();
 
             iterator = new Listing(S3Client.join(getS3().listObjects(this.request)));
             remaining = depth == INFINITE ? INFINITE : depth - 1;
@@ -1659,7 +1706,7 @@ public class S3File {
                 final S3File next = objectListingIterator.next();
 
                 if (next.isDirectory() && (remaining == INFINITE || remaining > 0)) {
-                    children.add(new WalkingIterator(request, next, remaining, request.delimiter()));
+                    children.add(new WalkingIterator(request.toBuilder().prefix(null).build(), next, remaining, request.delimiter()));
                 }
 
                 return next;

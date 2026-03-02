@@ -254,6 +254,56 @@ public class S3WalkTest {
     }
 
     @Test
+    public void walkWithPrefix() throws Exception {
+        new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir(store);
+
+        final S3Bucket bucket = s3Client.getBucket("repository");
+        final Work work = bucket.as(Work.class);
+        final List<S3File> list = work.walkWithPrefix().collect(Collectors.toList());
+
+        final List<String> paths = paths(list);
+
+        assertEquals("" +
+                "org.color.bright/\n" +
+                "org.color.bright/green/\n" +
+                "org.color.bright/green/1/\n" +
+                "org.color.bright/green/1/1.4/\n" +
+                "org.color.bright/green/1/1.4/foo.txt\n" +
+                "org.color/\n" +
+                "org.color/red/\n" +
+                "org.color/red/1/\n" +
+                "org.color/red/1/1.4/\n" +
+                "org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
+    }
+
+    @Test
+    public void walkWithPrefixMaxTwo() throws Exception {
+        new Archive()
+                .add("repository/org.color/red/1/1.4/foo.txt", "")
+                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
+                .add("repository/junit/junit/4/4.12/bar.txt", "")
+                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
+                .toDir(store);
+
+        final S3Bucket bucket = s3Client.getBucket("repository");
+        final Work work = bucket.as(Work.class);
+        final List<S3File> list = work.walkWithPrefixMaxTwo().collect(Collectors.toList());
+
+        final List<String> paths = paths(list);
+
+        assertEquals("" +
+                "org.color.bright/\n" +
+                "org.color.bright/green/\n" +
+                "org.color/\n" +
+                "org.color/red/", Join.join("\n", paths));
+    }
+
+    @Test
     public void files() throws Exception {
         new Archive()
                 .add("repository/org.color/red/1/1.4/foo.txt", "")
@@ -327,6 +377,14 @@ public class S3WalkTest {
 
         @Walk(minDepth = 2, maxDepth = 2)
         Stream<S3File> minTwoMaxTwo();
+
+        @Walk
+        @Prefix("org.")
+        Stream<S3File> walkWithPrefix();
+
+        @Walk(maxDepth = 2)
+        @Prefix("org.")
+        Stream<S3File> walkWithPrefixMaxTwo();
     }
 
     public interface Module extends S3 {

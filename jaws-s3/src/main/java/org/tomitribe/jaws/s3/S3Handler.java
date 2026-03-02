@@ -337,7 +337,14 @@ public class S3Handler implements InvocationHandler {
             final String delimiter = method.isAnnotationPresent(Delimiter.class)
                     ? method.getAnnotation(Delimiter.class).value()
                     : "/";
-            return walk(walk, dir, delimiter);
+            final String prefix;
+            if (method.isAnnotationPresent(Prefix.class)) {
+                final String searchPrefix = dir.getPath().getSearchPrefix();
+                prefix = (searchPrefix != null ? searchPrefix : "") + method.getAnnotation(Prefix.class).value();
+            } else {
+                prefix = null;
+            }
+            return walk(walk, dir, delimiter, prefix);
         }
 
         final Class<?> elementType = getElementType(method);
@@ -368,17 +375,22 @@ public class S3Handler implements InvocationHandler {
         return dir.files(builder.build());
     }
 
-    private static Stream<S3File> walk(final Walk walk, final S3File dir, final String delimiter) {
-        return walk(dir, walk.maxDepth(), walk.minDepth(), delimiter);
+    private static Stream<S3File> walk(final Walk walk, final S3File dir, final String delimiter, final String prefix) {
+        return walk(dir, walk.maxDepth(), walk.minDepth(), delimiter, prefix);
     }
 
-    private static Stream<S3File> walk(final S3File dir, final int maxDepth, final int minDepth, final String delimiter) {
+    private static Stream<S3File> walk(final S3File dir, final int maxDepth, final int minDepth, final String delimiter, final String prefix) {
         final Predicate<S3File> min = minDepth <= 0 ? s3File -> true : minDepth(dir, minDepth);
 
+        final ListObjectsRequest.Builder builder = ListObjectsRequest.builder();
+        if (prefix != null) {
+            builder.prefix(prefix);
+        }
+
         if (maxDepth != -1) {
-            return dir.walk(maxDepth, delimiter).filter(min);
+            return dir.walk(builder.build(), maxDepth, delimiter).filter(min);
         } else {
-            return dir.walk(delimiter).filter(min);
+            return dir.walk(builder.build(), delimiter).filter(min);
         }
     }
 
