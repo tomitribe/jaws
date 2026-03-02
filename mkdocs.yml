@@ -32,8 +32,20 @@ theme:
     - search.highlight
     - search.suggest
     - toc.follow
+  logo: assets/jaws.svg
   icon:
     repo: fontawesome/brands/github
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/tomitribe/jaws
+copyright: >
+  <a href="https://tomitribe.com" class="tomitribe-footer">
+    <img src="/jaws/assets/tomitribe.svg" alt="Tomitribe" class="tomitribe-logo">
+  </a>
+  <span class="tomitribe-copyright">Copyright © 2026 Tomitribe Corporation</span>
 
 extra_css:
   - stylesheets/extra.css

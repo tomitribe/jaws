@@ -68,3 +68,24 @@
 .md-search-result .md-typeset mark {
   background-color: rgba(229, 113, 37, 0.3);
 }
+
+/* Footer — logo left, copyright centered */
+.md-footer-meta__inner.md-grid {
+  position: relative;
+}
+
+.md-copyright__highlight {
+  display: flex;
+  align-items: center;
+}
+
+.tomitribe-copyright {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.md-copyright__highlight img.tomitribe-logo {
+  height: 30px;
+  width: auto;
+}
