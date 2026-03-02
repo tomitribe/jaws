@@ -21,19 +21,34 @@ public @interface Filter {
 
 ## Description
 
-Filters results on the client side after data is returned from AWS. The
+Applies an arbitrary client-side predicate to filter listing results. The
 predicate class is instantiated via its no-arg constructor and applied to
 each `S3File` in the listing.
 
+`@Filter` is the most powerful filtering annotation, but also the **last
+to run**. When a method or type carries several filter annotations, they
+are evaluated in a fixed order — simplest and cheapest first:
+
+1. **@Prefix** — server-side, in the `ListObjects` request
+2. **@Suffix** — client-side, `String.endsWith()`
+3. **@Matches** — client-side, compiled regex
+4. **@Filter** — client-side, arbitrary `Predicate<S3File>`
+
+Because `@Filter` runs last, the predicate will only see entries that have
+already passed `@Prefix`, `@Suffix`, and `@Matches`. This is intentional —
+a predicate can safely assume, for example, that the file name ends with
+`.jar` if `@Suffix(".jar")` is also present on the same method or type.
+
 `@Filter` is repeatable — multiple filters on the same method are combined
 with AND logic. It can be placed on methods or on interface types.
+Interface-level filters run before method-level filters.
 
 !!! tip
     When possible, use a simpler annotation. `@Prefix` filters server-side,
     reducing the HTTP payload from AWS. `@Suffix` handles extension checks
     and `@Matches` handles name patterns. Reserve `@Filter` for criteria
-    that need access to the full `S3File` (e.g., size, metadata, path
-    components).
+    that need access to the full `S3File` — size, metadata, path components,
+    or other attributes beyond the name.
 
 ## Examples
 
@@ -85,27 +100,32 @@ public interface VersionDir extends S3.Dir {
 }
 ```
 
-### Evaluation order
+### What your predicate sees
 
-When multiple filter annotations are present, they are applied in order —
-simplest first, most complex last:
-
-1. **@Prefix** — server-side, in the `ListObjects` request
-2. **@Suffix** — client-side, `String.endsWith()`
-3. **@Matches** — client-side, compiled regex
-4. **@Filter** — client-side, arbitrary `Predicate<S3File>`
-
-Interface-level filters run before method-level filters within each
-category. All client-side filters are AND'd together. A `@Filter`
-predicate can safely assume that `@Suffix` and `@Matches` have already
-passed.
+Because `@Prefix`, `@Suffix`, and `@Matches` all run before `@Filter`,
+you can write predicates that depend on those earlier filters having
+already narrowed the results:
 
 ```java
-@Suffix(".jar")                   // 1st: interface-level suffix
+// This predicate can safely assume every file ends with ".jar"
+// because @Suffix(".jar") already ran.  It strips the suffix
+// and inspects what remains.
+public class IsSnapshot implements Predicate<S3File> {
+    @Override
+    public boolean test(S3File file) {
+        String name = file.getName();                     // e.g. "commons-lang-3.14-SNAPSHOT.jar"
+        String base = name.substring(0, name.length() - 4); // strip ".jar"
+        return base.endsWith("-SNAPSHOT");
+    }
+}
+
+@Suffix(".jar")
 public interface JarFile extends S3.File {}
 
 public interface VersionDir extends S3.Dir {
-    @Filter(IsSnapshot.class)     // 2nd: method-level filter (sees only .jar)
+    // @Suffix(".jar") on JarFile runs first
+    // @Filter(IsSnapshot.class) sees only .jar files
+    @Filter(IsSnapshot.class)
     Stream<JarFile> snapshotJars();
 }
 ```
