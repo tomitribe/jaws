@@ -1,0 +1,91 @@
+/* Tomitribe brand colors — matching Harminie templates */
+/* Dark charcoal header: #363636 */
+/* Accent orange: #e57125 */
+/* Body text: #363636 */
+/* Muted text: #6b7280 */
+/* Background: #f4f4f5 */
+
+:root {
+  --md-primary-fg-color:        #e57125;
+  --md-primary-fg-color--light: #f0863e;
+  --md-primary-fg-color--dark:  #c9601b;
+  --md-accent-fg-color:         #e57125;
+  --md-typeset-a-color:         #e57125;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        #e57125;
+  --md-primary-fg-color--light: #f0863e;
+  --md-primary-fg-color--dark:  #c9601b;
+  --md-accent-fg-color:         #e57125;
+  --md-typeset-a-color:         #e57125;
+}
+
+/* Tabs bar — dark charcoal background with orange accents */
+.md-tabs {
+  background-color: #363636;
+}
+
+.md-tabs__link,
+.md-tabs__item--active .md-tabs__link,
+.md-tabs__link--active,
+.md-tabs__link:is(:focus, :hover) {
+  color: #e57125;
+}
+
+/* Header title accent */
+.md-header__title {
+  font-weight: 700;
+}
+
+/* Sidebar nav — orange active link */
+.md-nav__link--active {
+  color: #e57125;
+}
+
+/* Admonition — orange accent for note/info */
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: #e57125;
+}
+
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+  background-color: rgba(229, 113, 37, 0.1);
+}
+
+.md-typeset .tip > .admonition-title::before,
+.md-typeset .tip > summary::before {
+  background-color: #e57125;
+}
+
+/* Footer link color */
+.md-footer-meta a {
+  color: #e57125;
+}
+
+/* Search highlight */
+.md-search-result .md-typeset mark {
+  background-color: rgba(229, 113, 37, 0.3);
+}
+
+/* Footer — logo left, copyright centered */
+.md-footer-meta__inner.md-grid {
+  position: relative;
+}
+
+.md-copyright__highlight {
+  display: flex;
+  align-items: center;
+}
+
+.tomitribe-copyright {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.md-copyright__highlight img.tomitribe-logo {
+  height: 30px;
+  width: auto;
+}
