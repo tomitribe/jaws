@@ -13,9 +13,6 @@
  */
 package org.tomitribe.jaws.s3;
 
-import org.tomitribe.util.dir.Name;
-import org.tomitribe.util.dir.Parent;
-import org.tomitribe.util.dir.Walk;
 import org.tomitribe.util.reflect.Generics;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 

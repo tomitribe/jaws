@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 import org.tomitribe.util.dir.Dir;
-import org.tomitribe.util.dir.Walk;
 
 import java.io.File;
 import java.util.List;

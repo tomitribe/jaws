@@ -21,7 +21,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
-import org.tomitribe.util.dir.Name;
 
 import java.io.File;
 import java.util.Collection;

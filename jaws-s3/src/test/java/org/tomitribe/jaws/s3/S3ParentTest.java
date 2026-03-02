@@ -17,8 +17,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
-import org.tomitribe.util.dir.Name;
-import org.tomitribe.util.dir.Parent;
 
 import java.io.File;
 
