@@ -26,9 +26,11 @@
   background-color: #363636;
 }
 
+.md-tabs__link,
+.md-tabs__item--active .md-tabs__link,
 .md-tabs__link--active,
 .md-tabs__link:is(:focus, :hover) {
-  color: #ffffff;
+  color: #e57125;
 }
 
 /* Header title accent */
