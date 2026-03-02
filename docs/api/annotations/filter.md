@@ -30,12 +30,14 @@ to run**. When a method or type carries several filter annotations, they
 are evaluated in a fixed order — simplest and cheapest first:
 
 1. **@Prefix** — server-side, in the `ListObjects` request
-2. **@Suffix** — client-side, `String.endsWith()`
-3. **@Matches** — client-side, compiled regex
-4. **@Filter** — client-side, arbitrary `Predicate<S3File>`
+2. **@Suffix** includes — client-side, `String.endsWith()`
+3. **@Suffix** excludes
+4. **@Match** includes — client-side, compiled regex
+5. **@Match** excludes
+6. **@Filter** — client-side, arbitrary `Predicate<S3File>`
 
 Because `@Filter` runs last, the predicate will only see entries that have
-already passed `@Prefix`, `@Suffix`, and `@Matches`. This is intentional —
+already passed `@Prefix`, `@Suffix`, and `@Match`. This is intentional —
 a predicate can safely assume, for example, that the file name ends with
 `.jar` if `@Suffix(".jar")` is also present on the same method or type.
 
@@ -46,7 +48,7 @@ Interface-level filters run before method-level filters.
 !!! tip
     When possible, use a simpler annotation. `@Prefix` filters server-side,
     reducing the HTTP payload from AWS. `@Suffix` handles extension checks
-    and `@Matches` handles name patterns. Reserve `@Filter` for criteria
+    and `@Match` handles name patterns. Reserve `@Filter` for criteria
     that need access to the full `S3File` — size, metadata, path components,
     or other attributes beyond the name.
 
@@ -102,7 +104,7 @@ public interface VersionDir extends S3.Dir {
 
 ### What your predicate sees
 
-Because `@Prefix`, `@Suffix`, and `@Matches` all run before `@Filter`,
+Because `@Prefix`, `@Suffix`, and `@Match` all run before `@Filter`,
 you can write predicates that depend on those earlier filters having
 already narrowed the results:
 
@@ -151,6 +153,6 @@ public interface Repository extends S3.Dir {
 ## See Also
 
 - [@Suffix](suffix.md) — client-side suffix filtering (simpler, faster)
-- [@Matches](matches.md) — client-side regex filtering
+- [@Match](match.md) — client-side regex filtering
 - [@Prefix](prefix.md) — server-side prefix filtering
 - [Filtering](../../guide/filtering.md) — detailed guide on filtering strategies

@@ -23,6 +23,6 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Matches {
-    Match[] value();
+public @interface Suffixes {
+    Suffix[] value();
 }

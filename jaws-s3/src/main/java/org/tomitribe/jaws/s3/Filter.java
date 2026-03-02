@@ -37,17 +37,19 @@ import java.util.function.Predicate;
  * <ol>
  *   <li>{@link Prefix @Prefix} — server-side, in the
  *       {@code ListObjects} request</li>
- *   <li>{@link Suffix @Suffix} — client-side,
+ *   <li>{@link Suffix @Suffix} includes — client-side,
  *       {@link String#endsWith}</li>
- *   <li>{@link Matches @Matches} — client-side, compiled regex
+ *   <li>{@link Suffix @Suffix} excludes</li>
+ *   <li>{@link Match @Match} includes — client-side, compiled regex
  *       via {@link java.util.regex.Pattern#asMatchPredicate()}</li>
+ *   <li>{@link Match @Match} excludes</li>
  *   <li>{@code @Filter} — client-side, arbitrary
  *       {@code Predicate<S3File>}</li>
  * </ol>
  *
  * <p>Because {@code @Filter} runs last, the predicate will only
  * see entries that have already passed {@code @Prefix},
- * {@code @Suffix}, and {@code @Matches}. This is intentional —
+ * {@code @Suffix}, and {@code @Match}. This is intentional —
  * a predicate can safely assume, for example, that the file name
  * ends with {@code .jar} if {@code @Suffix(".jar")} is also
  * present.
@@ -69,14 +71,14 @@ import java.util.function.Predicate;
  * <p>When possible, prefer a simpler annotation. Use
  * {@link Prefix @Prefix} for server-side key filtering,
  * {@link Suffix @Suffix} for extension checks, and
- * {@link Matches @Matches} for name patterns. Reserve
+ * {@link Match @Match} for name patterns. Reserve
  * {@code @Filter} for criteria that need access to the full
  * {@link S3File} — size, metadata, path components, or other
  * attributes beyond the name.
  *
  * @see Prefix
  * @see Suffix
- * @see Matches
+ * @see Match
  */
 @Repeatable(Filters.class)
 @Target({ElementType.METHOD, ElementType.TYPE})

@@ -2,7 +2,7 @@
 
 JAWS provides several filtering mechanisms. **Server-side** filtering with
 `@Prefix` reduces the data transferred from AWS. **Client-side** filtering
-with `@Suffix`, `@Matches`, and `@Filter` refines results once they arrive.
+with `@Suffix`, `@Match`, and `@Filter` refines results once they arrive.
 
 Use server-side filtering whenever possible, then layer on client-side
 filters from simplest to most complex.
@@ -61,27 +61,62 @@ public interface Assets extends S3.Dir {
 }
 ```
 
-## Client-Side Filtering with @Matches
+### Excluding by suffix
 
-The `@Matches` annotation filters by a regular expression on the file name.
+Use `exclude = true` to remove entries matching a suffix. `@Suffix` is
+repeatable, so you can combine include and exclude annotations:
+
+```java
+public interface Assets extends S3.Dir {
+    // Everything except JavaScript files
+    @Suffix(value = ".js", exclude = true)
+    Stream<S3File> noJavaScript();
+
+    // All .jar files except sources and javadoc jars
+    @Suffix(".jar")
+    @Suffix(value = {"-sources.jar", "-javadoc.jar"}, exclude = true)
+    Stream<S3File> binaryJars();
+}
+```
+
+Include annotations are applied first, then exclude annotations carve out
+exceptions from the included set.
+
+## Client-Side Filtering with @Match
+
+The `@Match` annotation filters by a regular expression on the file name.
 The entire name must match (implied `^` and `$`):
 
 ```java
 public interface Reports extends S3.Dir {
     // Match daily-2025-01-15.csv, daily-2025-02-01.csv, etc.
-    @Matches("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
+    @Match("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
     Stream<S3File> dailyReports();
 
     // Match .jpg or .png files
-    @Matches(".*\\.(jpg|png)")
+    @Match(".*\\.(jpg|png)")
     Stream<S3File> images();
 }
 ```
 
 !!! warning
-    `@Matches` uses `Pattern.asMatchPredicate()`, so the pattern must match
-    the **entire** file name. `@Matches("css")` matches nothing — no file is
-    named exactly "css". Use `@Matches(".*\\.css")` instead.
+    `@Match` uses `Pattern.asMatchPredicate()`, so the pattern must match
+    the **entire** file name. `@Match("css")` matches nothing — no file is
+    named exactly "css". Use `@Match(".*\\.css")` instead.
+
+### Excluding by regex
+
+Use `exclude = true` to remove entries matching a pattern. `@Match` is
+repeatable, so you can combine include and exclude annotations:
+
+```java
+public interface Assets extends S3.Dir {
+    // All CSS files except reset.css
+    @Match(".*\\.css")
+    @Match(value = "reset\\.css", exclude = true)
+    Stream<S3File> cssExceptReset();
+}
+```
 
 ## Client-Side Filtering with @Filter
 
@@ -118,12 +153,12 @@ public interface VersionDir extends S3.Dir {
 
 !!! tip
     If your filter is just checking a suffix, use `@Suffix` instead. If it's
-    a name pattern, use `@Matches`. Reserve `@Filter` for cases that need
+    a name pattern, use `@Match`. Reserve `@Filter` for cases that need
     access to the full `S3File` (e.g., size, metadata, path components).
 
 ## Type-Level Filters
 
-`@Suffix`, `@Matches`, and `@Filter` can all be placed on the element type
+`@Suffix`, `@Match`, and `@Filter` can all be placed on the element type
 interface itself. The filter then applies automatically to every listing
 method that returns that type:
 
@@ -133,7 +168,7 @@ public interface ParquetFile extends S3.File {
     // Any Stream<ParquetFile> listing will only include .parquet files
 }
 
-@Matches("\\d{4}-\\d{2}-\\d{2}\\.csv")
+@Match("\\d{4}-\\d{2}-\\d{2}\\.csv")
 public interface DailyReport extends S3.File {
     // Any Stream<DailyReport> listing will only include date-named CSVs
 }
@@ -157,13 +192,15 @@ When multiple filter annotations are present, they are applied in a
 defined order — simplest and cheapest first, most complex last:
 
 1. **@Prefix** — server-side, in the `ListObjects` request
-2. **@Suffix** — client-side, `String.endsWith()`
-3. **@Matches** — client-side, compiled regex
-4. **@Filter** — client-side, arbitrary `Predicate<S3File>`
+2. **@Suffix** includes — client-side, `String.endsWith()`
+3. **@Suffix** excludes
+4. **@Match** includes — client-side, compiled regex
+5. **@Match** excludes
+6. **@Filter** — client-side, arbitrary `Predicate<S3File>`
 
 All client-side filters are AND'd together. Each filter only sees entries
 that already passed the previous ones. This means a `@Filter` predicate
-can safely assume that `@Suffix` and `@Matches` have already passed.
+can safely assume that `@Suffix` and `@Match` have already passed.
 
 When both interface-level and method-level annotations are present,
 interface-level filters run first within each category.
@@ -195,12 +232,12 @@ public interface Repository extends S3.Dir {
     // Client-side: only .parquet files matching a date pattern
     @Prefix("export-")
     @Suffix(".parquet")
-    @Matches("export-2025-.*\\.parquet")
+    @Match("export-2025-.*\\.parquet")
     Stream<S3File> exports2025();
 
     // All three client-side filters together
     @Suffix(".jar")
-    @Matches(".*-SNAPSHOT\\.jar")
+    @Match(".*-SNAPSHOT\\.jar")
     @Filter(IsInRange.class)
     Stream<S3File> recentSnapshots();
 }

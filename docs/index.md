@@ -123,7 +123,7 @@ repo.group("org/apache/maven").artifacts().forEach(artifactId -> {
 - **Typed proxies** — Define interfaces, get proxies. Method names map to S3 keys.
 - **Directory & File types** — `S3.Dir` for containers, `S3.File` for objects with content.
   Return types drive listing behavior automatically.
-- **Annotations** — `@Name`, `@Parent`, `@Walk`, `@Prefix`, `@Suffix`, `@Matches`,
+- **Annotations** — `@Name`, `@Parent`, `@Walk`, `@Prefix`, `@Suffix`, `@Match`,
   `@Filter`, `@Delimiter` give fine-grained control over key resolution, traversal,
   and filtering.
 - **Efficient S3 usage** — Delimiter-based listings, server-side prefix filtering, and

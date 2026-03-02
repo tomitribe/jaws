@@ -211,6 +211,24 @@ public class S3SuffixTest {
     }
 
     // ---------------------------------------------------------------
+    // Exclude tests
+    // ---------------------------------------------------------------
+
+    @Test
+    public void excludeSuffix() throws Exception {
+        final ExcludeReturns returns = root().assets().file().as(ExcludeReturns.class);
+        final List<S3File> data = returns.noJavaScript().collect(Collectors.toList());
+        assertEquals("hero.jpg\nindex.html\nlogo.png\nmain.css\nreset.css", Join.join("\n", S3File::getName, data));
+    }
+
+    @Test
+    public void includeAndExcludeSuffix() throws Exception {
+        final ExcludeReturns returns = root().assets().file().as(ExcludeReturns.class);
+        final List<S3File> data = returns.cssExceptReset().collect(Collectors.toList());
+        assertEquals("main.css", Join.join("\n", S3File::getName, data));
+    }
+
+    // ---------------------------------------------------------------
     // Filter ordering: @Filter only sees post-@Suffix entries
     // ---------------------------------------------------------------
 
@@ -223,6 +241,19 @@ public class S3SuffixTest {
 
         // The filter should only have seen the 2 CSS files, not all 7 assets
         assertEquals("main.css\nreset.css", Join.join("\n", RecordingFilter.seen));
+    }
+
+    @Test
+    public void filterOnlySeesPostExcludeEntries() throws Exception {
+        RecordingFilter.seen.clear();
+
+        final FilterOrderReturns returns = root().assets().file().as(FilterOrderReturns.class);
+        returns.excludeThenFilter().collect(Collectors.toList());
+
+        // @Suffix(".css") includes main.css, reset.css
+        // @Suffix(value = "reset.css", exclude = true) removes reset.css
+        // @Filter should only see main.css
+        assertEquals("main.css", Join.join("\n", RecordingFilter.seen));
     }
 
     // ---------------------------------------------------------------
@@ -284,10 +315,24 @@ public class S3SuffixTest {
         @Suffix({".jpg", ".png"}) Stream<S3File> images();
     }
 
+    public interface ExcludeReturns {
+        @Suffix(value = ".js", exclude = true)
+        Stream<S3File> noJavaScript();
+
+        @Suffix(".css")
+        @Suffix(value = "reset.css", exclude = true)
+        Stream<S3File> cssExceptReset();
+    }
+
     public interface FilterOrderReturns {
         @Suffix(".css")
         @Filter(RecordingFilter.class)
         Stream<S3File> suffixThenFilter();
+
+        @Suffix(".css")
+        @Suffix(value = "reset.css", exclude = true)
+        @Filter(RecordingFilter.class)
+        Stream<S3File> excludeThenFilter();
     }
 
     public static class RecordingFilter implements Predicate<S3File> {

@@ -142,6 +142,18 @@ public interface Assets extends S3.Dir {
 }
 ```
 
+`@Suffix` is repeatable with an `exclude` flag. Use `exclude = true` to
+remove entries matching a suffix:
+
+```java
+public interface Assets extends S3.Dir {
+    // All .jar files except sources and javadoc jars
+    @Suffix(".jar")
+    @Suffix(value = {"-sources.jar", "-javadoc.jar"}, exclude = true)
+    Stream<S3File> binaryJars();
+}
+```
+
 ### Type-level suffix
 
 `@Suffix` can also be placed on an interface. It applies to all methods that
@@ -155,22 +167,34 @@ public interface ParquetFile extends S3.File {
 }
 ```
 
-## @Matches
+## @Match
 
 Filters results by a regular expression on the file name. The entire name
 must match (implied `^` and `$`). Uses `Pattern.asMatchPredicate()`.
 
 ```java
 public interface Reports extends S3.Dir {
-    @Matches("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
+    @Match("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
     Stream<S3File> dailyReports();
 
-    @Matches(".*\\.(jpg|png)")
+    @Match(".*\\.(jpg|png)")
     Stream<S3File> images();
 }
 ```
 
-`@Matches` can also be placed on an interface for type-level filtering.
+`@Match` is repeatable with an `exclude` flag. Use `exclude = true` to
+remove entries matching a pattern:
+
+```java
+public interface Assets extends S3.Dir {
+    // All CSS files except reset.css
+    @Match(".*\\.css")
+    @Match(value = "reset\\.css", exclude = true)
+    Stream<S3File> cssExceptReset();
+}
+```
+
+`@Match` can also be placed on an interface for type-level filtering.
 
 ## @Filter
 
@@ -216,15 +240,17 @@ When multiple filter annotations are present, they are applied in order —
 simplest first, most complex last:
 
 1. **@Prefix** — server-side
-2. **@Suffix** — `String.endsWith()`
-3. **@Matches** — compiled regex
-4. **@Filter** — arbitrary `Predicate<S3File>`
+2. **@Suffix** includes — `String.endsWith()`
+3. **@Suffix** excludes
+4. **@Match** includes — compiled regex
+5. **@Match** excludes
+6. **@Filter** — arbitrary `Predicate<S3File>`
 
 Each filter only sees entries that passed the previous ones. Interface-level
 filters run before method-level filters within each category.
 
 !!! tip
-    Use `@Suffix` for extension checks and `@Matches` for name patterns.
+    Use `@Suffix` for extension checks and `@Match` for name patterns.
     Reserve `@Filter` for cases that need access to the full `S3File`.
     Prefer `@Prefix` over all of these when possible — it filters
     server-side and reduces the data transferred from AWS.

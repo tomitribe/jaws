@@ -105,6 +105,6 @@ narrowed to just the relevant subset.
 
 - [@Walk](walk.md) — recursive traversal
 - [@Suffix](suffix.md) — client-side suffix filtering
-- [@Matches](matches.md) — client-side regex filtering
+- [@Match](match.md) — client-side regex filtering
 - [@Filter](filter.md) — client-side filtering with arbitrary predicates
 - [Filtering](../../guide/filtering.md) — server-side vs client-side filtering

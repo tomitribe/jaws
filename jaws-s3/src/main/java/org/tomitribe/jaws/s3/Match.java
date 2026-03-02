@@ -24,32 +24,28 @@ import java.lang.annotation.Target;
 
 /**
  * Filters listing results on the client side to entries whose
- * {@link S3File#getName() name} ends with one of the given suffixes.
- * Multiple values are OR'd — a file matches if its name ends with
- * <b>any</b> of them.
+ * {@link S3File#getName() name} matches the given regular expression.
+ * Uses {@link java.util.regex.Pattern#asMatchPredicate()}, so the
+ * <b>entire</b> name must match (implied {@code ^} and {@code $}).
  *
- * <p>This is a shorthand for the common case of filtering by file
- * extension. For more complex name patterns use {@link Match @Match}.
- * For arbitrary criteria use {@link Filter @Filter}.
- *
- * <p>{@code @Suffix} is repeatable. When {@link #exclude()} is
+ * <p>{@code @Match} is repeatable. When {@link #exclude()} is
  * {@code false} (the default), the annotation <b>includes</b> entries
- * matching any of its suffixes. When {@code exclude = true}, it
- * <b>excludes</b> entries matching any of its suffixes. Includes are
- * applied before excludes, so you can combine them:
+ * matching the pattern. When {@code exclude = true}, it <b>excludes</b>
+ * entries matching the pattern. Includes are applied before excludes,
+ * so you can combine them:
  *
  * <pre>{@code
- * public interface Assets extends S3.Dir {
- *     @Suffix(".css")
- *     Stream<S3File> stylesheets();
+ * public interface Reports extends S3.Dir {
+ *     @Match("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
+ *     Stream<S3File> dailyReports();
  *
- *     @Suffix({".jpg", ".png", ".gif"})
+ *     @Match(".*\\.(jpg|png)")
  *     Stream<S3File> images();
  *
- *     // All .jar files except sources and javadoc jars
- *     @Suffix(".jar")
- *     @Suffix(value = {"-sources.jar", "-javadoc.jar"}, exclude = true)
- *     Stream<S3File> binaryJars();
+ *     // All CSS files except reset.css
+ *     @Match(".*\\.css")
+ *     @Match(value = "reset\\.css", exclude = true)
+ *     Stream<S3File> cssExceptReset();
  * }
  * }</pre>
  *
@@ -57,20 +53,20 @@ import java.lang.annotation.Target;
  *
  * <p>When multiple filter annotations are present, they are applied
  * in order: {@link Prefix @Prefix} (server-side) &rarr;
- * {@code @Suffix} includes &rarr; {@code @Suffix} excludes &rarr;
- * {@link Match @Match} includes &rarr; {@link Match @Match} excludes
- * &rarr; {@link Filter @Filter}. Each filter only sees entries that
- * passed the previous ones.
+ * {@link Suffix @Suffix} includes &rarr; {@link Suffix @Suffix}
+ * excludes &rarr; {@code @Match} includes &rarr; {@code @Match}
+ * excludes &rarr; {@link Filter @Filter}. Each filter only sees
+ * entries that passed the previous ones.
  *
- * @see Match
+ * @see Suffix
  * @see Filter
  * @see Prefix
  */
-@Repeatable(Suffixes.class)
+@Repeatable(Matches.class)
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Suffix {
-    String[] value();
+public @interface Match {
+    String value();
 
     boolean exclude() default false;
 }

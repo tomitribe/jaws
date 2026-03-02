@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 
-public class S3MatchesTest {
+public class S3MatchTest {
 
     @Rule
     public MockS3Rule mockS3 = new MockS3Rule();
@@ -65,54 +65,54 @@ public class S3MatchesTest {
     }
 
     // ---------------------------------------------------------------
-    // All 10 return types with @Matches
+    // All 10 return types with @Match
     // ---------------------------------------------------------------
 
     @Test
     public void returnArrayOfInterface() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final Asset[] data = returns.returnArrayOfInterface();
         assertEquals("assets/main.css\nassets/reset.css", Join.join("\n", (Object[]) data));
     }
 
     @Test
     public void returnArrayOfS3File() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final S3File[] data = returns.returnArrayOfS3File();
         assertEquals("main.css\nreset.css", Join.join("\n", S3File::getName, data));
     }
 
     @Test
     public void returnStreamOfInterface() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final List<Asset> data = returns.returnStreamOfInterface().collect(Collectors.toList());
         assertEquals("assets/main.css\nassets/reset.css", Join.join("\n", data));
     }
 
     @Test
     public void returnStreamOfS3File() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final List<S3File> data = returns.returnStreamOfS3File().collect(Collectors.toList());
         assertEquals("main.css\nreset.css", Join.join("\n", S3File::getName, data));
     }
 
     @Test
     public void returnListOfInterface() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final List<Asset> data = returns.returnListOfInterface();
         assertEquals("assets/main.css\nassets/reset.css", Join.join("\n", data));
     }
 
     @Test
     public void returnListOfS3File() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final List<S3File> data = returns.returnListOfS3File();
         assertEquals("main.css\nreset.css", Join.join("\n", S3File::getName, data));
     }
 
     @Test
     public void returnSetOfInterface() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final List<String> data = returns.returnSetOfInterface().stream()
                 .map(Asset::toString).sorted().collect(Collectors.toList());
         assertEquals("assets/main.css\nassets/reset.css", Join.join("\n", data));
@@ -120,7 +120,7 @@ public class S3MatchesTest {
 
     @Test
     public void returnSetOfS3File() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final List<String> data = returns.returnSetOfS3File().stream()
                 .map(S3File::getName).sorted().collect(Collectors.toList());
         assertEquals("main.css\nreset.css", Join.join("\n", data));
@@ -128,14 +128,14 @@ public class S3MatchesTest {
 
     @Test
     public void returnCollectionOfInterface() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final Collection<Asset> data = returns.returnCollectionOfInterface();
         assertEquals("assets/main.css\nassets/reset.css", Join.join("\n", data));
     }
 
     @Test
     public void returnCollectionOfS3File() throws Exception {
-        final MatchesReturns returns = root().assets().file().as(MatchesReturns.class);
+        final MatchReturns returns = root().assets().file().as(MatchReturns.class);
         final Collection<S3File> data = returns.returnCollectionOfS3File();
         assertEquals("main.css\nreset.css", Join.join("\n", S3File::getName, data));
     }
@@ -187,11 +187,11 @@ public class S3MatchesTest {
     }
 
     // ---------------------------------------------------------------
-    // Type-level @Matches
+    // Type-level @Match
     // ---------------------------------------------------------------
 
     @Test
-    public void typeLevelMatches() throws Exception {
+    public void typeLevelMatch() throws Exception {
         final TypeLevelReturns returns = root().assets().file().as(TypeLevelReturns.class);
         final List<String> names = returns.cssAssets()
                 .map(a -> a.file().getName())
@@ -222,18 +222,52 @@ public class S3MatchesTest {
     }
 
     // ---------------------------------------------------------------
-    // Filter ordering: @Filter only sees post-@Suffix-and-@Matches entries
+    // Exclude tests
     // ---------------------------------------------------------------
 
     @Test
-    public void filterOnlySeesPostSuffixAndMatches() throws Exception {
+    public void excludeByRegex() throws Exception {
+        final ExcludeReturns returns = root().groups().file().as(ExcludeReturns.class);
+        final List<String> names = returns.nonAlphaDirs()
+                .map(d -> d.file().getName())
+                .sorted()
+                .collect(Collectors.toList());
+        assertEquals("dept-beta\norg-gamma\nteam-beta", Join.join("\n", names));
+    }
+
+    @Test
+    public void includeAndExclude() throws Exception {
+        final ExcludeReturns returns = root().assets().file().as(ExcludeReturns.class);
+        final List<S3File> data = returns.cssExceptReset().collect(Collectors.toList());
+        assertEquals("main.css", Join.join("\n", S3File::getName, data));
+    }
+
+    // ---------------------------------------------------------------
+    // Filter ordering: @Filter only sees post-@Suffix-and-@Match entries
+    // ---------------------------------------------------------------
+
+    @Test
+    public void filterOnlySeesPostSuffixAndMatch() throws Exception {
         RecordingFilter.seen.clear();
 
         final FilterOrderReturns returns = root().assets().file().as(FilterOrderReturns.class);
-        returns.suffixMatchesThenFilter().collect(Collectors.toList());
+        returns.suffixMatchThenFilter().collect(Collectors.toList());
 
         // @Suffix(".css") narrows 7 assets to 2: main.css, reset.css
-        // @Matches("m.*") narrows to 1: main.css
+        // @Match("m.*") narrows to 1: main.css
+        // @Filter should only see main.css
+        assertEquals("main.css", Join.join("\n", RecordingFilter.seen));
+    }
+
+    @Test
+    public void filterOnlySeesPostExcludeEntries() throws Exception {
+        RecordingFilter.seen.clear();
+
+        final FilterOrderReturns returns = root().assets().file().as(FilterOrderReturns.class);
+        returns.excludeThenFilter().collect(Collectors.toList());
+
+        // @Match(".*\\.css") includes main.css, reset.css
+        // @Match(value = "reset\\.css", exclude = true) removes reset.css
         // @Filter should only see main.css
         assertEquals("main.css", Join.join("\n", RecordingFilter.seen));
     }
@@ -256,36 +290,36 @@ public class S3MatchesTest {
     public interface Asset extends S3 {
     }
 
-    public interface MatchesReturns {
-        @Matches(".*\\.css") Asset[] returnArrayOfInterface();
-        @Matches(".*\\.css") S3File[] returnArrayOfS3File();
-        @Matches(".*\\.css") Stream<Asset> returnStreamOfInterface();
-        @Matches(".*\\.css") Stream<S3File> returnStreamOfS3File();
-        @Matches(".*\\.css") List<Asset> returnListOfInterface();
-        @Matches(".*\\.css") List<S3File> returnListOfS3File();
-        @Matches(".*\\.css") Set<Asset> returnSetOfInterface();
-        @Matches(".*\\.css") Set<S3File> returnSetOfS3File();
-        @Matches(".*\\.css") Collection<Asset> returnCollectionOfInterface();
-        @Matches(".*\\.css") Collection<S3File> returnCollectionOfS3File();
+    public interface MatchReturns {
+        @Match(".*\\.css") Asset[] returnArrayOfInterface();
+        @Match(".*\\.css") S3File[] returnArrayOfS3File();
+        @Match(".*\\.css") Stream<Asset> returnStreamOfInterface();
+        @Match(".*\\.css") Stream<S3File> returnStreamOfS3File();
+        @Match(".*\\.css") List<Asset> returnListOfInterface();
+        @Match(".*\\.css") List<S3File> returnListOfS3File();
+        @Match(".*\\.css") Set<Asset> returnSetOfInterface();
+        @Match(".*\\.css") Set<S3File> returnSetOfS3File();
+        @Match(".*\\.css") Collection<Asset> returnCollectionOfInterface();
+        @Match(".*\\.css") Collection<S3File> returnCollectionOfS3File();
     }
 
     public interface AssetFile extends S3.File {
     }
 
     public interface FileReturns extends S3.Dir {
-        @Matches(".*\\.css") Stream<S3.File> cssS3Files();
-        @Matches(".*\\.css") Stream<AssetFile> cssAssetFiles();
+        @Match(".*\\.css") Stream<S3.File> cssS3Files();
+        @Match(".*\\.css") Stream<AssetFile> cssAssetFiles();
     }
 
     public interface GroupDir extends S3.Dir {
     }
 
     public interface DirReturns extends S3.Dir {
-        @Matches(".*-alpha") Stream<S3.Dir> alphaS3Dirs();
-        @Matches(".*-alpha") Stream<GroupDir> alphaGroupDirs();
+        @Match(".*-alpha") Stream<S3.Dir> alphaS3Dirs();
+        @Match(".*-alpha") Stream<GroupDir> alphaGroupDirs();
     }
 
-    @Matches(".*\\.css")
+    @Match(".*\\.css")
     public interface CssAsset extends S3 {
     }
 
@@ -294,18 +328,32 @@ public class S3MatchesTest {
     }
 
     public interface AlternationReturns {
-        @Matches(".*\\.(jpg|png)") Stream<S3File> images();
+        @Match(".*\\.(jpg|png)") Stream<S3File> images();
     }
 
     public interface FullMatchReturns {
-        @Matches("css") Stream<S3File> cssExact();
+        @Match("css") Stream<S3File> cssExact();
+    }
+
+    public interface ExcludeReturns {
+        @Match(value = ".*-alpha", exclude = true)
+        Stream<S3.Dir> nonAlphaDirs();
+
+        @Match(".*\\.css")
+        @Match(value = "reset\\.css", exclude = true)
+        Stream<S3File> cssExceptReset();
     }
 
     public interface FilterOrderReturns {
         @Suffix(".css")
-        @Matches("m.*")
+        @Match("m.*")
         @Filter(RecordingFilter.class)
-        Stream<S3File> suffixMatchesThenFilter();
+        Stream<S3File> suffixMatchThenFilter();
+
+        @Match(".*\\.css")
+        @Match(value = "reset\\.css", exclude = true)
+        @Filter(RecordingFilter.class)
+        Stream<S3File> excludeThenFilter();
     }
 
     public static class RecordingFilter implements Predicate<S3File> {

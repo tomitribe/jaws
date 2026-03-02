@@ -276,32 +276,43 @@ public class S3Handler implements InvocationHandler {
 
         Predicate<S3File> predicate = file -> true;
 
-        // Simplest first: @Suffix (String.endsWith)
-        if (element.isAnnotationPresent(Suffix.class)) {
-            final String[] suffixes = element.getAnnotation(Suffix.class).value();
+        // @Suffix includes, then excludes
+        for (final Suffix suffix : element.getAnnotationsByType(Suffix.class)) {
+            if (suffix.exclude()) continue;
+            final String[] values = suffix.value();
             predicate = predicate.and(file -> {
                 final String name = file.getName();
-                for (final String suffix : suffixes) {
-                    if (name.endsWith(suffix)) return true;
+                for (final String s : values) {
+                    if (name.endsWith(s)) return true;
                 }
                 return false;
             });
         }
-
-        // Then @Matches (compiled regex)
-        if (element.isAnnotationPresent(Matches.class)) {
-            final java.util.function.Predicate<String> regex =
-                    Pattern.compile(element.getAnnotation(Matches.class).value()).asMatchPredicate();
-            predicate = predicate.and(file -> regex.test(file.getName()));
+        for (final Suffix suffix : element.getAnnotationsByType(Suffix.class)) {
+            if (!suffix.exclude()) continue;
+            final String[] values = suffix.value();
+            predicate = predicate.and(file -> {
+                final String name = file.getName();
+                for (final String s : values) {
+                    if (name.endsWith(s)) return false;
+                }
+                return true;
+            });
         }
 
-        // Finally @Filter (arbitrary user code)
-        if (element.isAnnotationPresent(Filter.class)) {
-            predicate = predicate.and(asPredicate(element.getAnnotation(Filter.class)));
-        } else if (element.isAnnotationPresent(Filters.class)) {
-            for (final Filter filter : element.getAnnotation(Filters.class).value()) {
-                predicate = predicate.and(asPredicate(filter));
+        // @Match includes, then excludes
+        for (final Match match : element.getAnnotationsByType(Match.class)) {
+            final Predicate<String> regex = Pattern.compile(match.value()).asMatchPredicate();
+            if (!match.exclude()) {
+                predicate = predicate.and(file -> regex.test(file.getName()));
+            } else {
+                predicate = predicate.and(file -> !regex.test(file.getName()));
             }
+        }
+
+        // @Filter / @Filters
+        for (final Filter filter : element.getAnnotationsByType(Filter.class)) {
+            predicate = predicate.and(asPredicate(filter));
         }
 
         return predicate;
