@@ -53,15 +53,24 @@ import java.util.stream.Stream;
 import static org.tomitribe.jaws.s3.S3Client.asStream;
 
 /**
- * S3File aims to provide an abstraction over the Amazon S3 API
- * that acts like java.io.File and provides a stable reference
- * to all the states of an S3 object.
- * <p>
- * Like java.io.File, S3File can refer to an S3 object before it
- * exists, once it is created, after it is updated and after it
- * is deleted.  Throughout these various states, callers may simply
- * hold the same S3File instance and expect it will reflect the
- * most current information that has been fetched.
+ * A stable reference to an S3 object, analogous to {@link java.io.File}.
+ *
+ * <p>Like {@code java.io.File}, an {@code S3File} can refer to an S3
+ * object before it exists, once it is created, after it is updated,
+ * and after it is deleted. Throughout these state transitions callers
+ * may hold the same instance and it will reflect the most current
+ * information that has been fetched.
+ *
+ * <p>S3File instances are obtained from {@link S3Bucket#getFile(String)},
+ * {@link S3Bucket#root()}, or through the proxy layer via
+ * {@link S3#file()} and {@link S3.Dir#file(String)}.
+ *
+ * <p>To create a strongly-typed proxy from an S3File, use
+ * {@link #as(Class)}:
+ * <pre>{@code
+ * S3File file = bucket.getFile("config.json");
+ * Config config = file.as(Config.class);
+ * }</pre>
  */
 public class S3File {
 
@@ -107,105 +116,250 @@ public class S3File {
         return new S3File(bucket, Path.ROOT, Directory.class);
     }
 
+    /**
+     * Returns the parsed path of this S3 object within its bucket.
+     *
+     * @return the object path
+     */
     public Path getPath() {
         return path;
     }
 
+    /**
+     * Returns {@code true} if this object is known to exist in S3.
+     *
+     * @return {@code true} if the object exists
+     */
     public boolean exists() {
         return node.get().exists();
     }
 
+    /**
+     * Returns {@code true} if this entry represents a file (object),
+     * as opposed to a directory (common prefix).
+     *
+     * @return {@code true} if this is a file
+     */
     public boolean isFile() {
         return node.get().isFile();
     }
 
+    /**
+     * Returns {@code true} if this entry represents a directory
+     * (common prefix), as opposed to a file (object).
+     *
+     * @return {@code true} if this is a directory
+     */
     public boolean isDirectory() {
         return node.get().isDirectory();
     }
 
+    /**
+     * Returns the parent directory of this S3 object, or {@code null}
+     * if this is the bucket root.
+     *
+     * @return the parent S3File, or {@code null}
+     */
     public S3File getParentFile() {
         final Path parent = path.getParent();
         if (parent == null) return null;
         return new S3File(bucket, parent, Directory.class);
     }
 
+    /**
+     * Returns a child S3File relative to this directory.
+     * The child may or may not exist in S3.
+     *
+     * @param name the child key name
+     * @return the child S3File
+     */
     public S3File getFile(final String name) {
         return node.get().getFile(name);
     }
 
-
+    /**
+     * Returns all objects under this directory recursively as a flat
+     * listing (no delimiter).
+     *
+     * @return a stream of all descendant S3Files
+     */
     public Stream<S3File> files() {
         return node.get().files();
     }
 
+    /**
+     * Returns objects matching the given {@link ListObjectsRequest}.
+     * The request's bucket is set automatically.
+     *
+     * @param request the listing request with prefix, delimiter, etc.
+     * @return a stream of matching S3Files
+     */
     public Stream<S3File> files(final ListObjectsRequest request) {
         return node.get().files(request);
     }
 
+    /**
+     * Walks the directory tree rooted at this S3File with no depth limit.
+     *
+     * @return a stream of all descendant S3Files including directories
+     */
     public Stream<S3File> walk() {
         return node.get().walk(WalkingIterator.INFINITE);
     }
 
+    /**
+     * Walks the directory tree rooted at this S3File up to the given depth.
+     *
+     * @param maxDepth the maximum depth to traverse
+     * @return a stream of descendant S3Files up to the specified depth
+     */
     public Stream<S3File> walk(final int maxDepth) {
         return node.get().walk(maxDepth);
     }
 
+    /**
+     * Returns immediate child files and directories (one level deep)
+     * using a delimiter-based listing.
+     *
+     * @return a stream of immediate child S3Files
+     */
     Stream<S3File> list() {
         return node.get().list();
     }
 
+    /**
+     * Returns the full key of this object within its bucket.
+     * For the bucket root this returns an empty string.
+     *
+     * @return the absolute object key
+     */
     public String getAbsoluteName() {
         return path.getAbsoluteName();
     }
 
+    /**
+     * Returns the simple name (last path segment) of this object.
+     *
+     * @return the object name
+     */
     public String getName() {
         return path.getName();
     }
 
+    /**
+     * Returns the bucket that contains this S3 object.
+     *
+     * @return the parent bucket
+     */
     public S3Bucket getBucket() {
         return bucket;
     }
 
+    /**
+     * Returns the object content as an {@link InputStream}.
+     * The caller is responsible for closing the stream.
+     *
+     * @return an input stream of the object content
+     */
     public InputStream getValueAsStream() {
         return node.get().getValueAsStream();
     }
 
+    /**
+     * Returns the object content as a {@link String}.
+     *
+     * @return the object content
+     */
     public String getValueAsString() {
         return node.get().getValueAsString();
     }
 
+    /**
+     * Replaces the object content by reading from the given input stream.
+     *
+     * @param inputStream the input stream to read from
+     */
     public void setValueAsStream(final InputStream inputStream) {
         node.get().setValueAsStream(inputStream);
     }
 
+    /**
+     * Replaces the object content with the contents of the given file.
+     *
+     * @param file the local file whose content will be uploaded
+     */
     public void setValueAsFile(final File file) {
         node.get().setValueAsFile(file);
     }
 
+    /**
+     * Replaces the object content with the given string.
+     *
+     * @param value the new content
+     */
     public void setValueAsString(final String value) {
         node.get().setValueAsString(value);
     }
 
+    /**
+     * Returns the name of the bucket containing this object.
+     *
+     * @return the bucket name
+     */
     public String getBucketName() {
         return bucket.getName();
     }
 
+    /**
+     * Returns the ETag of the object, typically an MD5 hash of the content.
+     *
+     * @return the ETag, or {@code null} if not yet fetched
+     */
     public String getETag() {
         return node.get().getETag();
     }
 
+    /**
+     * Returns the size of the object in bytes.
+     *
+     * @return the content length in bytes
+     */
     public long getSize() {
         return node.get().getSize();
     }
 
+    /**
+     * Returns the last modified timestamp of the object.
+     *
+     * @return the last modified instant, or {@code null} if not available
+     */
     public Instant getLastModified() {
         return node.get().getLastModified();
     }
 
+    /**
+     * Returns the full {@link ObjectMetadata} for this object,
+     * including content type, user metadata, and other attributes.
+     *
+     * @return the object metadata
+     */
     public ObjectMetadata getObjectMetadata() {
         return node.get().getObjectMetadata();
     }
 
+    /**
+     * Creates a strongly-typed proxy backed by this S3File. The given
+     * class should be an interface extending {@link S3}, {@link S3.Dir},
+     * or {@link S3.File}.
+     *
+     * <pre>{@code
+     * Product product = s3File.as(Product.class);
+     * }</pre>
+     *
+     * @param clazz the interface class to proxy
+     * @param <T>   the proxy type
+     * @return a proxy instance backed by this S3File
+     */
     public <T> T as(final Class<T> clazz) {
         return (T) Proxy.newProxyInstance(
                 Thread.currentThread().getContextClassLoader(),
@@ -231,26 +385,66 @@ public class S3File {
         return path.hashCode();
     }
 
+    /**
+     * Deletes this object from S3.
+     */
     public void delete() {
         node.get().delete();
     }
 
+    /**
+     * Deletes this object from S3.
+     *
+     * @param force if {@code true}, recursively deletes all children
+     *              when this is a directory
+     */
     public void delete(final boolean force) {
         node.get().delete(force);
     }
 
+    /**
+     * Uploads content from the given input stream.
+     *
+     * @param input the content to upload
+     * @param size  the content length in bytes
+     * @return the in-progress Upload
+     */
     public Upload upload(final InputStream input, final long size) {
         return upload(input, size, null);
     }
 
+    /**
+     * Uploads content from the given input stream with a transfer listener.
+     *
+     * @param input    the content to upload
+     * @param size     the content length in bytes
+     * @param listener the listener for transfer progress events, or {@code null}
+     * @return the in-progress Upload
+     */
     public Upload upload(final InputStream input, final long size, final TransferListener listener) {
         return upload(input, ObjectMetadata.builder().contentLength(size).build(), listener);
     }
 
+    /**
+     * Uploads content from the given input stream with custom metadata.
+     *
+     * @param input          the content to upload
+     * @param objectMetadata metadata including content length, type, and user metadata
+     * @return the in-progress Upload
+     */
     public Upload upload(final InputStream input, final ObjectMetadata objectMetadata) {
         return upload(input, objectMetadata, null);
     }
 
+    /**
+     * Uploads content from the given input stream with custom metadata
+     * and a transfer listener.
+     *
+     * @param input          the content to upload
+     * @param objectMetadata metadata including content length, type, and user metadata
+     * @param listener       the listener for transfer progress events, or {@code null}
+     * @return the in-progress Upload
+     */
     public Upload upload(final InputStream input, final ObjectMetadata objectMetadata, final TransferListener listener) {
         final long size = objectMetadata.getContentLength();
         final AsyncRequestBody body = input != null
@@ -259,18 +453,48 @@ public class S3File {
         return upload(body, objectMetadata, listener);
     }
 
+    /**
+     * Uploads a local file. Content type and metadata are derived
+     * automatically via {@link ObjectMetadata#from(File)}.
+     *
+     * @param file the local file to upload
+     * @return the in-progress Upload
+     */
     public Upload upload(final File file) {
         return upload(file, (TransferListener) null);
     }
 
+    /**
+     * Uploads a local file with a transfer listener. Content type and
+     * metadata are derived automatically via {@link ObjectMetadata#from(File)}.
+     *
+     * @param file     the local file to upload
+     * @param listener the listener for transfer progress events, or {@code null}
+     * @return the in-progress Upload
+     */
     public Upload upload(final File file, final TransferListener listener) {
         return upload(file, ObjectMetadata.from(file), listener);
     }
 
+    /**
+     * Uploads a local file with custom metadata.
+     *
+     * @param file           the local file to upload
+     * @param objectMetadata metadata including content type and user metadata
+     * @return the in-progress Upload
+     */
     public Upload upload(final File file, final ObjectMetadata objectMetadata) {
         return upload(file, objectMetadata, null);
     }
 
+    /**
+     * Uploads a local file with custom metadata and a transfer listener.
+     *
+     * @param file           the local file to upload
+     * @param objectMetadata metadata including content type and user metadata
+     * @param listener       the listener for transfer progress events, or {@code null}
+     * @return the in-progress Upload
+     */
     public Upload upload(final File file, final ObjectMetadata objectMetadata, final TransferListener listener) {
         final AsyncRequestBody body = file != null
                 ? AsyncRequestBody.fromFile(file)
@@ -278,18 +502,50 @@ public class S3File {
         return upload(body, objectMetadata, listener);
     }
 
+    /**
+     * Uploads a local file from the given path. Content type and metadata
+     * are derived automatically via {@link ObjectMetadata#from(java.nio.file.Path)}.
+     *
+     * @param path the local path to upload
+     * @return the in-progress Upload
+     */
     public Upload upload(final java.nio.file.Path path) {
         return upload(path, (TransferListener) null);
     }
 
+    /**
+     * Uploads a local file from the given path with a transfer listener.
+     * Content type and metadata are derived automatically via
+     * {@link ObjectMetadata#from(java.nio.file.Path)}.
+     *
+     * @param path     the local path to upload
+     * @param listener the listener for transfer progress events, or {@code null}
+     * @return the in-progress Upload
+     */
     public Upload upload(final java.nio.file.Path path, final TransferListener listener) {
         return upload(path, ObjectMetadata.from(path), listener);
     }
 
+    /**
+     * Uploads a local file from the given path with custom metadata.
+     *
+     * @param path           the local path to upload
+     * @param objectMetadata metadata including content type and user metadata
+     * @return the in-progress Upload
+     */
     public Upload upload(final java.nio.file.Path path, final ObjectMetadata objectMetadata) {
         return upload(path, objectMetadata, null);
     }
 
+    /**
+     * Uploads a local file from the given path with custom metadata
+     * and a transfer listener.
+     *
+     * @param path           the local path to upload
+     * @param objectMetadata metadata including content type and user metadata
+     * @param listener       the listener for transfer progress events, or {@code null}
+     * @return the in-progress Upload
+     */
     public Upload upload(final java.nio.file.Path path, final ObjectMetadata objectMetadata, final TransferListener listener) {
         final AsyncRequestBody body = path != null
                 ? AsyncRequestBody.fromFile(path)
@@ -323,10 +579,24 @@ public class S3File {
         return node.get().upload(builder.build());
     }
 
+    /**
+     * Uploads using a fully-configured {@link UploadRequest}.
+     *
+     * @param uploadRequest the pre-built upload request
+     * @return the in-progress Upload
+     */
     public Upload upload(final UploadRequest uploadRequest) {
         return upload(uploadRequest, null);
     }
 
+    /**
+     * Uploads using a fully-configured {@link UploadRequest} with
+     * a transfer listener.
+     *
+     * @param uploadRequest the pre-built upload request
+     * @param listener      the listener for transfer progress events, or {@code null}
+     * @return the in-progress Upload
+     */
     public Upload upload(final UploadRequest uploadRequest, final TransferListener listener) {
         if (listener == null) {
             return node.get().upload(uploadRequest);
@@ -339,10 +609,23 @@ public class S3File {
         return node.get().upload(withListener);
     }
 
+    /**
+     * Downloads this S3 object to a local file.
+     *
+     * @param destination the local file to write to
+     * @return the in-progress FileDownload
+     */
     public FileDownload download(final File destination) {
         return download(destination, null);
     }
 
+    /**
+     * Downloads this S3 object to a local file with a transfer listener.
+     *
+     * @param destination the local file to write to
+     * @param listener    the listener for transfer progress events, or {@code null}
+     * @return the in-progress FileDownload
+     */
     public FileDownload download(final File destination, final TransferListener listener) {
         final DownloadFileRequest.Builder builder = DownloadFileRequest.builder()
                 .getObjectRequest(GetObjectRequest.builder()

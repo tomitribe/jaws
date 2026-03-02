@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.tomitribe</groupId>
     <artifactId>oss-parent</artifactId>
-    <version>9</version>
+    <version>13</version>
   </parent>
 
   <artifactId>jaws-parent</artifactId>

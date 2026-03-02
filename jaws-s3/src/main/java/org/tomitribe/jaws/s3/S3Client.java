@@ -34,11 +34,33 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * Entry point for interacting with Amazon S3. Wraps an
+ * {@link S3AsyncClient} and an {@link S3TransferManager},
+ * providing bucket-level operations and a shared thread pool
+ * for asynchronous transfers.
+ *
+ * <p>Typical usage:
+ * <pre>{@code
+ * S3AsyncClient asyncClient = S3AsyncClient.builder().build();
+ * S3Client s3 = new S3Client(asyncClient);
+ *
+ * S3Bucket bucket = s3.getBucket("my-bucket");
+ * Catalog catalog = bucket.as(Catalog.class);
+ * }</pre>
+ */
 public class S3Client {
     private final S3AsyncClient s3;
     private final S3TransferManager transferManager;
     private final ExecutorService executor;
 
+    /**
+     * Creates a new S3Client backed by the given async client.
+     * A default thread pool and {@link S3TransferManager} are
+     * created automatically.
+     *
+     * @param s3 the AWS async S3 client
+     */
     public S3Client(final S3AsyncClient s3) {
         this.s3 = s3;
         this.executor = createDefaultExecutorService();
@@ -61,23 +83,40 @@ public class S3Client {
         return (ThreadPoolExecutor) Executors.newFixedThreadPool(10, threadFactory);
     }
 
-    public static <T> Stream<T> asStream(final Iterator<T> iterator) {
+    /**
+     * Converts an {@link Iterator} into an ordered, sequential {@link Stream}.
+     *
+     * @param iterator the iterator to wrap
+     * @param <T>      the element type
+     * @return a stream over the iterator's elements
+     */
+    static <T> Stream<T> asStream(final Iterator<T> iterator) {
         return StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED),
                 false);
     }
 
+    /**
+     * Creates a new S3 bucket with the given name.
+     *
+     * @param s the bucket name
+     * @return the newly created bucket
+     */
     public S3Bucket createBucket(final String s) {
         join(s3.createBucket(CreateBucketRequest.builder().bucket(s).build()));
         final Bucket bucket = Bucket.builder().name(s).build();
         return new S3Bucket(this, bucket);
     }
 
+    /**
+     * Returns the bucket with the given name.
+     *
+     * @param name the bucket name
+     * @return the matching bucket
+     * @throws org.tomitribe.jaws.NoSuchBucketException if no bucket with
+     *         that name exists
+     */
     public S3Bucket getBucket(final String name) {
-        /*
-         * There doesn't seem to be a way to get a bucket
-         * directly by name.
-         */
         final Bucket bucket = join(s3.listBuckets()).buckets().stream()
                 .filter(item -> name.equals(item.name()))
                 .findAny()
@@ -86,21 +125,42 @@ public class S3Client {
         return new S3Bucket(this, bucket);
     }
 
+    /**
+     * Returns all buckets visible to the configured AWS credentials.
+     *
+     * @return a stream of buckets
+     */
     public Stream<S3Bucket> buckets() {
         return join(s3.listBuckets()).buckets().stream()
                 .map(bucket -> new S3Bucket(this, bucket));
 
     }
 
+    /**
+     * Returns the underlying AWS async S3 client.
+     *
+     * @return the async S3 client
+     */
     public S3AsyncClient getS3() {
         return s3;
     }
 
+    /**
+     * Returns the {@link S3TransferManager} used for upload and
+     * download operations.
+     *
+     * @return the transfer manager
+     */
     public S3TransferManager getTransferManager() {
         return transferManager;
     }
 
-    public ExecutorService getExecutor() {
+    /**
+     * Returns the shared executor service used for async transfers.
+     *
+     * @return the executor service
+     */
+    ExecutorService getExecutor() {
         return executor;
     }
 
