@@ -21,6 +21,7 @@ nav = [
         {"Directories & Files" = "guide/directories-and-files.md"},
         {"Annotations" = "guide/annotations.md"},
         {"Walking & Listing" = "guide/walking-and-listing.md"},
+        {"Default Methods" = "guide/default-methods.md"},
         {"Filtering" = "guide/filtering.md"},
         {"Uploads & Downloads" = "guide/uploads-and-downloads.md"},
     ]},
