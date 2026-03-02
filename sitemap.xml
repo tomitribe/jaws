@@ -64,6 +64,12 @@
         <loc>https://tomitribe.github.io/jaws/api/annotations/prefix/</loc>
       </url>
       <url>
+        <loc>https://tomitribe.github.io/jaws/api/annotations/suffix/</loc>
+      </url>
+      <url>
+        <loc>https://tomitribe.github.io/jaws/api/annotations/match/</loc>
+      </url>
+      <url>
         <loc>https://tomitribe.github.io/jaws/api/annotations/filter/</loc>
       </url>
       <url>
