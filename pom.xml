@@ -28,14 +28,14 @@
 
   <artifactId>jaws-parent</artifactId>
   <packaging>pom</packaging>
-  <version>2.0.1</version>
+  <version>2.0.2-SNAPSHOT</version>
   <name>Tomitribe :: JAWS</name>
 
   <scm>
     <connection>scm:git:git@github.com:tomitribe/jaws.git</connection>
     <url>scm:git:git@github.com:tomitribe/jaws.git</url>
     <developerConnection>scm:git:git@github.com:tomitribe/jaws.git</developerConnection>
-    <tag>jaws-parent-2.0.1</tag>
+    <tag>jaws-parent-2.0</tag>
   </scm>
 
   <modules>
