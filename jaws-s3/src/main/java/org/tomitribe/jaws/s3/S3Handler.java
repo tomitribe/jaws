@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -273,21 +274,37 @@ public class S3Handler implements InvocationHandler {
     private Predicate<S3File> getAnnotationFilter(final AnnotatedElement element) {
         if (element == null) return file -> true;
 
-        if (element.isAnnotationPresent(Filter.class)) {
-            final Filter filter = element.getAnnotation(Filter.class);
-            return asPredicate(filter);
-        }
+        Predicate<S3File> predicate = file -> true;
 
-        if (element.isAnnotationPresent(Filters.class)) {
-            final Filters filters = element.getAnnotation(Filters.class);
-            Predicate<S3File> predicate = file -> true;
-            for (final Filter filter : filters.value()) {
+        // Existing @Filter / @Filters handling
+        if (element.isAnnotationPresent(Filter.class)) {
+            predicate = predicate.and(asPredicate(element.getAnnotation(Filter.class)));
+        } else if (element.isAnnotationPresent(Filters.class)) {
+            for (final Filter filter : element.getAnnotation(Filters.class).value()) {
                 predicate = predicate.and(asPredicate(filter));
             }
-            return predicate;
         }
 
-        return file -> true;
+        // @Suffix
+        if (element.isAnnotationPresent(Suffix.class)) {
+            final String[] suffixes = element.getAnnotation(Suffix.class).value();
+            predicate = predicate.and(file -> {
+                final String name = file.getName();
+                for (final String suffix : suffixes) {
+                    if (name.endsWith(suffix)) return true;
+                }
+                return false;
+            });
+        }
+
+        // @Matches
+        if (element.isAnnotationPresent(Matches.class)) {
+            final java.util.function.Predicate<String> regex =
+                    Pattern.compile(element.getAnnotation(Matches.class).value()).asMatchPredicate();
+            predicate = predicate.and(file -> regex.test(file.getName()));
+        }
+
+        return predicate;
     }
 
     private Predicate<S3File> asPredicate(final Filter filter) {
