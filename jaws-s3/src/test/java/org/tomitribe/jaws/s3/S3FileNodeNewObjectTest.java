@@ -16,20 +16,23 @@
  */
 package org.tomitribe.jaws.s3;
 
-import software.amazon.awssdk.services.s3.model.S3Exception;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 /**

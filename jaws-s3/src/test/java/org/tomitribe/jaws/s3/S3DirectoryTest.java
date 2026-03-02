@@ -96,7 +96,7 @@ public class S3DirectoryTest {
                     "org.color/red/1/1.3\n" +
                     "org.color/red/1/1.3/foo.txt\n" +
                     "org.color/red/1/1.4\n" +
-                    "org.color/red/1/1.4/foo.txt"                    , Join.join("\n", list));
+                    "org.color/red/1/1.4/foo.txt", Join.join("\n", list));
         }
 
         final S3File orgColor = repository.getFile("org.color/");
@@ -121,7 +121,7 @@ public class S3DirectoryTest {
                     "org.color/red/1/1.3\n" +
                     "org.color/red/1/1.3/foo.txt\n" +
                     "org.color/red/1/1.4\n" +
-                    "org.color/red/1/1.4/foo.txt"                    , Join.join("\n", list));
+                    "org.color/red/1/1.4/foo.txt", Join.join("\n", list));
         }
 
         final S3File red = orgColor.getFile("red/");
@@ -141,7 +141,7 @@ public class S3DirectoryTest {
                     "org.color/red/1/1.3\n" +
                     "org.color/red/1/1.3/foo.txt\n" +
                     "org.color/red/1/1.4\n" +
-                    "org.color/red/1/1.4/foo.txt"                    , Join.join("\n", list));
+                    "org.color/red/1/1.4/foo.txt", Join.join("\n", list));
         }
     }
 

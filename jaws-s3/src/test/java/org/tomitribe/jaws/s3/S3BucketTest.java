@@ -126,7 +126,7 @@ public class S3BucketTest {
                 "org.color/red/1/1.3\n" +
                 "org.color/red/1/1.3/foo.txt\n" +
                 "org.color/red/1/1.4\n" +
-                "org.color/red/1/1.4/foo.txt"                , Join.join("\n", list));
+                "org.color/red/1/1.4/foo.txt", Join.join("\n", list));
     }
 
     @Test
