@@ -25,6 +25,21 @@
         <loc>https://tomitribe.github.io/jaws/guide/uploads-and-downloads/</loc>
       </url>
       <url>
+        <loc>https://tomitribe.github.io/jaws/examples/maven-project/</loc>
+      </url>
+      <url>
+        <loc>https://tomitribe.github.io/jaws/examples/static-website/</loc>
+      </url>
+      <url>
+        <loc>https://tomitribe.github.io/jaws/examples/log-archives/</loc>
+      </url>
+      <url>
+        <loc>https://tomitribe.github.io/jaws/examples/data-lake/</loc>
+      </url>
+      <url>
+        <loc>https://tomitribe.github.io/jaws/examples/container-registry/</loc>
+      </url>
+      <url>
         <loc>https://tomitribe.github.io/jaws/api/s3client/</loc>
       </url>
       <url>
