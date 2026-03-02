@@ -54,8 +54,9 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Home: index.md
-  - Getting Started: getting-started.md
+  - Home:
+      - Overview: index.md
+      - Getting Started: getting-started.md
   - Guide:
       - Typed Proxies: guide/typed-proxies.md
       - Directories & Files: guide/directories-and-files.md

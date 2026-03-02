@@ -90,7 +90,7 @@ paginated requests are made automatically.
 
 The total number of requests is:
 
-```
+```text
 requests = sum of ceil(entries / 1000) for each prefix visited
 ```
 
@@ -98,7 +98,7 @@ requests = sum of ceil(entries / 1000) for each prefix visited
 
 Consider a bucket with this structure:
 
-```
+```text
 photos/
   2024/
     jan/   (50 files)

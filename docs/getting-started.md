@@ -54,7 +54,7 @@ s3.buckets().forEach(b -> System.out.println(b.getName()));
 
 Imagine a bucket with this structure:
 
-```
+```text
 my-bucket/
   config.properties
   users/

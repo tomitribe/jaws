@@ -61,7 +61,7 @@ requests are made automatically.
 
 Consider this bucket structure:
 
-```
+```text
 repository/
   org/
     apache/

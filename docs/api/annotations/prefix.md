@@ -31,7 +31,7 @@ bandwidth or processing.
 
 Consider a Maven repository stored in S3:
 
-```
+```text
 repository/
   org/apache/maven/maven-core/3.9.6/maven-core-3.9.6.jar
   org/apache/maven/maven-core/3.9.6/maven-core-3.9.6.pom
