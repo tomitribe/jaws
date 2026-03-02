@@ -23,9 +23,11 @@ import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -220,6 +222,23 @@ public class S3MatchesTest {
     }
 
     // ---------------------------------------------------------------
+    // Filter ordering: @Filter only sees post-@Suffix-and-@Matches entries
+    // ---------------------------------------------------------------
+
+    @Test
+    public void filterOnlySeesPostSuffixAndMatches() throws Exception {
+        RecordingFilter.seen.clear();
+
+        final FilterOrderReturns returns = root().assets().file().as(FilterOrderReturns.class);
+        returns.suffixMatchesThenFilter().collect(Collectors.toList());
+
+        // @Suffix(".css") narrows 7 assets to 2: main.css, reset.css
+        // @Matches("m.*") narrows to 1: main.css
+        // @Filter should only see main.css
+        assertEquals("main.css", Join.join("\n", RecordingFilter.seen));
+    }
+
+    // ---------------------------------------------------------------
     // Test interfaces
     // ---------------------------------------------------------------
 
@@ -280,5 +299,22 @@ public class S3MatchesTest {
 
     public interface FullMatchReturns {
         @Matches("css") Stream<S3File> cssExact();
+    }
+
+    public interface FilterOrderReturns {
+        @Suffix(".css")
+        @Matches("m.*")
+        @Filter(RecordingFilter.class)
+        Stream<S3File> suffixMatchesThenFilter();
+    }
+
+    public static class RecordingFilter implements Predicate<S3File> {
+        static final List<String> seen = new ArrayList<>();
+
+        @Override
+        public boolean test(final S3File s3File) {
+            seen.add(s3File.getName());
+            return true;
+        }
     }
 }

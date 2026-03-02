@@ -29,9 +29,11 @@ each `S3File` in the listing.
 with AND logic. It can be placed on methods or on interface types.
 
 !!! tip
-    When possible, use `@Prefix` instead. `@Prefix` filters server-side,
-    reducing the HTTP payload from AWS. Use `@Filter` for criteria that
-    can't be expressed as a key prefix (e.g., file extension, size, name pattern).
+    When possible, use a simpler annotation. `@Prefix` filters server-side,
+    reducing the HTTP payload from AWS. `@Suffix` handles extension checks
+    and `@Matches` handles name patterns. Reserve `@Filter` for criteria
+    that need access to the full `S3File` (e.g., size, metadata, path
+    components).
 
 ## Examples
 
@@ -83,37 +85,52 @@ public interface VersionDir extends S3.Dir {
 }
 ```
 
-### Filter ordering
+### Evaluation order
 
-Interface-level filters run before method-level filters. Both must pass
-for a result to be included:
+When multiple filter annotations are present, they are applied in order —
+simplest first, most complex last:
+
+1. **@Prefix** — server-side, in the `ListObjects` request
+2. **@Suffix** — client-side, `String.endsWith()`
+3. **@Matches** — client-side, compiled regex
+4. **@Filter** — client-side, arbitrary `Predicate<S3File>`
+
+Interface-level filters run before method-level filters within each
+category. All client-side filters are AND'd together. A `@Filter`
+predicate can safely assume that `@Suffix` and `@Matches` have already
+passed.
 
 ```java
-@Filter(IsJar.class)              // 1st: must be .jar
+@Suffix(".jar")                   // 1st: interface-level suffix
 public interface JarFile extends S3.File {}
 
 public interface VersionDir extends S3.Dir {
-    @Filter(IsSnapshot.class)     // 2nd: must also be SNAPSHOT
+    @Filter(IsSnapshot.class)     // 2nd: method-level filter (sees only .jar)
     Stream<JarFile> snapshotJars();
 }
 ```
 
-### Combining with @Prefix
+### Combining with other annotations
 
 For maximum efficiency, use `@Prefix` to reduce the result set server-side,
-then `@Filter` for criteria that can't be expressed as a key prefix:
+then layer on client-side filters as needed:
 
 ```java
 public interface Repository extends S3.Dir {
-    // Server-side: only keys starting with "org/apache"
-    // Client-side: only .jar files
     @Prefix("org/apache")
-    @Filter(IsJar.class)
+    @Suffix(".jar")
     Stream<S3File> apacheJars();
+
+    @Prefix("org/apache")
+    @Suffix(".jar")
+    @Filter(IsSnapshot.class)
+    Stream<S3File> apacheSnapshotJars();
 }
 ```
 
 ## See Also
 
-- [@Prefix](prefix.md) — server-side filtering
+- [@Suffix](suffix.md) — client-side suffix filtering (simpler, faster)
+- [@Matches](matches.md) — client-side regex filtering
+- [@Prefix](prefix.md) — server-side prefix filtering
 - [Filtering](../../guide/filtering.md) — detailed guide on filtering strategies

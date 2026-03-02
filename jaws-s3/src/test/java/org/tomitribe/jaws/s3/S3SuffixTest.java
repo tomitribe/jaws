@@ -23,9 +23,11 @@ import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -209,6 +211,21 @@ public class S3SuffixTest {
     }
 
     // ---------------------------------------------------------------
+    // Filter ordering: @Filter only sees post-@Suffix entries
+    // ---------------------------------------------------------------
+
+    @Test
+    public void filterOnlySeesPostSuffix() throws Exception {
+        RecordingFilter.seen.clear();
+
+        final FilterOrderReturns returns = root().assets().file().as(FilterOrderReturns.class);
+        returns.suffixThenFilter().collect(Collectors.toList());
+
+        // The filter should only have seen the 2 CSS files, not all 7 assets
+        assertEquals("main.css\nreset.css", Join.join("\n", RecordingFilter.seen));
+    }
+
+    // ---------------------------------------------------------------
     // Test interfaces
     // ---------------------------------------------------------------
 
@@ -265,5 +282,21 @@ public class S3SuffixTest {
 
     public interface MultiValueReturns {
         @Suffix({".jpg", ".png"}) Stream<S3File> images();
+    }
+
+    public interface FilterOrderReturns {
+        @Suffix(".css")
+        @Filter(RecordingFilter.class)
+        Stream<S3File> suffixThenFilter();
+    }
+
+    public static class RecordingFilter implements Predicate<S3File> {
+        static final List<String> seen = new ArrayList<>();
+
+        @Override
+        public boolean test(final S3File s3File) {
+            seen.add(s3File.getName());
+            return true;
+        }
     }
 }

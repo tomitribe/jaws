@@ -127,10 +127,55 @@ public interface Tomcat extends S3.Dir {
 Because the prefix is applied server-side, a directory with hundreds of entries
 can be efficiently narrowed to just the relevant subset.
 
+## @Suffix
+
+Filters results by file name ending. A shorthand for the common case of
+filtering by file extension. Multiple values are OR'd.
+
+```java
+public interface Assets extends S3.Dir {
+    @Suffix(".css")
+    Stream<S3File> stylesheets();
+
+    @Suffix({".jpg", ".png", ".gif"})
+    Stream<S3File> images();
+}
+```
+
+### Type-level suffix
+
+`@Suffix` can also be placed on an interface. It applies to all methods that
+return that type:
+
+```java
+@Suffix(".parquet")
+public interface ParquetFile extends S3.File {
+    // Every listing that returns Stream<ParquetFile> will
+    // automatically filter to .parquet files only
+}
+```
+
+## @Matches
+
+Filters results by a regular expression on the file name. The entire name
+must match (implied `^` and `$`). Uses `Pattern.asMatchPredicate()`.
+
+```java
+public interface Reports extends S3.Dir {
+    @Matches("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
+    Stream<S3File> dailyReports();
+
+    @Matches(".*\\.(jpg|png)")
+    Stream<S3File> images();
+}
+```
+
+`@Matches` can also be placed on an interface for type-level filtering.
+
 ## @Filter
 
-Applies a client-side predicate to filter results. The annotation takes
-a `Predicate<S3File>` class that must have a no-arg constructor.
+Applies an arbitrary client-side predicate to filter results. The annotation
+takes a `Predicate<S3File>` class that must have a no-arg constructor.
 
 ```java
 public class IsJar implements Predicate<S3File> {
@@ -164,10 +209,24 @@ public interface VersionDir extends S3.Dir {
 ```
 
 `@Filter` is repeatable — multiple filters are combined with AND logic.
-Interface-level filters run before method-level filters.
+
+### Filter evaluation order
+
+When multiple filter annotations are present, they are applied in order —
+simplest first, most complex last:
+
+1. **@Prefix** — server-side
+2. **@Suffix** — `String.endsWith()`
+3. **@Matches** — compiled regex
+4. **@Filter** — arbitrary `Predicate<S3File>`
+
+Each filter only sees entries that passed the previous ones. Interface-level
+filters run before method-level filters within each category.
 
 !!! tip
-    Prefer `@Prefix` over `@Filter` when possible. `@Prefix` filters
+    Use `@Suffix` for extension checks and `@Matches` for name patterns.
+    Reserve `@Filter` for cases that need access to the full `S3File`.
+    Prefer `@Prefix` over all of these when possible — it filters
     server-side and reduces the data transferred from AWS.
 
 ## @Delimiter

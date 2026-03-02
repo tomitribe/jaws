@@ -276,16 +276,7 @@ public class S3Handler implements InvocationHandler {
 
         Predicate<S3File> predicate = file -> true;
 
-        // Existing @Filter / @Filters handling
-        if (element.isAnnotationPresent(Filter.class)) {
-            predicate = predicate.and(asPredicate(element.getAnnotation(Filter.class)));
-        } else if (element.isAnnotationPresent(Filters.class)) {
-            for (final Filter filter : element.getAnnotation(Filters.class).value()) {
-                predicate = predicate.and(asPredicate(filter));
-            }
-        }
-
-        // @Suffix
+        // Simplest first: @Suffix (String.endsWith)
         if (element.isAnnotationPresent(Suffix.class)) {
             final String[] suffixes = element.getAnnotation(Suffix.class).value();
             predicate = predicate.and(file -> {
@@ -297,11 +288,20 @@ public class S3Handler implements InvocationHandler {
             });
         }
 
-        // @Matches
+        // Then @Matches (compiled regex)
         if (element.isAnnotationPresent(Matches.class)) {
             final java.util.function.Predicate<String> regex =
                     Pattern.compile(element.getAnnotation(Matches.class).value()).asMatchPredicate();
             predicate = predicate.and(file -> regex.test(file.getName()));
+        }
+
+        // Finally @Filter (arbitrary user code)
+        if (element.isAnnotationPresent(Filter.class)) {
+            predicate = predicate.and(asPredicate(element.getAnnotation(Filter.class)));
+        } else if (element.isAnnotationPresent(Filters.class)) {
+            for (final Filter filter : element.getAnnotation(Filters.class).value()) {
+                predicate = predicate.and(asPredicate(filter));
+            }
         }
 
         return predicate;

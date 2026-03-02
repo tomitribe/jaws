@@ -21,6 +21,38 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Filters listing results on the client side to entries whose
+ * {@link S3File#getName() name} ends with one of the given suffixes.
+ * Multiple values are OR'd — a file matches if its name ends with
+ * <b>any</b> of them.
+ *
+ * <p>This is a shorthand for the common case of filtering by file
+ * extension. For more complex name patterns use {@link Matches @Matches}.
+ * For arbitrary criteria use {@link Filter @Filter}.
+ *
+ * <pre>{@code
+ * public interface Assets extends S3.Dir {
+ *     @Suffix(".css")
+ *     Stream<S3File> stylesheets();
+ *
+ *     @Suffix({".jpg", ".png", ".gif"})
+ *     Stream<S3File> images();
+ * }
+ * }</pre>
+ *
+ * <h3>Evaluation order</h3>
+ *
+ * <p>When multiple filter annotations are present, they are applied
+ * in order: {@link Prefix @Prefix} (server-side) &rarr;
+ * {@code @Suffix} &rarr; {@link Matches @Matches} &rarr;
+ * {@link Filter @Filter}. Each filter only sees entries that passed
+ * the previous ones.
+ *
+ * @see Matches
+ * @see Filter
+ * @see Prefix
+ */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Suffix {

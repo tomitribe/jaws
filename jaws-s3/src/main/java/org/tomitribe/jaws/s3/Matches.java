@@ -21,6 +21,34 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Filters listing results on the client side to entries whose
+ * {@link S3File#getName() name} matches the given regular expression.
+ * Uses {@link java.util.regex.Pattern#asMatchPredicate()}, so the
+ * <b>entire</b> name must match (implied {@code ^} and {@code $}).
+ *
+ * <pre>{@code
+ * public interface Reports extends S3.Dir {
+ *     @Matches("daily-\\d{4}-\\d{2}-\\d{2}\\.csv")
+ *     Stream<S3File> dailyReports();
+ *
+ *     @Matches(".*\\.(jpg|png)")
+ *     Stream<S3File> images();
+ * }
+ * }</pre>
+ *
+ * <h3>Evaluation order</h3>
+ *
+ * <p>When multiple filter annotations are present, they are applied
+ * in order: {@link Prefix @Prefix} (server-side) &rarr;
+ * {@link Suffix @Suffix} &rarr; {@code @Matches} &rarr;
+ * {@link Filter @Filter}. Each filter only sees entries that passed
+ * the previous ones.
+ *
+ * @see Suffix
+ * @see Filter
+ * @see Prefix
+ */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Matches {
