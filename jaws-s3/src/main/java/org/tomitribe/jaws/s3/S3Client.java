@@ -174,4 +174,8 @@ public class S3Client {
             throw e;
         }
     }
+
+    public static S3Client from(final S3AsyncClient client) {
+        return new S3Client(client);
+    }
 }
