@@ -30,18 +30,15 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.tomitribe.jaws.s3.S3BucketTest.assertContent;
 
 public class S3DirectoryTest {
 
     @Rule
     public MockS3Rule mockS3 = new MockS3Rule();
-    private File store;
     private S3Client s3Client;
 
     @Before
     public final void setUp() throws Exception {
-        this.store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
     }
 
@@ -145,7 +142,7 @@ public class S3DirectoryTest {
     }
 
     @Test
-    public void putObjectString() throws IOException {
+    public void putObjectString() {
         final S3Bucket bucket = s3Client.createBucket("repository");
 
         bucket.root()
@@ -158,8 +155,9 @@ public class S3DirectoryTest {
                 .getFile("green/")
                 .getFile("1/1.4/foo.txt").setValueAsString("green");
 
-        assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
-        assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
+        S3Asserts.of(mockS3.getS3Client(), "repository")
+                .assertContent("org.color/red/1/1.4/foo.txt", "red")
+                .assertContent("org.color.bright/green/1/1.4/foo.txt", "green");
     }
 
     @Test
@@ -182,8 +180,9 @@ public class S3DirectoryTest {
                 .getFile("1/1.4/foo.txt")
                 .setValueAsFile(new File(data, "green.txt"));
 
-        assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
-        assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
+        S3Asserts.of(mockS3.getS3Client(), "repository")
+                .assertContent("org.color/red/1/1.4/foo.txt", "red")
+                .assertContent("org.color.bright/green/1/1.4/foo.txt", "green");
     }
 
     @Test
@@ -205,8 +204,9 @@ public class S3DirectoryTest {
                 .getFile("green/")
                 .getFile("1/1.4/foo.txt").setValueAsStream(IO.read(new File(data, "green.txt")));
 
-        assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
-        assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
+        S3Asserts.of(mockS3.getS3Client(), "repository")
+                .assertContent("org.color/red/1/1.4/foo.txt", "red")
+                .assertContent("org.color.bright/green/1/1.4/foo.txt", "green");
     }
 
     @Test

@@ -125,24 +125,18 @@ public class S3BucketTest {
     }
 
     @Test
-    public void putObjectString() throws IOException {
+    public void putObjectString() {
         final S3Bucket bucket = s3Client.createBucket("repository");
         bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
         bucket.putObject("org.color.bright/green/1/1.4/foo.txt", "green");
         bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final List<String> paths = paths(store);
-
-        assertEquals("/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
-                "/repository/junit/junit/4/4.12/bar.txt\n" +
-                "/repository/org.color.bright/green/1/1.4/foo.txt\n" +
-                "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
-
-        assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
-        assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
-        assertContent(store, "blue", "repository/junit/junit/4/4.12/bar.txt");
-        assertContent(store, "orange", "repository/io.tomitribe/crest/5/5.4.1.2/baz.txt");
+        S3Asserts.of(mockS3.getS3Client(), "repository")
+                .assertContent("org.color/red/1/1.4/foo.txt", "red")
+                .assertContent("org.color.bright/green/1/1.4/foo.txt", "green")
+                .assertContent("junit/junit/4/4.12/bar.txt", "blue")
+                .assertContent("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
     }
 
     @Test
@@ -160,17 +154,11 @@ public class S3BucketTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", new File(data, "blue.txt"));
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", new File(data, "orange.txt"));
 
-        final List<String> paths = paths(store);
-
-        assertEquals("/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
-                "/repository/junit/junit/4/4.12/bar.txt\n" +
-                "/repository/org.color.bright/green/1/1.4/foo.txt\n" +
-                "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
-
-        assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
-        assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
-        assertContent(store, "blue", "repository/junit/junit/4/4.12/bar.txt");
-        assertContent(store, "orange", "repository/io.tomitribe/crest/5/5.4.1.2/baz.txt");
+        S3Asserts.of(mockS3.getS3Client(), "repository")
+                .assertContent("org.color/red/1/1.4/foo.txt", "red")
+                .assertContent("org.color.bright/green/1/1.4/foo.txt", "green")
+                .assertContent("junit/junit/4/4.12/bar.txt", "blue")
+                .assertContent("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
     }
 
     @Test
@@ -188,18 +176,11 @@ public class S3BucketTest {
         bucket.putObject("junit/junit/4/4.12/bar.txt", IO.read(new File(data, "blue.txt")), new File(data, "blue.txt").length());
         bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", IO.read(new File(data, "orange.txt")), new File(data, "orange.txt").length());
 
-        final List<String> paths = paths(store);
-
-        assertEquals("/repository/io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
-                "/repository/junit/junit/4/4.12/bar.txt\n" +
-                "/repository/org.color.bright/green/1/1.4/foo.txt\n" +
-                "/repository/org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
-
-        assertContent(store, "red", "repository/org.color/red/1/1.4/foo.txt");
-        assertContent(store, "green", "repository/org.color.bright/green/1/1.4/foo.txt");
-        assertContent(store, "blue", "repository/junit/junit/4/4.12/bar.txt");
-        assertContent(store, "orange", "repository/io.tomitribe/crest/5/5.4.1.2/baz.txt");
-
+        S3Asserts.of(mockS3.getS3Client(), "repository")
+                .assertContent("org.color/red/1/1.4/foo.txt", "red")
+                .assertContent("org.color.bright/green/1/1.4/foo.txt", "green")
+                .assertContent("junit/junit/4/4.12/bar.txt", "blue")
+                .assertContent("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
     }
 
     @Test
@@ -306,10 +287,6 @@ public class S3BucketTest {
                 .map(s -> s.substring(trim))
                 .sorted()
                 .collect(Collectors.toList());
-    }
-
-    public static void assertContent(final File store, final String orange, final String s) throws IOException {
-        assertEquals(orange, IO.slurp(new File(store, s)));
     }
 
     public static void assertObject(final S3Bucket bucket, final String bucketName, final String path, final String expectedContent) throws IOException {
