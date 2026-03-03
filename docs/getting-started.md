@@ -3,8 +3,6 @@
 ## Prerequisites
 
 - Java 11 or later
-- An AWS account with S3 access
-- AWS credentials configured (environment variables, `~/.aws/credentials`, or IAM role)
 
 ## Installation
 
@@ -65,21 +63,23 @@ my-bucket/
 Define interfaces that mirror this structure:
 
 ```java
-public interface MyBucket extends S3.Dir {
+public interface UserRepository extends S3.Dir {
     @Name("config.properties")
-    Config config();
+    S3File config();
 
     Users users();
 }
 
-public interface Config extends S3.File {
-    // Inherits getValueAsString(), setValueAsString(), etc.
+public interface Users extends S3.Dir {
+    Stream<UserFile> users();
+
+    UserFile user(String name);
 }
 
-public interface Users extends S3.Dir {
-    Stream<S3File> list();
-
-    S3File file(String name);
+public interface UserFile extends S3.File {
+    default String getUserName() {
+        return file().getName().replaceAll("\\.json$", "");
+    }
 }
 ```
 
@@ -87,20 +87,124 @@ Create and use the proxy:
 
 ```java
 S3Bucket bucket = s3.getBucket("my-bucket");
-MyBucket root = bucket.as(MyBucket.class);
+UserRepository root = bucket.as(UserRepository.class);
 
 // Read config
 String config = root.config().getValueAsString();
 
 // List users
-root.users().list().forEach(user ->
-    System.out.println(user.getName())
+root.users().users().forEach(user ->
+    System.out.println(user.getUserName())
 );
 
 // Get a specific user
-S3File alice = root.users().file("alice.json");
+UserFile alice = root.users().user("alice.json");
 String json = alice.getValueAsString();
 ```
+
+## Testing
+
+JAWS ships a `jaws-s3-test` module with an in-memory S3 backend powered by
+[S3Proxy](https://github.com/gaul/s3proxy). Add it as a test dependency alongside
+JUnit 5:
+
+```xml
+<dependency>
+    <groupId>org.tomitribe</groupId>
+    <artifactId>jaws-s3-test</artifactId>
+    <version>2.0.5</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter-api</artifactId>
+    <version>5.10.2</version>
+    <scope>test</scope>
+</dependency>
+```
+
+Register a `MockS3Extension` in your test. It starts a local S3 server before each
+test and tears it down after:
+
+```java
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.tomitribe.jaws.s3.MockS3Extension;
+import org.tomitribe.jaws.s3.Name;
+import org.tomitribe.jaws.s3.S3;
+import org.tomitribe.jaws.s3.S3Asserts;
+import org.tomitribe.jaws.s3.S3Client;
+import org.tomitribe.jaws.s3.S3File;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class GettingStartedTest {
+
+    @RegisterExtension
+    private final MockS3Extension mockS3 = new MockS3Extension();
+
+    @Test
+    void test() {
+        final S3Client s3Client = new S3Client(mockS3.getS3Client());
+
+        final UserRepository root = s3Client.createBucket("my-bucket")
+                .put("config.properties", "color=red")
+                .put("users/alice.json", "{\"name\":\"Alice\"}")
+                .put("users/bob.json", "{\"name\":\"Bob\"}")
+                .as(UserRepository.class);
+
+        // Read entries
+        assertEquals("color=red", root.config().getValueAsString());
+        assertEquals("{\"name\":\"Alice\"}", root.users().user("alice.json").getValueAsString());
+
+        // List entries
+        final String names = root.users().users()
+                .map(UserFile::getUserName)
+                .sorted()
+                .collect(Collectors.joining(", "));
+
+        assertEquals("alice, bob", names);
+
+        // Add entry
+        root.users().user("charlie.json").setValueAsString("{\"name\":\"Charlie\"}");
+
+        // Review all results
+        S3Asserts.of(mockS3.getS3Client(), "my-bucket")
+                .snapshot()
+                .assertContent("users/charlie.json", "{\"name\":\"Charlie\"}")
+                .assertContent("users/alice.json", "{\"name\":\"Alice\"}")
+                .assertExists("config.properties")
+                .assertNotExists("users/dave.json");
+    }
+
+    public interface UserRepository extends S3.Dir {
+        @Name("config.properties")
+        S3File config();
+
+        Users users();
+    }
+
+    public interface Users extends S3.Dir {
+        Stream<UserFile> users();
+
+        UserFile user(String name);
+    }
+
+    public interface UserFile extends S3.File {
+        default String getUserName() {
+            return file().getName().replaceAll("\\.json$", "");
+        }
+    }
+}
+```
+
+The test creates a bucket, populates it with the fluent `put()` API, then uses a
+typed proxy to read, list, and write entries — the same code you'd write against real
+S3. `S3Asserts` provides a snapshot-based way to verify the final bucket state
+directly against the underlying S3 client.
 
 ## Next Steps
 
