@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class S3MatchTest {
 
@@ -196,6 +197,23 @@ public class S3MatchTest {
     }
 
     // ---------------------------------------------------------------
+    // Type-level @Match validates single-arg input
+    // ---------------------------------------------------------------
+
+    @Test
+    public void typeLevelMatchValidatesInput() throws Exception {
+        final SingleArgReturns returns = root().assets().file().as(SingleArgReturns.class);
+        final CssAsset css = returns.asset("main.css");
+        assertEquals("assets/main.css", css.toString());
+    }
+
+    @Test
+    public void typeLevelMatchRejectsInput() throws Exception {
+        final SingleArgReturns returns = root().assets().file().as(SingleArgReturns.class);
+        assertThrows(IllegalArgumentException.class, () -> returns.asset("app.js"));
+    }
+
+    // ---------------------------------------------------------------
     // Regex alternation
     // ---------------------------------------------------------------
 
@@ -321,6 +339,10 @@ public class S3MatchTest {
 
     public interface TypeLevelReturns {
         Stream<CssAsset> cssAssets();
+    }
+
+    public interface SingleArgReturns {
+        CssAsset asset(String name);
     }
 
     public interface AlternationReturns {

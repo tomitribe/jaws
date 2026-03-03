@@ -19,7 +19,6 @@ import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import java.io.FileNotFoundException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -29,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -92,7 +90,18 @@ public class S3Handler implements InvocationHandler {
         }
 
         if (returnType.isInterface() && args != null && args.length == 1 && args[0] instanceof String) {
-            return dir.getFile((String) args[0]).as(returnType);
+            final String name = (String) args[0];
+            final S3File target = dir.getFile(name);
+            final Validation validation = Validation.builder()
+                    .type(returnType)
+                    .method(method)
+                    .build();
+            if (!validation.test(target)) {
+                throw new IllegalArgumentException(
+                        String.format("\"%s\" does not match the naming constraints of %s",
+                                name, returnType.getSimpleName()));
+            }
+            return target.as(returnType);
         }
 
         if (returnType.isInterface() && args == null) {
@@ -194,7 +203,11 @@ public class S3Handler implements InvocationHandler {
     }
 
     private Object returnArray(final Method method) {
-        final Predicate<S3File> filter = getFilter(method);
+        final Predicate<S3File> filter = Validation.builder()
+                .type(getElementType(method))
+                .method(method)
+                .prefix(false)
+                .build();
 
         final Class<?> arrayType = method.getReturnType().getComponentType();
 
@@ -225,7 +238,11 @@ public class S3Handler implements InvocationHandler {
 
     private Object returnList(final Method method) {
         final Class<?> listType = (Class<?>) Generics.getReturnType(method);
-        final Predicate<S3File> filter = getFilter(method);
+        final Predicate<S3File> filter = Validation.builder()
+                .type(getElementType(method))
+                .method(method)
+                .prefix(false)
+                .build();
 
         if (S3File.class.equals(listType)) {
 
@@ -246,7 +263,11 @@ public class S3Handler implements InvocationHandler {
 
     private Object returnSet(final Method method) {
         final Class<?> listType = (Class<?>) Generics.getReturnType(method);
-        final Predicate<S3File> filter = getFilter(method);
+        final Predicate<S3File> filter = Validation.builder()
+                .type(getElementType(method))
+                .method(method)
+                .prefix(false)
+                .build();
 
         if (S3File.class.equals(listType)) {
 
@@ -265,73 +286,13 @@ public class S3Handler implements InvocationHandler {
         throw new UnsupportedOperationException(method.toGenericString());
     }
 
-    private Predicate<S3File> getFilter(final Method method) {
-        // Interface-level filters apply first, then method-level filters
-        final Class<?> elementType = getElementType(method);
-        return getAnnotationFilter(elementType).and(getAnnotationFilter(method));
-    }
-
-    private Predicate<S3File> getAnnotationFilter(final AnnotatedElement element) {
-        if (element == null) return file -> true;
-
-        Predicate<S3File> predicate = file -> true;
-
-        // @Suffix includes, then excludes
-        for (final Suffix suffix : element.getAnnotationsByType(Suffix.class)) {
-            if (suffix.exclude()) continue;
-            final String[] values = suffix.value();
-            predicate = predicate.and(file -> {
-                final String name = file.getName();
-                for (final String s : values) {
-                    if (name.endsWith(s)) return true;
-                }
-                return false;
-            });
-        }
-        for (final Suffix suffix : element.getAnnotationsByType(Suffix.class)) {
-            if (!suffix.exclude()) continue;
-            final String[] values = suffix.value();
-            predicate = predicate.and(file -> {
-                final String name = file.getName();
-                for (final String s : values) {
-                    if (name.endsWith(s)) return false;
-                }
-                return true;
-            });
-        }
-
-        // @Match includes, then excludes
-        for (final Match match : element.getAnnotationsByType(Match.class)) {
-            final Predicate<String> regex = Pattern.compile(match.value()).asMatchPredicate();
-            if (!match.exclude()) {
-                predicate = predicate.and(file -> regex.test(file.getName()));
-            } else {
-                predicate = predicate.and(file -> !regex.test(file.getName()));
-            }
-        }
-
-        // @Filter / @Filters
-        for (final Filter filter : element.getAnnotationsByType(Filter.class)) {
-            predicate = predicate.and(asPredicate(filter));
-        }
-
-        return predicate;
-    }
-
-    private Predicate<S3File> asPredicate(final Filter filter) {
-        if (filter == null) return pathname -> true;
-
-        final Class<? extends Predicate<S3File>> clazz = filter.value();
-        try {
-            return clazz.newInstance();
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to instantiate filter " + clazz, e);
-        }
-    }
-
     private Object returnStream(final Method method) {
         final Class returnType = (Class) Generics.getReturnType(method);
-        final Predicate<S3File> filter = getFilter(method);
+        final Predicate<S3File> filter = Validation.builder()
+                .type(getElementType(method))
+                .method(method)
+                .prefix(false)
+                .build();
 
         if (returnType.isInterface()) {
             return stream(method)

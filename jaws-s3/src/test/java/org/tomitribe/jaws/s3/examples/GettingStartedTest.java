@@ -18,6 +18,7 @@ package org.tomitribe.jaws.s3.examples;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.tomitribe.jaws.s3.Match;
 import org.tomitribe.jaws.s3.MockS3Extension;
 import org.tomitribe.jaws.s3.Name;
 import org.tomitribe.jaws.s3.S3;
@@ -88,6 +89,7 @@ public class GettingStartedTest {
         UserFile user(String name);
     }
 
+    @Match(".*\\.json")
     public interface UserFile extends S3.File {
         default String getUserName() {
             return file().getName().replaceAll("\\.json$", "");
