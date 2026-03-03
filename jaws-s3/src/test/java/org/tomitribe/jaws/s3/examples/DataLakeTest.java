@@ -29,10 +29,8 @@ import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
 import org.tomitribe.jaws.s3.S3File;
 import org.tomitribe.jaws.s3.Walk;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -54,26 +52,24 @@ public class DataLakeTest {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("data-lake/raw/events-2025-01-15.json", "{}")
-                .add("data-lake/raw/events-2025-01-16.json", "{}")
-                .add("data-lake/raw/events-2025-02-01.json", "{}")
-                .add("data-lake/processed/year=2025/month=01/day=15/part-00000.parquet", "")
-                .add("data-lake/processed/year=2025/month=01/day=15/part-00001.parquet", "")
-                .add("data-lake/processed/year=2025/month=01/day=15/_SUCCESS", "")
-                .add("data-lake/processed/year=2025/month=01/day=16/part-00000.parquet", "")
-                .add("data-lake/processed/year=2025/month=01/day=16/_SUCCESS", "")
-                .add("data-lake/processed/year=2025/month=02/day=01/part-00000.parquet", "")
-                .add("data-lake/processed/year=2025/month=02/day=01/_SUCCESS", "")
-                .add("data-lake/curated/daily-summary-2025-01-15.csv", "")
-                .add("data-lake/curated/daily-summary-2025-01-16.csv", "")
-                .add("data-lake/curated/daily-summary-2025-02-01.csv", "")
-                .add("data-lake/curated/monthly-summary-2025-01.csv", "")
-                .add("data-lake/curated/monthly-summary-2025-02.csv", "")
-                .toDir(store);
+        s3Client.createBucket("data-lake")
+                .put("raw/events-2025-01-15.json", "{}")
+                .put("raw/events-2025-01-16.json", "{}")
+                .put("raw/events-2025-02-01.json", "{}")
+                .put("processed/year=2025/month=01/day=15/part-00000.parquet", "")
+                .put("processed/year=2025/month=01/day=15/part-00001.parquet", "")
+                .put("processed/year=2025/month=01/day=15/_SUCCESS", "")
+                .put("processed/year=2025/month=01/day=16/part-00000.parquet", "")
+                .put("processed/year=2025/month=01/day=16/_SUCCESS", "")
+                .put("processed/year=2025/month=02/day=01/part-00000.parquet", "")
+                .put("processed/year=2025/month=02/day=01/_SUCCESS", "")
+                .put("curated/daily-summary-2025-01-15.csv", "")
+                .put("curated/daily-summary-2025-01-16.csv", "")
+                .put("curated/daily-summary-2025-02-01.csv", "")
+                .put("curated/monthly-summary-2025-01.csv", "")
+                .put("curated/monthly-summary-2025-02.csv", "");
     }
 
     private DataLake lake() {

@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -44,11 +43,11 @@ public class S3FileNodeObjectSummary2Test {
 
     @Test
     public void getValue() throws IOException {
-        final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
-        bucket.putObject("org.color.bright/green/1/1.4/foo.txt", "green");
-        bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
-        bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "red")
+                .put("org.color.bright/green/1/1.4/foo.txt", "green")
+                .put("junit/junit/4/4.12/bar.txt", "blue")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
         final Map<String, S3File> entries = bucket.objects().collect(Collectors.toMap(S3File::getAbsoluteName, Function.identity()));
 
@@ -60,11 +59,11 @@ public class S3FileNodeObjectSummary2Test {
 
     @Test
     public void getValueAsStream() throws IOException {
-        final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
-        bucket.putObject("org.color.bright/green/1/1.4/foo.txt", "green");
-        bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
-        bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "red")
+                .put("org.color.bright/green/1/1.4/foo.txt", "green")
+                .put("junit/junit/4/4.12/bar.txt", "blue")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
         final Map<String, S3File> entries = bucket.objects().collect(Collectors.toMap(S3File::getAbsoluteName, Function.identity()));
 
@@ -76,11 +75,11 @@ public class S3FileNodeObjectSummary2Test {
 
     @Test
     public void getValueAsString() throws IOException {
-        final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
-        bucket.putObject("org.color.bright/green/1/1.4/foo.txt", "green");
-        bucket.putObject("junit/junit/4/4.12/bar.txt", "blue");
-        bucket.putObject("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "red")
+                .put("org.color.bright/green/1/1.4/foo.txt", "green")
+                .put("junit/junit/4/4.12/bar.txt", "blue")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
         final Map<String, S3File> entries = bucket.objects().collect(Collectors.toMap(S3File::getAbsoluteName, Function.identity()));
 
@@ -92,44 +91,46 @@ public class S3FileNodeObjectSummary2Test {
 
     @Test
     public void getBucketName() {
-        final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "red");
 
-        final Stream<S3File> objects = bucket.objects();
-        final S3File entry = objects.findAny().orElseThrow(AssertionError::new);
+        final S3File entry = bucket.objects().findAny().orElseThrow(AssertionError::new);
 
         assertEquals("repository", entry.getBucketName());
     }
 
     @Test
     public void getKey() {
-        final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "red");
 
-        final Stream<S3File> objects = bucket.objects();
-        final S3File entry = objects.filter(s3File -> s3File.getName().endsWith(".txt")).findAny().orElseThrow(AssertionError::new);
+        final S3File entry = bucket.objects()
+                .filter(s3File -> s3File.getName().endsWith(".txt"))
+                .findAny().orElseThrow(AssertionError::new);
 
         assertEquals("org.color/red/1/1.4/foo.txt", entry.getAbsoluteName());
     }
 
     @Test
     public void getSize() {
-        final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "red");
 
-        final Stream<S3File> objects = bucket.objects();
-        final S3File entry = objects.filter(s3File -> s3File.getName().endsWith(".txt")).findAny().orElseThrow(AssertionError::new);
+        final S3File entry = bucket.objects()
+                .filter(s3File -> s3File.getName().endsWith(".txt"))
+                .findAny().orElseThrow(AssertionError::new);
 
         assertEquals(3, entry.getSize());
     }
 
     @Test
     public void getName() {
-        final S3Bucket bucket = s3Client.createBucket("repository");
-        bucket.putObject("org.color/red/1/1.4/foo.txt", "red");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "red");
 
-        final Stream<S3File> objects = bucket.objects();
-        final S3File entry = objects.filter(s3File -> s3File.getName().endsWith(".txt")).findAny().orElseThrow(AssertionError::new);
+        final S3File entry = bucket.objects()
+                .filter(s3File -> s3File.getName().endsWith(".txt"))
+                .findAny().orElseThrow(AssertionError::new);
 
         assertEquals("foo.txt", entry.getName());
     }

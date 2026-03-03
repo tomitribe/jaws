@@ -19,10 +19,8 @@ package org.tomitribe.jaws.s3;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,21 +45,19 @@ public class S3PrefixTest {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("bucket/reports/daily-2025-01-15.csv", "")
-                .add("bucket/reports/daily-2025-01-16.csv", "")
-                .add("bucket/reports/daily-2025-02-01.csv", "")
-                .add("bucket/reports/monthly-2025-01.csv", "")
-                .add("bucket/reports/monthly-2025-02.csv", "")
-                .add("bucket/data/alpha/file1.txt", "")
-                .add("bucket/data/alpha/file2.txt", "")
-                .add("bucket/data/beta/file3.txt", "")
-                .add("bucket/data/beta-extra/file4.txt", "")
-                .add("bucket/data/gamma/file5.txt", "")
-                .toDir(store);
+        s3Client.createBucket("bucket")
+                .put("reports/daily-2025-01-15.csv", "")
+                .put("reports/daily-2025-01-16.csv", "")
+                .put("reports/daily-2025-02-01.csv", "")
+                .put("reports/monthly-2025-01.csv", "")
+                .put("reports/monthly-2025-02.csv", "")
+                .put("data/alpha/file1.txt", "")
+                .put("data/alpha/file2.txt", "")
+                .put("data/beta/file3.txt", "")
+                .put("data/beta-extra/file4.txt", "")
+                .put("data/gamma/file5.txt", "");
     }
 
     private Root root() {

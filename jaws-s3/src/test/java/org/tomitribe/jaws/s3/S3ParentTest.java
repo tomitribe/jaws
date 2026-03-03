@@ -16,8 +16,6 @@ package org.tomitribe.jaws.s3;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.tomitribe.util.Archive;
-
 import java.io.File;
 
 import static junit.framework.Assert.fail;
@@ -29,27 +27,23 @@ public class S3ParentTest {
     @Rule
     public MockS3Rule mockS3 = new MockS3Rule();
     private S3Client s3Client;
-    private File store;
 
     @Before
     public final void setUp() throws Exception {
-        store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
     }
 
 
     @Test
     public void test() throws Exception {
-        Archive.archive()
-                .add("orange/src/main/java/org/example/Foo.java", "")
-                .add("orange/src/main/java/four.txt", "")
-                .add("orange/src/main/three.txt", "")
-                .add("orange/src/two.txt", "")
-                .add("orange/one.txt", "")
-                .add("orange/pom.xml", "")
-                .toDir(store);
+        final S3Bucket bucket = s3Client.createBucket("orange")
+                .put("src/main/java/org/example/Foo.java", "")
+                .put("src/main/java/four.txt", "")
+                .put("src/main/three.txt", "")
+                .put("src/two.txt", "")
+                .put("one.txt", "")
+                .put("pom.xml", "");
 
-        final S3Bucket bucket = s3Client.getBucket("orange");
         final Module module = bucket.as(Module.class);
 
         final Src src = module.src();
@@ -60,16 +54,14 @@ public class S3ParentTest {
 
     @Test
     public void depth() throws Exception {
-        Archive.archive()
-                .add("orange/src/main/java/org/example/Foo.java", "")
-                .add("orange/src/main/java/four.txt", "")
-                .add("orange/src/main/three.txt", "")
-                .add("orange/src/two.txt", "")
-                .add("orange/one.txt", "")
-                .add("orange/pom.xml", "")
-                .toDir(store);
+        final S3Bucket bucket = s3Client.createBucket("orange")
+                .put("src/main/java/org/example/Foo.java", "")
+                .put("src/main/java/four.txt", "")
+                .put("src/main/three.txt", "")
+                .put("src/two.txt", "")
+                .put("one.txt", "")
+                .put("pom.xml", "");
 
-        final S3Bucket bucket = s3Client.getBucket("orange");
         final Module module = bucket.as(Module.class);
 
         final Src src = module.src();
@@ -85,16 +77,14 @@ public class S3ParentTest {
 
     @Test
     public void noParent() throws Exception {
-        Archive.archive()
-                .add("orange/src/main/java/org/example/Foo.java", "")
-                .add("orange/src/main/java/four.txt", "")
-                .add("orange/src/main/three.txt", "")
-                .add("orange/src/two.txt", "")
-                .add("orange/one.txt", "")
-                .add("orange/pom.xml", "")
-                .toDir(store);
+        final S3Bucket bucket = s3Client.createBucket("orange")
+                .put("src/main/java/org/example/Foo.java", "")
+                .put("src/main/java/four.txt", "")
+                .put("src/main/three.txt", "")
+                .put("src/two.txt", "")
+                .put("one.txt", "")
+                .put("pom.xml", "");
 
-        final S3Bucket bucket = s3Client.getBucket("orange");
         final Module module = bucket.as(Module.class);
 
         try {

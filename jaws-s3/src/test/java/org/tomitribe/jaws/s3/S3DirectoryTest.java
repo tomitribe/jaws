@@ -47,16 +47,15 @@ public class S3DirectoryTest {
 
     @Test
     public void objects() throws IOException {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color/red/1/1.3/foo.txt", "")
-                .add("repository/org.color/red/1/1.2/foo.txt", "")
-                .add("repository/org.color/red/1/1.1/foo.txt", "")
-                .add("repository/org.color/green/2/2.3/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
+        s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color/red/1/1.3/foo.txt", "")
+                .put("org.color/red/1/1.2/foo.txt", "")
+                .put("org.color/red/1/1.1/foo.txt", "")
+                .put("org.color/green/2/2.3/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
 
         final S3File repository = s3Client.getBucket("repository").root();
 
@@ -238,16 +237,15 @@ public class S3DirectoryTest {
 
     @Test
     public void getDirectory() throws IOException {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color/red/1/1.3/foo.txt", "")
-                .add("repository/org.color/red/1/1.2/foo.txt", "")
-                .add("repository/org.color/red/1/1.1/foo.txt", "")
-                .add("repository/org.color/green/2/2.3/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
+        s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color/red/1/1.3/foo.txt", "")
+                .put("org.color/red/1/1.2/foo.txt", "")
+                .put("org.color/red/1/1.1/foo.txt", "")
+                .put("org.color/green/2/2.3/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
 
         final S3File repository = s3Client.getBucket("repository").root();
 
@@ -258,16 +256,15 @@ public class S3DirectoryTest {
 
     @Test
     public void getParentDirectory() throws IOException {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color/red/1/1.3/foo.txt", "")
-                .add("repository/org.color/red/1/1.2/foo.txt", "")
-                .add("repository/org.color/red/1/1.1/foo.txt", "")
-                .add("repository/org.color/green/2/2.3/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
+        s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color/red/1/1.3/foo.txt", "")
+                .put("org.color/red/1/1.2/foo.txt", "")
+                .put("org.color/red/1/1.1/foo.txt", "")
+                .put("org.color/green/2/2.3/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
 
         final S3File directory = s3Client.getBucket("repository").root()
                 .getFile("io.tomitribe/")

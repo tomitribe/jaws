@@ -19,7 +19,6 @@ package org.tomitribe.jaws.s3;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -47,17 +46,14 @@ public class S3FileNodeUnknown2Test {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         final S3Client s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("repository/org.color/green/2/2.3/foo.txt", "red")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "green")
-                .add("repository/junit/junit/4/4.12/bar.txt", "blue")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange")
-                .toDir(store);
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/green/2/2.3/foo.txt", "red")
+                .put("org.color.bright/green/1/1.4/foo.txt", "green")
+                .put("junit/junit/4/4.12/bar.txt", "blue")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "orange");
 
-        final S3Bucket bucket = s3Client.getBucket("repository");
         file = bucket.root().getFile("org.color.bright/green/does/not/exist.txt");
 
         // Check to ensure our current node type is `Object`

@@ -24,10 +24,8 @@ import org.tomitribe.jaws.s3.MockS3Rule;
 import org.tomitribe.jaws.s3.Name;
 import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,26 +48,24 @@ public class ContainerRegistryTest {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
+        s3Client.createBucket("registry")
                 // api-server image
-                .add("registry/repositories/myorg/api-server/_manifests/tags/latest/current/link", "sha256:abc123")
-                .add("registry/repositories/myorg/api-server/_manifests/tags/v1.0.0/current/link", "sha256:abc123")
-                .add("registry/repositories/myorg/api-server/_manifests/tags/v1.1.0/current/link", "sha256:def456")
-                .add("registry/repositories/myorg/api-server/_manifests/revisions/sha256/abc123/link", "sha256:abc123")
-                .add("registry/repositories/myorg/api-server/_layers/sha256/layer01/link", "sha256:layer01")
-                .add("registry/repositories/myorg/api-server/_layers/sha256/layer02/link", "sha256:layer02")
+                .put("repositories/myorg/api-server/_manifests/tags/latest/current/link", "sha256:abc123")
+                .put("repositories/myorg/api-server/_manifests/tags/v1.0.0/current/link", "sha256:abc123")
+                .put("repositories/myorg/api-server/_manifests/tags/v1.1.0/current/link", "sha256:def456")
+                .put("repositories/myorg/api-server/_manifests/revisions/sha256/abc123/link", "sha256:abc123")
+                .put("repositories/myorg/api-server/_layers/sha256/layer01/link", "sha256:layer01")
+                .put("repositories/myorg/api-server/_layers/sha256/layer02/link", "sha256:layer02")
                 // web-frontend image
-                .add("registry/repositories/myorg/web-frontend/_manifests/tags/latest/current/link", "sha256:fff999")
-                .add("registry/repositories/myorg/web-frontend/_layers/sha256/layeraa/link", "sha256:layeraa")
+                .put("repositories/myorg/web-frontend/_manifests/tags/latest/current/link", "sha256:fff999")
+                .put("repositories/myorg/web-frontend/_layers/sha256/layeraa/link", "sha256:layeraa")
                 // blobs
-                .add("registry/blobs/sha256/abc123/data", "manifest-data")
-                .add("registry/blobs/sha256/def456/data", "manifest-data-2")
-                .add("registry/blobs/sha256/layer01/data", "layer-data-1")
-                .add("registry/blobs/sha256/layer02/data", "layer-data-2")
-                .toDir(store);
+                .put("blobs/sha256/abc123/data", "manifest-data")
+                .put("blobs/sha256/def456/data", "manifest-data-2")
+                .put("blobs/sha256/layer01/data", "layer-data-1")
+                .put("blobs/sha256/layer02/data", "layer-data-2");
     }
 
     private Registry registry() {

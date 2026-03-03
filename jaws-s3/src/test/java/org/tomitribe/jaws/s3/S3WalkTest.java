@@ -21,11 +21,9 @@ package org.tomitribe.jaws.s3;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 import org.tomitribe.util.dir.Dir;
 
-import java.io.File;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -38,24 +36,19 @@ public class S3WalkTest {
     @Rule
     public MockS3Rule mockS3 = new MockS3Rule();
     private S3Client s3Client;
-    private File store;
 
     @Before
     public final void setUp() throws Exception {
-        store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
     }
 
     @Test
     public void walk() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
 
         final List<S3File> list = work.nofilter().collect(Collectors.toList());
@@ -87,14 +80,11 @@ public class S3WalkTest {
 
     @Test
     public void maxDepthOne() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.maxOne().collect(Collectors.toList());
 
@@ -109,14 +99,11 @@ public class S3WalkTest {
 
     @Test
     public void maxDepthTwo() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.maxTwo().collect(Collectors.toList());
 
@@ -135,14 +122,11 @@ public class S3WalkTest {
 
     @Test
     public void minDepthOne() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.minOne().collect(Collectors.toList());
 
@@ -173,14 +157,11 @@ public class S3WalkTest {
 
     @Test
     public void minDepthTwo() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.minTwo().collect(Collectors.toList());
 
@@ -207,14 +188,11 @@ public class S3WalkTest {
 
     @Test
     public void minOneMaxTwo() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.minOneMaxTwo().collect(Collectors.toList());
 
@@ -233,14 +211,11 @@ public class S3WalkTest {
 
     @Test
     public void minTwoMaxTwo() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.minTwoMaxTwo().collect(Collectors.toList());
 
@@ -255,14 +230,11 @@ public class S3WalkTest {
 
     @Test
     public void walkWithPrefix() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.walkWithPrefix().collect(Collectors.toList());
 
@@ -283,14 +255,11 @@ public class S3WalkTest {
 
     @Test
     public void walkWithPrefixMaxTwo() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.walkWithPrefixMaxTwo().collect(Collectors.toList());
 
@@ -305,14 +274,11 @@ public class S3WalkTest {
 
     @Test
     public void files() throws Exception {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
         final Work work = bucket.as(Work.class);
         final List<S3File> list = work.files().collect(Collectors.toList());
 
@@ -342,11 +308,6 @@ public class S3WalkTest {
 //                "junit/junit/4/4.12/bar.txt\n" +
 //                "org.color.bright/green/1/1.4/foo.txt\n" +
 //                "org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
-    }
-
-    public String path(final File file) {
-        if (file.isDirectory()) return file.getAbsolutePath() + "/";
-        else return file.getAbsolutePath();
     }
 
     private List<String> paths(final List<S3File> list) {

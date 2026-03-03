@@ -25,10 +25,8 @@ import org.tomitribe.jaws.s3.Name;
 import org.tomitribe.jaws.s3.Parent;
 import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -48,24 +46,22 @@ public class MavenProjectTest {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("my-project/pom.xml", "<project>parent</project>")
-                .add("my-project/README.md", "# My Project")
-                .add("my-project/core/pom.xml", "<project>core</project>")
-                .add("my-project/core/src/main/java/App.java", "class App {}")
-                .add("my-project/core/src/main/java/Config.java", "class Config {}")
-                .add("my-project/core/src/main/resources/application.properties", "key=value")
-                .add("my-project/core/src/test/java/AppTest.java", "class AppTest {}")
-                .add("my-project/core/src/test/resources/test.properties", "test=true")
-                .add("my-project/web/pom.xml", "<project>web</project>")
-                .add("my-project/web/src/main/java/WebApp.java", "class WebApp {}")
-                .add("my-project/web/src/main/java/Controller.java", "class Controller {}")
-                .add("my-project/web/src/main/resources/templates/index.html", "<html/>")
-                .add("my-project/web/src/test/java/WebAppTest.java", "class WebAppTest {}")
-                .toDir(store);
+        s3Client.createBucket("my-project")
+                .put("pom.xml", "<project>parent</project>")
+                .put("README.md", "# My Project")
+                .put("core/pom.xml", "<project>core</project>")
+                .put("core/src/main/java/App.java", "class App {}")
+                .put("core/src/main/java/Config.java", "class Config {}")
+                .put("core/src/main/resources/application.properties", "key=value")
+                .put("core/src/test/java/AppTest.java", "class AppTest {}")
+                .put("core/src/test/resources/test.properties", "test=true")
+                .put("web/pom.xml", "<project>web</project>")
+                .put("web/src/main/java/WebApp.java", "class WebApp {}")
+                .put("web/src/main/java/Controller.java", "class Controller {}")
+                .put("web/src/main/resources/templates/index.html", "<html/>")
+                .put("web/src/test/java/WebAppTest.java", "class WebAppTest {}");
     }
 
     /**

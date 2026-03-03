@@ -19,10 +19,8 @@ package org.tomitribe.jaws.s3;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -43,22 +41,20 @@ public class S3Test {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("project/pom.xml", "<xml>")
-                .add("project/src/main/java/org/supertribe/colors/Green.java", "forrest")
-                .add("project/src/main/java/org/supertribe/colors/Red.java", "crimson")
-                .add("project/src/main/resources/square.txt", "block")
-                .add("project/src/main/resources/triangle.txt", "three")
-                .add("project/src/test/java/org/supertribe/colors/GreenTest.java", "forrest test")
-                .add("project/src/test/java/org/supertribe/colors/RedTest.java", "crimson test")
-                .add("project/src/test/resources/circle.txt", "pizza")
-                .add("project/src/test/resources/rectangle.txt", "book")
-                .add("project/target/bar.txt", "barbar")
-                .add("project/target/foo.txt", "foofoo")
-                .toDir(store);
+        s3Client.createBucket("project")
+                .put("pom.xml", "<xml>")
+                .put("src/main/java/org/supertribe/colors/Green.java", "forrest")
+                .put("src/main/java/org/supertribe/colors/Red.java", "crimson")
+                .put("src/main/resources/square.txt", "block")
+                .put("src/main/resources/triangle.txt", "three")
+                .put("src/test/java/org/supertribe/colors/GreenTest.java", "forrest test")
+                .put("src/test/java/org/supertribe/colors/RedTest.java", "crimson test")
+                .put("src/test/resources/circle.txt", "pizza")
+                .put("src/test/resources/rectangle.txt", "book")
+                .put("target/bar.txt", "barbar")
+                .put("target/foo.txt", "foofoo");
 
         project = s3Client.getBucket("project").as(Project.class);
     }

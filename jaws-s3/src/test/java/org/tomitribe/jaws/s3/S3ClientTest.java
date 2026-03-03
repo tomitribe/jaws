@@ -19,10 +19,8 @@ package org.tomitribe.jaws.s3;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,24 +32,23 @@ public class S3ClientTest {
 
     @Rule
     public MockS3Rule mockS3 = new MockS3Rule();
-    private File store;
     private S3Client s3Client;
 
 
     @Before
     public final void setUp() throws Exception {
-        this.store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
     }
 
     @Test
     public void getBucket() throws IOException {
-        new Archive()
-                .add("red/org.color/red/1/1.4/foo.txt", "")
-                .add("green/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("blue/junit/junit/4/4.12/bar.txt", "")
-                .add("blue/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
+        s3Client.createBucket("red")
+                .put("org.color/red/1/1.4/foo.txt", "");
+        s3Client.createBucket("green")
+                .put("org.color.bright/green/1/1.4/foo.txt", "");
+        s3Client.createBucket("blue")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
 
         final S3Bucket bucket = s3Client.getBucket("red");
         assertNotNull(bucket);
@@ -60,12 +57,13 @@ public class S3ClientTest {
 
     @Test
     public void buckets() throws IOException {
-        new Archive()
-                .add("red/org.color/red/1/1.4/foo.txt", "")
-                .add("green/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("blue/junit/junit/4/4.12/bar.txt", "")
-                .add("blue/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
+        s3Client.createBucket("red")
+                .put("org.color/red/1/1.4/foo.txt", "");
+        s3Client.createBucket("green")
+                .put("org.color.bright/green/1/1.4/foo.txt", "");
+        s3Client.createBucket("blue")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
 
         final List<String> list = s3Client.buckets()
                 .map(S3Bucket::getName)

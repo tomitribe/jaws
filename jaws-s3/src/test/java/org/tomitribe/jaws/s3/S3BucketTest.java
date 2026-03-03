@@ -51,14 +51,12 @@ public class S3BucketTest {
 
     @Test
     public void objects() throws IOException {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
 
-        final S3Bucket bucket = s3Client.getBucket("repository");
         final List<String> list = bucket.objects()
                 .map(S3File::getAbsoluteName)
                 .sorted()
@@ -89,18 +87,15 @@ public class S3BucketTest {
 
     @Test
     public void objectsListObjectsRequest() throws IOException {
-        new Archive()
-                .add("repository/org.color/red/1/1.4/foo.txt", "")
-                .add("repository/org.color/red/1/1.3/foo.txt", "")
-                .add("repository/org.color/red/1/1.2/foo.txt", "")
-                .add("repository/org.color/red/1/1.1/foo.txt", "")
-                .add("repository/org.color/green/2/2.3/foo.txt", "")
-                .add("repository/org.color.bright/green/1/1.4/foo.txt", "")
-                .add("repository/junit/junit/4/4.12/bar.txt", "")
-                .add("repository/io.tomitribe/crest/5/5.4.1.2/baz.txt", "")
-                .toDir(store);
-
-        final S3Bucket bucket = s3Client.getBucket("repository");
+        final S3Bucket bucket = s3Client.createBucket("repository")
+                .put("org.color/red/1/1.4/foo.txt", "")
+                .put("org.color/red/1/1.3/foo.txt", "")
+                .put("org.color/red/1/1.2/foo.txt", "")
+                .put("org.color/red/1/1.1/foo.txt", "")
+                .put("org.color/green/2/2.3/foo.txt", "")
+                .put("org.color.bright/green/1/1.4/foo.txt", "")
+                .put("junit/junit/4/4.12/bar.txt", "")
+                .put("io.tomitribe/crest/5/5.4.1.2/baz.txt", "");
 
         // The bucket name is implied -- we do not need to fill it in
         final ListObjectsRequest request = ListObjectsRequest.builder()

@@ -27,10 +27,8 @@ import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
 import org.tomitribe.jaws.s3.S3File;
 import org.tomitribe.jaws.s3.Walk;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -51,22 +49,20 @@ public class LogArchivesTest {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("logs/production/2024/12/30/app-2024-12-30.log.gz", "")
-                .add("logs/production/2024/12/30/access-2024-12-30.log.gz", "")
-                .add("logs/production/2024/12/31/app-2024-12-31.log.gz", "")
-                .add("logs/production/2024/12/31/access-2024-12-31.log.gz", "")
-                .add("logs/production/2025/01/01/app-2025-01-01.log.gz", "")
-                .add("logs/production/2025/01/01/access-2025-01-01.log.gz", "")
-                .add("logs/production/2025/01/02/app-2025-01-02.log.gz", "")
-                .add("logs/production/2025/01/02/access-2025-01-02.log.gz", "")
-                .add("logs/production/2025/02/01/app-2025-02-01.log.gz", "")
-                .add("logs/production/2025/02/01/access-2025-02-01.log.gz", "")
-                .add("logs/staging/2025/01/01/app-2025-01-01.log.gz", "")
-                .toDir(store);
+        s3Client.createBucket("logs")
+                .put("production/2024/12/30/app-2024-12-30.log.gz", "")
+                .put("production/2024/12/30/access-2024-12-30.log.gz", "")
+                .put("production/2024/12/31/app-2024-12-31.log.gz", "")
+                .put("production/2024/12/31/access-2024-12-31.log.gz", "")
+                .put("production/2025/01/01/app-2025-01-01.log.gz", "")
+                .put("production/2025/01/01/access-2025-01-01.log.gz", "")
+                .put("production/2025/01/02/app-2025-01-02.log.gz", "")
+                .put("production/2025/01/02/access-2025-01-02.log.gz", "")
+                .put("production/2025/02/01/app-2025-02-01.log.gz", "")
+                .put("production/2025/02/01/access-2025-02-01.log.gz", "")
+                .put("staging/2025/01/01/app-2025-01-01.log.gz", "");
     }
 
     private Environment prod() {

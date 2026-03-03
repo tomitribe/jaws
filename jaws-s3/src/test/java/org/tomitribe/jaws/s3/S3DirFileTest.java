@@ -19,7 +19,6 @@ package org.tomitribe.jaws.s3;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
 import org.tomitribe.util.Join;
 
@@ -43,18 +42,16 @@ public class S3DirFileTest {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("colors/red/light.txt", "rose")
-                .add("colors/red/dark.txt", "crimson")
-                .add("colors/green/light.txt", "lime")
-                .add("colors/green/dark.txt", "forest")
-                .add("colors/blue/light.txt", "sky")
-                .add("colors/blue/dark.txt", "navy")
-                .add("colors/readme.txt", "about colors")
-                .toDir(store);
+        s3Client.createBucket("colors")
+                .put("red/light.txt", "rose")
+                .put("red/dark.txt", "crimson")
+                .put("green/light.txt", "lime")
+                .put("green/dark.txt", "forest")
+                .put("blue/light.txt", "sky")
+                .put("blue/dark.txt", "navy")
+                .put("readme.txt", "about colors");
     }
 
     // ---------------------------------------------------------------

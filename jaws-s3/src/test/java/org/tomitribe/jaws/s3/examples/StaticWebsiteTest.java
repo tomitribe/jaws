@@ -26,10 +26,8 @@ import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
 import org.tomitribe.jaws.s3.S3File;
 import org.tomitribe.jaws.s3.Walk;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -53,19 +51,17 @@ public class StaticWebsiteTest {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("site/20250301-143022/index.html", "<html>hello</html>")
-                .add("site/20250301-143022/manifest.json", "{\"version\":\"1.4.2\"}")
-                .add("site/20250301-143022/css/main.css", "body{}")
-                .add("site/20250301-143022/css/reset.css", "*{margin:0}")
-                .add("site/20250301-143022/js/app.js", "console.log('hi')")
-                .add("site/20250301-143022/js/vendor.js", "/* vendor */")
-                .add("site/20250301-143022/images/logo.png", "PNG")
-                .add("site/20250301-143022/images/hero.jpg", "JPEG")
-                .toDir(store);
+        s3Client.createBucket("site")
+                .put("20250301-143022/index.html", "<html>hello</html>")
+                .put("20250301-143022/manifest.json", "{\"version\":\"1.4.2\"}")
+                .put("20250301-143022/css/main.css", "body{}")
+                .put("20250301-143022/css/reset.css", "*{margin:0}")
+                .put("20250301-143022/js/app.js", "console.log('hi')")
+                .put("20250301-143022/js/vendor.js", "/* vendor */")
+                .put("20250301-143022/images/logo.png", "PNG")
+                .put("20250301-143022/images/hero.jpg", "JPEG");
     }
 
     /**

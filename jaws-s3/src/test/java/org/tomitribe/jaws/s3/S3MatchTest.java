@@ -19,10 +19,8 @@ package org.tomitribe.jaws.s3;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.tomitribe.util.Archive;
 import org.tomitribe.util.Join;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,23 +39,21 @@ public class S3MatchTest {
 
     @Before
     public final void setUp() throws Exception {
-        final File store = mockS3.getBlobStoreLocation();
         this.s3Client = new S3Client(mockS3.getS3Client());
 
-        new Archive()
-                .add("bucket/assets/main.css", "")
-                .add("bucket/assets/reset.css", "")
-                .add("bucket/assets/app.js", "")
-                .add("bucket/assets/vendor.js", "")
-                .add("bucket/assets/logo.png", "")
-                .add("bucket/assets/hero.jpg", "")
-                .add("bucket/assets/index.html", "")
-                .add("bucket/groups/team-alpha/file1.txt", "")
-                .add("bucket/groups/team-beta/file2.txt", "")
-                .add("bucket/groups/dept-alpha/file3.txt", "")
-                .add("bucket/groups/dept-beta/file4.txt", "")
-                .add("bucket/groups/org-gamma/file5.txt", "")
-                .toDir(store);
+        s3Client.createBucket("bucket")
+                .put("assets/main.css", "")
+                .put("assets/reset.css", "")
+                .put("assets/app.js", "")
+                .put("assets/vendor.js", "")
+                .put("assets/logo.png", "")
+                .put("assets/hero.jpg", "")
+                .put("assets/index.html", "")
+                .put("groups/team-alpha/file1.txt", "")
+                .put("groups/team-beta/file2.txt", "")
+                .put("groups/dept-alpha/file3.txt", "")
+                .put("groups/dept-beta/file4.txt", "")
+                .put("groups/org-gamma/file5.txt", "");
     }
 
     private Root root() {

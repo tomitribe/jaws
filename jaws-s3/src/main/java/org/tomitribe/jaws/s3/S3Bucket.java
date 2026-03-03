@@ -45,6 +45,8 @@ import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -121,6 +123,28 @@ public class S3Bucket {
         final ObjectListingIterator iterator = new ObjectListingIterator(bucket.name());
         return S3Client.asStream(iterator)
                 .map(s3Object -> new S3File(this, s3Object));
+    }
+
+    public S3Bucket put(String key, byte[] bytes) {
+        S3Client.join(s3.putObject(
+                PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                AsyncRequestBody.fromBytes(bytes)));
+        return this;
+    }
+
+    public S3Bucket put(String name, Supplier<byte[]> content) {
+        return put(name, content.get());
+    }
+
+    public S3Bucket put(String key, String content) {
+        Objects.requireNonNull(content);
+        putObject(key, content);
+        return this;
+    }
+
+    public S3Bucket put(String key, File file) {
+        putObject(key, file);
+        return this;
     }
 
     /**
