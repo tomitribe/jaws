@@ -16,11 +16,10 @@
  */
 package org.tomitribe.jaws.s3.examples;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.tomitribe.jaws.s3.MockS3Rule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.tomitribe.jaws.s3.MockS3Extension;
 import org.tomitribe.jaws.s3.Name;
 import org.tomitribe.jaws.s3.Parent;
 import org.tomitribe.jaws.s3.S3;
@@ -31,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests modeled after the Maven Project example in docs/examples/maven-project.md.
@@ -40,11 +39,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class MavenProjectTest {
 
-    @Rule
-    public MockS3Rule mockS3 = new MockS3Rule();
+    @RegisterExtension
+    public MockS3Extension mockS3 = new MockS3Extension();
     private S3Client s3Client;
 
-    @Before
+    @BeforeEach
     public final void setUp() throws Exception {
         this.s3Client = new S3Client(mockS3.getS3Client());
 
@@ -87,7 +86,7 @@ public class MavenProjectTest {
         final Project project = s3Client.getBucket("my-project").as(Project.class);
 
         final Module core = project.module("core");
-        Assert.assertEquals("core", core.file().getName());
+        assertEquals("core", core.file().getName());
     }
 
     /**
@@ -97,8 +96,8 @@ public class MavenProjectTest {
     public void readPomXml() throws Exception {
         final Project project = s3Client.getBucket("my-project").as(Project.class);
 
-        Assert.assertEquals("<project>parent</project>", project.pomXml().getValueAsString());
-        Assert.assertEquals("<project>core</project>", project.module("core").pomXml().getValueAsString());
+        assertEquals("<project>parent</project>", project.pomXml().getValueAsString());
+        assertEquals("<project>core</project>", project.module("core").pomXml().getValueAsString());
     }
 
     /**
@@ -108,7 +107,7 @@ public class MavenProjectTest {
     public void readReadme() throws Exception {
         final Project project = s3Client.getBucket("my-project").as(Project.class);
 
-        Assert.assertEquals("# My Project", project.readme().getValueAsString());
+        assertEquals("# My Project", project.readme().getValueAsString());
     }
 
     /**
@@ -120,7 +119,7 @@ public class MavenProjectTest {
         final Module web = project.module("web");
 
         final Project root = web.project();
-        Assert.assertEquals(project.file().getAbsoluteName(), root.file().getAbsoluteName());
+        assertEquals(project.file().getAbsoluteName(), root.file().getAbsoluteName());
     }
 
     /**
@@ -133,7 +132,7 @@ public class MavenProjectTest {
         final Section main = web.src().main();
 
         final Module parent = main.module();
-        Assert.assertEquals("web", parent.file().getName());
+        assertEquals("web", parent.file().getName());
     }
 
     /**

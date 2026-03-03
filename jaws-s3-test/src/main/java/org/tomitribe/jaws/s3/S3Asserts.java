@@ -36,10 +36,10 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class S3Asserts {
 
@@ -168,7 +168,7 @@ public class S3Asserts {
 
         public Snapshot assertContent(final String key, final String expected) {
             final S3Object object = entries.get(key);
-            assertNotNull("Expected object to exist: " + key, object);
+            assertNotNull(object, "Expected object to exist: " + key);
             try (final InputStream stream = S3Asserts.join(s3.getObject(
                     GetObjectRequest.builder().bucket(bucketName).key(key).build(),
                     AsyncResponseTransformer.toBlockingInputStream()))) {
@@ -180,12 +180,12 @@ public class S3Asserts {
         }
 
         public Snapshot assertExists(final String key) {
-            assertNotNull("Expected object to exist: " + key, entries.get(key));
+            assertNotNull(entries.get(key), "Expected object to exist: " + key);
             return this;
         }
 
         public Snapshot assertNotExists(final String key) {
-            assertNull("Expected object to NOT exist: " + key, entries.get(key));
+            assertNull(entries.get(key), "Expected object to NOT exist: " + key);
             return this;
         }
     }

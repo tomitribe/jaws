@@ -16,9 +16,9 @@
  */
 package org.tomitribe.jaws.s3;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.tomitribe.util.IO;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -28,10 +28,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.tomitribe.jaws.s3.Asserts.assertType;
 
 /**
@@ -40,11 +40,11 @@ import static org.tomitribe.jaws.s3.Asserts.assertType;
  */
 public class S3FileNodeUnknown2Test {
 
-    @Rule
-    public MockS3Rule mockS3 = new MockS3Rule();
+    @RegisterExtension
+    public MockS3Extension mockS3 = new MockS3Extension();
     private S3File file;
 
-    @Before
+    @BeforeEach
     public final void setUp() throws Exception {
         final S3Client s3Client = new S3Client(mockS3.getS3Client());
 

@@ -16,15 +16,15 @@
  */
 package org.tomitribe.jaws.s3;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Asserts {
     public static void assertType(final S3File file, final String type) {
         final String desc = file.toString();
 
         assertTrue(
-                String.format("Expected node %s, found: %s", type, desc),
-                desc.contains(String.format("node='%s'", type))
+                desc.contains(String.format("node='%s'", type)),
+                String.format("Expected node %s, found: %s", type, desc)
         );
     }
 }

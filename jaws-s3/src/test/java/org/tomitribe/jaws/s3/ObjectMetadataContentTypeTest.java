@@ -16,7 +16,7 @@
  */
 package org.tomitribe.jaws.s3;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.tomitribe.util.IO;
 
 import java.io.File;
@@ -25,10 +25,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ObjectMetadataContentTypeTest {
 

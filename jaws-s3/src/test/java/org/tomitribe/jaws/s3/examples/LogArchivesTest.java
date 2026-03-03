@@ -16,12 +16,11 @@
  */
 package org.tomitribe.jaws.s3.examples;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.tomitribe.jaws.s3.Filter;
-import org.tomitribe.jaws.s3.MockS3Rule;
+import org.tomitribe.jaws.s3.MockS3Extension;
 import org.tomitribe.jaws.s3.Parent;
 import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
@@ -34,7 +33,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests modeled after the Log Archives example in docs/examples/log-archives.md.
@@ -43,11 +42,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class LogArchivesTest {
 
-    @Rule
-    public MockS3Rule mockS3 = new MockS3Rule();
+    @RegisterExtension
+    public MockS3Extension mockS3 = new MockS3Extension();
     private S3Client s3Client;
 
-    @Before
+    @BeforeEach
     public final void setUp() throws Exception {
         this.s3Client = new S3Client(mockS3.getS3Client());
 
@@ -138,7 +137,7 @@ public class LogArchivesTest {
         final DayDir day = prod().year("2025").month("01").day("01");
 
         final Environment env = day.environment();
-        Assert.assertEquals("production", env.file().getName());
+        assertEquals("production", env.file().getName());
     }
 
     /**

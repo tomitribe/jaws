@@ -16,11 +16,10 @@
  */
 package org.tomitribe.jaws.s3.examples;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.tomitribe.jaws.s3.MockS3Rule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.tomitribe.jaws.s3.MockS3Extension;
 import org.tomitribe.jaws.s3.Name;
 import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
@@ -31,8 +30,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Tests modeled after the Container Registry example in docs/examples/container-registry.md.
@@ -42,11 +41,11 @@ import static org.junit.Assert.assertNotNull;
  */
 public class ContainerRegistryTest {
 
-    @Rule
-    public MockS3Rule mockS3 = new MockS3Rule();
+    @RegisterExtension
+    public MockS3Extension mockS3 = new MockS3Extension();
     private S3Client s3Client;
 
-    @Before
+    @BeforeEach
     public final void setUp() throws Exception {
         this.s3Client = new S3Client(mockS3.getS3Client());
 
@@ -86,7 +85,7 @@ public class ContainerRegistryTest {
                 .current()
                 .link();
 
-        Assert.assertEquals("sha256:abc123", link.getValueAsString());
+        assertEquals("sha256:abc123", link.getValueAsString());
     }
 
     /**
@@ -164,8 +163,8 @@ public class ContainerRegistryTest {
                 .namespace("myorg")
                 .image("api-server");
 
-        Assert.assertEquals("_manifests", apiServer.manifests().file().getName());
-        Assert.assertEquals("_layers", apiServer.layers().file().getName());
+        assertEquals("_manifests", apiServer.manifests().file().getName());
+        assertEquals("_layers", apiServer.layers().file().getName());
     }
 
     /**
@@ -199,7 +198,7 @@ public class ContainerRegistryTest {
                 .digest("layer01")
                 .link();
 
-        Assert.assertEquals("sha256:layer01", link.getValueAsString());
+        assertEquals("sha256:layer01", link.getValueAsString());
     }
 
     // ---------------------------------------------------------------

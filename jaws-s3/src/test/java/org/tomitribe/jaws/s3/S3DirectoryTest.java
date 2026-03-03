@@ -16,9 +16,9 @@
  */
 package org.tomitribe.jaws.s3;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.tomitribe.util.Archive;
 import org.tomitribe.util.IO;
 import org.tomitribe.util.Join;
@@ -28,16 +28,16 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class S3DirectoryTest {
 
-    @Rule
-    public MockS3Rule mockS3 = new MockS3Rule();
+    @RegisterExtension
+    public MockS3Extension mockS3 = new MockS3Extension();
     private S3Client s3Client;
 
-    @Before
+    @BeforeEach
     public final void setUp() throws Exception {
         this.s3Client = new S3Client(mockS3.getS3Client());
     }

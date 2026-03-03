@@ -16,13 +16,12 @@
  */
 package org.tomitribe.jaws.s3.examples;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.tomitribe.jaws.s3.Filter;
 import org.tomitribe.jaws.s3.Marker;
-import org.tomitribe.jaws.s3.MockS3Rule;
+import org.tomitribe.jaws.s3.MockS3Extension;
 import org.tomitribe.jaws.s3.Name;
 import org.tomitribe.jaws.s3.Prefix;
 import org.tomitribe.jaws.s3.S3;
@@ -36,7 +35,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests modeled after the Data Lake example in docs/examples/data-lake.md.
@@ -46,11 +45,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class DataLakeTest {
 
-    @Rule
-    public MockS3Rule mockS3 = new MockS3Rule();
+    @RegisterExtension
+    public MockS3Extension mockS3 = new MockS3Extension();
     private S3Client s3Client;
 
-    @Before
+    @BeforeEach
     public final void setUp() throws Exception {
         this.s3Client = new S3Client(mockS3.getS3Client());
 
@@ -82,10 +81,10 @@ public class DataLakeTest {
     @Test
     public void navigateHivePartitions() throws Exception {
         final YearPartition year = lake().processed().year2025();
-        Assert.assertEquals("year=2025", year.file().getName());
+        assertEquals("year=2025", year.file().getName());
 
         final MonthPartition jan = year.month01();
-        Assert.assertEquals("month=01", jan.file().getName());
+        assertEquals("month=01", jan.file().getName());
     }
 
     /**
@@ -94,7 +93,7 @@ public class DataLakeTest {
     @Test
     public void partitionNamedLookup() throws Exception {
         final MonthPartition feb = lake().processed().year2025().partition("month=02");
-        Assert.assertEquals("month=02", feb.file().getName());
+        assertEquals("month=02", feb.file().getName());
     }
 
     /**
@@ -119,7 +118,7 @@ public class DataLakeTest {
     public void listYearPartitions() throws Exception {
         final List<YearPartition> years = lake().processed().years();
         assertEquals(1, years.size());
-        Assert.assertEquals("year=2025", years.get(0).file().getName());
+        assertEquals("year=2025", years.get(0).file().getName());
     }
 
     /**
