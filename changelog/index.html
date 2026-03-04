@@ -1522,6 +1522,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.0
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1570,6 +1581,17 @@
     <span class="md-ellipsis">
       
         2.1.0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.0
       
     </span>
   </a>
@@ -1640,6 +1662,58 @@
 </tr>
 </tbody>
 </table>
+<h2 id="20">2.0<a class="headerlink" href="#20" title="Permanent link">&para;</a></h2>
+<p><strong>Breaking changes</strong></p>
+<ul>
+<li>
+<p><strong>Upgraded to AWS SDK v2.</strong> The library now uses the AWS SDK v2 (<code>S3AsyncClient</code>) exclusively. The v1 <code>S3Client</code> dependency has been removed.</p>
+</li>
+<li>
+<p><strong><code>S3.of()</code> removed.</strong> Use <code>s3Bucket.as(MyInterface.class)</code> and <code>s3File.as(MyInterface.class)</code> instead.</p>
+</li>
+<li>
+<p><strong><code>S3.get()</code> renamed to <code>S3.file()</code>.</strong> All call sites referencing <code>S3.get()</code> must be updated.</p>
+</li>
+</ul>
+<p><strong>New features</strong></p>
+<ul>
+<li>
+<p><strong><code>S3.Dir</code> and <code>S3.File</code> parent interfaces.</strong> Typed proxies can now use <code>S3.Dir</code> and <code>S3.File</code> as return types to distinguish directories from files in listings. <code>Stream&lt;S3.Dir&gt;</code> returns only directories; <code>Stream&lt;S3.File&gt;</code> returns only files.</p>
+</li>
+<li>
+<p><strong><code>@Prefix</code> support in <code>@Walk</code> and list operations.</strong> The <code>@Prefix</code> annotation now works with <code>@Walk</code> and standard list methods, allowing prefix-scoped recursive and flat listings.</p>
+</li>
+<li>
+<p><strong><code>@Delimiter</code> works with <code>@Walk</code>.</strong> The <code>@Delimiter</code> annotation can now be combined with <code>@Walk</code> for more precise listing control.</p>
+</li>
+<li>
+<p><strong><code>@Filter</code> on interfaces.</strong> The <code>@Filter</code> annotation can now be placed on the interface type itself, applying the filter to all listing methods in that interface.</p>
+</li>
+<li>
+<p><strong><code>@Suffix</code> and <code>@Match</code> annotations.</strong> New annotations for filtering S3 listings by suffix or regex pattern. Both support an <code>exclude</code> flag and are repeatable.</p>
+</li>
+<li>
+<p><strong><code>@Match</code> and <code>@Suffix</code> <code>exclude</code> flag.</strong> Both annotations accept <code>exclude = true</code> to invert the match, filtering out entries that match rather than keeping them.</p>
+</li>
+<li>
+<p><strong>Expanded <code>upload()</code> methods.</strong> Additional overloads for uploading content from <code>String</code>, <code>byte[]</code>, <code>File</code>, <code>Path</code>, and <code>InputStream</code>.</p>
+</li>
+<li>
+<p><strong><code>ObjectMetadata</code> improvements.</strong> Added <code>ObjectMetadata.from(File)</code> and <code>ObjectMetadata.from(Path)</code> for automatic content-type detection, plus a builder API.</p>
+</li>
+<li>
+<p><strong>Fluent <code>put()</code> methods on <code>S3Bucket</code>.</strong> New convenience methods for writing content directly to a bucket path.</p>
+</li>
+<li>
+<p><strong>Default methods on <code>S3.File</code>.</strong> Typed proxy interfaces extending <code>S3.File</code> now inherit default method implementations for common operations.</p>
+</li>
+<li>
+<p><strong><code>jaws-s3-test</code> module.</strong> New test module with <code>MockS3</code> for local S3 simulation and <code>S3Asserts</code> for fluent JUnit 5 assertions on bucket contents.</p>
+</li>
+<li>
+<p><strong>Annotations migrated into JAWS.</strong> <code>@Name</code>, <code>@Parent</code>, <code>@Walk</code>, and other annotations previously in external libraries are now part of the JAWS project directly.</p>
+</li>
+</ul>
 
 
 
