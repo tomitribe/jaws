@@ -36,8 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Tests modeled after the Container Registry example in docs/examples/container-registry.md.
  *
- * Verifies deep interface chaining, @Name for _prefixed keys, default methods
- * on S3.File, and @Walk with S3.File dispatch.
+ * Verifies deep interface chaining, @Name for _prefixed keys, and default methods
+ * on S3.File.
  */
 public class ContainerRegistryTest {
 

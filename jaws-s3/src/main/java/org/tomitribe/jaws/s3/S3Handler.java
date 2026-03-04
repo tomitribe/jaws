@@ -320,51 +320,31 @@ public class S3Handler implements InvocationHandler {
 
     private Stream<S3File> stream(final Method method) {
 
-        final Walk walk = method.getAnnotation(Walk.class);
-
-        if (walk != null) {
-            final String delimiter = method.isAnnotationPresent(Delimiter.class)
-                    ? method.getAnnotation(Delimiter.class).value()
-                    : "/";
-            final String prefix;
-            if (method.isAnnotationPresent(Prefix.class)) {
-                final String searchPrefix = dir.getPath().getSearchPrefix();
-                prefix = (searchPrefix != null ? searchPrefix : "") + method.getAnnotation(Prefix.class).value();
-            } else {
-                prefix = null;
-            }
-            Stream<S3File> walked = walk(walk, dir, delimiter, prefix);
-
-            final Class<?> elementType = getElementType(method);
-            if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
-                walked = walked.filter(S3File::isDirectory);
-            } else if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
-                walked = walked.filter(S3File::isFile);
-            }
-
-            return walked;
-        }
-
         final Class<?> elementType = getElementType(method);
+        final boolean recursive = method.isAnnotationPresent(Recursive.class);
+
         final boolean hasListAnnotations = method.isAnnotationPresent(Prefix.class)
                 || method.isAnnotationPresent(Marker.class)
                 || method.isAnnotationPresent(Delimiter.class);
 
         // Simple case: no listing annotations, just filter by type
-        if (!hasListAnnotations) {
+        if (!hasListAnnotations && !recursive) {
             if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
                 return dir.list().filter(S3File::isDirectory);
             }
             if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
                 return dir.list().filter(S3File::isFile);
             }
+            // Plain T (not S3.Dir, not S3.File): default is immediate, files only
+            return dir.list().filter(S3File::isFile);
         }
 
         ListObjectsRequest.Builder builder = ListObjectsRequest.builder();
 
         if (method.isAnnotationPresent(Prefix.class)) {
             final Prefix prefix = method.getAnnotation(Prefix.class);
-            builder.prefix(dir.getPath().getSearchPrefix() + prefix.value());
+            final String searchPrefix = dir.getPath().getSearchPrefix();
+            builder.prefix((searchPrefix != null ? searchPrefix : "") + prefix.value());
         }
 
         if (method.isAnnotationPresent(Marker.class)) {
@@ -380,56 +360,27 @@ public class S3Handler implements InvocationHandler {
 
         final ListObjectsRequest request = builder.build();
 
-        // S3.Dir subtypes need delimiter-based listing to discover directories
+        if (recursive) {
+            if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
+                final String delimiter = method.isAnnotationPresent(Delimiter.class)
+                        ? method.getAnnotation(Delimiter.class).value()
+                        : "/";
+                return dir.walk(request, delimiter).filter(S3File::isDirectory);
+            }
+
+            Stream<S3File> result = dir.files(request);
+            if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
+                result = result.filter(S3File::isFile);
+            }
+            return result;
+        }
+
+        // Non-recursive with listing annotations: immediate listing
         if (elementType != null && S3.Dir.class.isAssignableFrom(elementType)) {
             return dir.list(request).filter(S3File::isDirectory);
         }
 
-        Stream<S3File> result = dir.files(request);
-
-        if (elementType != null && S3.File.class.isAssignableFrom(elementType)) {
-            result = result.filter(S3File::isFile);
-        }
-
-        return result;
-    }
-
-    private static Stream<S3File> walk(final Walk walk, final S3File dir, final String delimiter, final String prefix) {
-        return walk(dir, walk.maxDepth(), walk.minDepth(), delimiter, prefix);
-    }
-
-    private static Stream<S3File> walk(final S3File dir, final int maxDepth, final int minDepth, final String delimiter, final String prefix) {
-        final Predicate<S3File> min = minDepth <= 0 ? s3File -> true : minDepth(dir, minDepth);
-
-        final ListObjectsRequest.Builder builder = ListObjectsRequest.builder();
-        if (prefix != null) {
-            builder.prefix(prefix);
-        }
-
-        if (maxDepth != -1) {
-            return dir.walk(builder.build(), maxDepth, delimiter).filter(min);
-        } else {
-            return dir.walk(builder.build(), delimiter).filter(min);
-        }
-    }
-
-    private static Predicate<S3File> minDepth(final S3File dir, final int minDepth) {
-        int parentDepth = getDepth(dir);
-        return s3File -> {
-            final int s3FileDepth = getDepth(s3File);
-            final int depth = s3FileDepth - parentDepth;
-            return depth >= minDepth;
-        };
-    }
-
-    private static int getDepth(final S3File dir) {
-        int depth = 0;
-        S3File f = dir;
-        while (f != null) {
-            f = f.getParentFile();
-            depth++;
-        }
-        return depth;
+        return dir.list(request).filter(S3File::isFile);
     }
 
     @Override

@@ -25,7 +25,7 @@ import org.tomitribe.jaws.s3.Name;
 import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
 import org.tomitribe.jaws.s3.S3File;
-import org.tomitribe.jaws.s3.Walk;
+import org.tomitribe.jaws.s3.Recursive;
 import org.tomitribe.util.Join;
 
 import java.util.List;
@@ -39,8 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Tests modeled after the Static Website example in docs/examples/static-website.md.
  *
  * Verifies that:
- * - @Walk Stream<AssetDir> layout() returns both directories and files
- * - Stream<Asset> assets() without @Walk returns only top-level files
+ * - @Recursive Stream<S3.Dir> layout() returns all descendant directories
+ * - Stream<Asset> assets() without @Recursive returns only top-level files
  * - Stream<CssFile> stylesheets() scoped to CssDir returns only css files
  */
 public class StaticWebsiteTest {
@@ -65,8 +65,8 @@ public class StaticWebsiteTest {
     }
 
     /**
-     * @Walk Stream<AssetDir> layout() should return only directories
-     * from the recursive walk, not files.
+     * @Recursive Stream<S3.Dir> layout() should return only directories
+     * from the recursive listing, not files.
      */
     @Test
     public void walkLayout() throws Exception {
@@ -86,7 +86,7 @@ public class StaticWebsiteTest {
     }
 
     /**
-     * Stream<Asset> assets() without @Walk should use delimiter-based listing
+     * Stream<Asset> assets() without @Recursive should use delimiter-based listing
      * and return only the immediate files (index.html, manifest.json),
      * not files inside css/, js/, or images/.
      */
@@ -161,7 +161,7 @@ public class StaticWebsiteTest {
 
         Stream<Asset> assets();
 
-        @Walk
+        @Recursive
         Stream<S3.Dir> layout();
     }
 

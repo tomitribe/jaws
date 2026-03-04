@@ -32,6 +32,12 @@ import java.lang.annotation.Target;
  * extension. For more complex name patterns use {@link Match @Match}.
  * For arbitrary criteria use {@link Filter @Filter}.
  *
+ * <p>In addition to filtering listings, {@code @Suffix} also
+ * <b>validates input</b> on single-arg proxy methods. When the return
+ * type carries {@code @Suffix}, the input name must end with one of
+ * the specified suffixes or an {@link IllegalArgumentException} is
+ * thrown.
+ *
  * <p>{@code @Suffix} is repeatable. When {@link #exclude()} is
  * {@code false} (the default), the annotation <b>includes</b> entries
  * matching any of its suffixes. When {@code exclude = true}, it

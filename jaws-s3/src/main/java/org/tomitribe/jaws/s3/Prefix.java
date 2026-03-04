@@ -41,9 +41,9 @@ import java.lang.annotation.Target;
  *
  * <h3>Flat listing</h3>
  *
- * <p>On a method without {@link Walk @Walk}, the prefix narrows a
- * flat listing. For example, listing only artifacts under the
- * {@code org/apache} namespace:
+ * <p>On a method without {@link Recursive @Recursive}, the prefix
+ * narrows an immediate listing. For example, listing only artifacts
+ * under the {@code org/apache} namespace:
  * <pre>{@code
  * public interface Repository extends S3.Dir {
  *     @Prefix("org/apache")
@@ -51,34 +51,26 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * <h3>Recursive walk</h3>
+ * <h3>Recursive listing</h3>
  *
- * <p>Combined with {@link Walk @Walk}, the prefix limits <em>which
- * subtrees are entered</em>, reducing both the number of AWS
- * requests and the volume of results:
+ * <p>Combined with {@link Recursive @Recursive}, the prefix limits
+ * <em>which keys are returned</em>, reducing both the bandwidth
+ * and the volume of results:
  * <pre>{@code
  * public interface Repository extends S3.Dir {
- *     // Walk only the org/ namespace — com/ and junit/
- *     // are never fetched from AWS
- *     @Walk
+ *     // Recursively list only keys under the org/ namespace
+ *     // — com/ and junit/ are never fetched from AWS
+ *     @Recursive
  *     @Prefix("org/")
  *     Stream<S3File> orgArtifacts();
- *
- *     // Walk only org/apache/ artifacts, two levels deep
- *     // (groupId directories and artifactId directories)
- *     @Walk(maxDepth = 2)
- *     @Prefix("org/apache/")
- *     Stream<S3File> apacheProjects();
  * }
  * }</pre>
  *
- * <p>Without {@code @Prefix}, the walk descends into every
- * namespace in the repository, issuing a {@code ListObjects}
- * request for each prefix visited. With
- * {@code @Prefix("org/apache/")}, only subtrees under
- * {@code org/apache/} are returned by AWS. In a large repository
- * with thousands of groupIds, this can reduce requests from
- * thousands to a handful.
+ * <p>Without {@code @Prefix}, the recursive listing returns every
+ * key in the directory. With {@code @Prefix("org/")}, only keys
+ * under {@code org/} are returned by AWS. In a large repository
+ * with thousands of groupIds, this can significantly reduce the
+ * data transferred.
  *
  * <h3>Partial prefixes</h3>
  *
@@ -104,7 +96,15 @@ import java.lang.annotation.Target;
  * the matching keys. A directory with hundreds of version entries
  * can be efficiently narrowed to just the relevant subset.
  *
- * @see Walk
+ * <h3>Input validation on single-arg methods</h3>
+ *
+ * <p>When {@code @Prefix} is placed on a single-arg proxy method,
+ * it also <b>validates</b> that the input name starts with the
+ * prefix. If not, an {@link IllegalArgumentException} is thrown.
+ * For listing methods, the prefix is applied server-side; for
+ * single-arg methods, it is checked client-side.
+ *
+ * @see Recursive
  * @see Delimiter
  */
 @Target(ElementType.METHOD)

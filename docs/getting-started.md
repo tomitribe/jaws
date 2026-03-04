@@ -76,12 +76,18 @@ public interface Users extends S3.Dir {
     UserFile user(String name);
 }
 
+@Match(".*\\.json")
 public interface UserFile extends S3.File {
     default String getUserName() {
         return file().getName().replaceAll("\\.json$", "");
     }
 }
 ```
+
+The `@Match(".*\\.json")` annotation does double duty: listing methods like
+`Stream<UserFile> users()` will only return `.json` files, and single-arg
+methods like `UserFile user(String name)` will reject names that don't match
+the pattern (throwing `IllegalArgumentException`).
 
 Create and use the proxy:
 
@@ -97,7 +103,7 @@ root.users().users().forEach(user ->
     System.out.println(user.getUserName())
 );
 
-// Get a specific user
+// Get a specific user — name is validated against @Match
 UserFile alice = root.users().user("alice.json");
 String json = alice.getValueAsString();
 ```
@@ -211,4 +217,4 @@ directly against the underlying S3 client.
 - [Typed Proxies](guide/typed-proxies.md) — Learn the full proxy dispatch model
 - [Directories & Files](guide/directories-and-files.md) — Understand `S3.Dir` vs `S3.File`
 - [Annotations](guide/annotations.md) — Fine-tune key resolution and listing behavior
-- [Walking & Listing](guide/walking-and-listing.md) — Recursive traversal with `@Walk`
+- [Listing & Recursion](guide/walking-and-listing.md) — Immediate vs recursive listing with `@Recursive`

@@ -27,7 +27,7 @@ import org.tomitribe.jaws.s3.Prefix;
 import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
 import org.tomitribe.jaws.s3.S3File;
-import org.tomitribe.jaws.s3.Walk;
+import org.tomitribe.jaws.s3.Recursive;
 import org.tomitribe.util.Join;
 
 import java.util.List;
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests modeled after the Data Lake example in docs/examples/data-lake.md.
  *
- * Verifies @Name for Hive-style keys, @Walk + @Filter, @Prefix, @Marker,
+ * Verifies @Name for Hive-style keys, @Recursive + @Filter, @Prefix, @Marker,
  * and List<>/array return types.
  */
 public class DataLakeTest {
@@ -161,8 +161,8 @@ public class DataLakeTest {
     }
 
     /**
-     * @Walk @Filter(IsParquet) Stream<S3File> should walk all partitions
-     * and return only parquet files.
+     * @Recursive @Filter(IsParquet) Stream<S3File> should recursively list
+     * all partitions and return only parquet files.
      */
     @Test
     public void walkAllParquetFiles() throws Exception {
@@ -290,7 +290,7 @@ public class DataLakeTest {
         @Name("year=2025")
         YearPartition year2025();
 
-        @Walk
+        @Recursive
         @Filter(IsParquet.class)
         Stream<S3File> allParquetFiles();
 

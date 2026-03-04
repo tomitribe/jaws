@@ -28,6 +28,12 @@ import java.lang.annotation.Target;
  * Uses {@link java.util.regex.Pattern#asMatchPredicate()}, so the
  * <b>entire</b> name must match (implied {@code ^} and {@code $}).
  *
+ * <p>In addition to filtering listings, {@code @Match} also
+ * <b>validates input</b> on single-arg proxy methods. When the return
+ * type carries {@code @Match}, the input name must match or an
+ * {@link IllegalArgumentException} is thrown. This prevents writing
+ * files that would never be returned by a listing method.
+ *
  * <p>{@code @Match} is repeatable. When {@link #exclude()} is
  * {@code false} (the default), the annotation <b>includes</b> entries
  * matching the pattern. When {@code exclude = true}, it <b>excludes</b>

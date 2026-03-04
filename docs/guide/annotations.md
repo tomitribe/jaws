@@ -51,47 +51,32 @@ without manually tracking the path.
     A `NoParentException` is thrown at runtime if the proxy is already at the
     bucket root and no further parent exists.
 
-## @Walk
+## @Recursive
 
-Marks a method as performing a recursive walk of the S3 key hierarchy, similar
-to `java.nio.file.Files.walk()`. Without `@Walk`, stream-returning methods use
-a single-level delimiter-based listing.
+Marks a listing method as recursive — all descendants are returned, not just
+immediate children. Without `@Recursive`, all listing methods use a
+delimiter-based listing that returns only immediate children at one level.
 
 ```java
 public interface Repository extends S3.Dir {
-    // Walk everything under this directory
-    @Walk
+    // All descendant objects (flat listing, single request)
+    @Recursive
     Stream<S3File> everything();
 
-    // Walk at most 2 levels deep
-    @Walk(maxDepth = 2)
-    Stream<S3File> shallow();
-
-    // Only return results at exactly depth 2
-    @Walk(minDepth = 2, maxDepth = 2)
-    Stream<S3File> exactlyTwoLevelsDeep();
+    // All descendant directories (tree walk, one request per prefix)
+    @Recursive
+    Stream<S3.Dir> layout();
 }
 ```
 
-### Parameters
+`@Recursive` is a marker annotation with no attributes. There is no depth
+control; for depth-limited traversal, use the `S3File.walk()` methods directly.
 
-| Parameter | Default | Description |
-|---|---|---|
-| `maxDepth` | `-1` (unlimited) | Maximum depth to traverse |
-| `minDepth` | `0` | Minimum depth at which results are included |
-
-!!! info "AWS request cost"
-    Each level of the walk issues one `ListObjects` request per prefix visited.
-    A walk over a directory with 5 subdirectories issues at least 6 requests
-    (1 for the root + 1 per subdirectory). Use `maxDepth` to limit this.
-    `minDepth` does **not** reduce requests — all levels are still traversed,
-    but shallow results are filtered out before being returned.
-
-See [Walking & Listing](walking-and-listing.md) for a detailed walkthrough.
+See [Listing & Recursion](walking-and-listing.md) for a detailed walkthrough.
 
 ## @Prefix
 
-Narrows a listing or walk to only S3 keys that begin with the given prefix.
+Narrows a listing to only S3 keys that begin with the given prefix.
 The value is relative — it is appended to the current proxy's position in
 the key hierarchy. The prefix is sent server-side in the `ListObjects` request,
 so non-matching keys are never returned by AWS.
@@ -102,8 +87,8 @@ public interface Repository extends S3.Dir {
     @Prefix("org/apache")
     Stream<S3File> apacheArtifacts();
 
-    // Walk only the org/ namespace
-    @Walk
+    // Recursively list only keys under the org/ namespace
+    @Recursive
     @Prefix("org/")
     Stream<S3File> orgArtifacts();
 }
@@ -157,13 +142,13 @@ public interface Assets extends S3.Dir {
 ### Type-level suffix
 
 `@Suffix` can also be placed on an interface. It applies to all methods that
-return that type:
+return that type — both listings and single-arg lookups:
 
 ```java
 @Suffix(".parquet")
 public interface ParquetFile extends S3.File {
-    // Every listing that returns Stream<ParquetFile> will
-    // automatically filter to .parquet files only
+    // Stream<ParquetFile> listings filter to .parquet files only
+    // ParquetFile partition(String name) validates name ends with .parquet
 }
 ```
 
@@ -194,7 +179,9 @@ public interface Assets extends S3.Dir {
 }
 ```
 
-`@Match` can also be placed on an interface for type-level filtering.
+`@Match` can also be placed on an interface for type-level filtering and
+validation. Listings return only matching entries, and single-arg methods
+reject names that don't match.
 
 ## @Filter
 
@@ -218,13 +205,13 @@ public interface VersionDir extends S3.Dir {
 ### Type-level filters
 
 `@Filter` can also be placed on an interface. It applies to all methods that
-return that type:
+return that type — both listings and single-arg lookups:
 
 ```java
 @Filter(IsJar.class)
 public interface JarFile extends S3.File {
-    // Every listing that returns Stream<JarFile> will
-    // automatically filter to .jar files only
+    // Stream<JarFile> listings filter to .jar files only
+    // JarFile artifact(String name) validates name passes IsJar
 }
 
 public interface VersionDir extends S3.Dir {
@@ -257,8 +244,8 @@ filters run before method-level filters within each category.
 
 ## @Delimiter
 
-Sets the delimiter for the `ListObjects` request. Defaults to `"/"` for
-`@Walk` methods. Can be used on both flat listing and walk methods.
+Sets the delimiter for the `ListObjects` request. Can be used on both
+immediate listing and `@Recursive` methods.
 
 ```java
 public interface Logs extends S3.Dir {

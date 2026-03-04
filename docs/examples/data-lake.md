@@ -65,8 +65,8 @@ public interface Processed extends S3.Dir {
     @Name("year=2025")
     YearPartition year2025();
 
-    // Walk all parquet files across all partitions
-    @Walk
+    // Recursively list all parquet files across all partitions
+    @Recursive
     @Filter(IsParquet.class)
     Stream<S3File> allParquetFiles();
 
@@ -169,9 +169,9 @@ jan.days().forEach(day -> {
 //   day=16
 ```
 
-### Walk all parquet files
+### Recursively list all parquet files
 
-`@Walk` combined with `@Filter` finds every parquet file across all partitions:
+`@Recursive` combined with `@Filter` finds every parquet file across all partitions:
 
 ```java
 lake.processed().allParquetFiles().forEach(f -> {
@@ -244,7 +244,7 @@ System.out.println(months.length);
 - [`@Prefix`](../api/annotations/prefix.md) — server-side filtering for `dailySummaries()` and `monthlySummaries()`
 - [`@Marker`](../api/annotations/marker.md) — resume listing from a known position with `reportsAfterJan15()`
 - [`@Filter` (method-level)](../guide/filtering.md#client-side-filtering-with-filter) — `IsParquet` predicate on `allParquetFiles()` and `parquetFiles()`
-- [`@Walk`](../guide/walking-and-listing.md#recursive-walk) — recursive traversal across all Hive partitions
+- [`@Recursive`](../guide/walking-and-listing.md#recursive-listing) — recursive listing across all Hive partitions
 - [`List<>` and array returns](../guide/typed-proxies.md#collections--stream-list-set-array) — `years()` returns `List<YearPartition>`, `months()` returns `MonthPartition[]`
 
 ## Test

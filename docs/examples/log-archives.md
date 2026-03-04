@@ -1,8 +1,8 @@
 # Log Archives by Date
 
 This example models date-partitioned application logs stored in S3.
-It demonstrates `@Walk` with depth control, method-level `@Filter` for
-selecting log types, and `@Parent` for navigating back up the hierarchy.
+It demonstrates method-level `@Filter` for selecting log types and
+`@Parent` for navigating back up the hierarchy.
 
 ## S3 Bucket Structure
 
@@ -50,13 +50,8 @@ public interface Environment extends S3.Dir {
     Stream<YearDir> years();
     YearDir year(String year);
 
-    // Walk only year directories (maxDepth = 1)
-    @Walk(maxDepth = 1)
+    // All year directories (immediate listing — S3.Dir type)
     Stream<YearDir> allYears();
-
-    // Walk only day directories (exactly 3 levels deep)
-    @Walk(minDepth = 3, maxDepth = 3)
-    Stream<DayDir> allDays();
 }
 
 // Year directory (2024, 2025, ...)
@@ -148,29 +143,18 @@ day.accessLogs().forEach(log -> {
 //   access-2025-01-01.log.gz
 ```
 
-### Control walk depth
+### List year directories
 
-Use `maxDepth` and `minDepth` to target specific levels of the hierarchy:
+Since `YearDir` extends `S3.Dir`, the listing returns only immediate
+directories — no `@Recursive` annotation needed:
 
 ```java
-// Only year directories (depth 1) — month and day dirs are not returned
 prod.allYears().forEach(year -> {
     System.out.println(year.file().getName());
 });
 // Output:
 //   2024
 //   2025
-
-// Only day directories (exactly depth 3 from the environment)
-prod.allDays().forEach(day -> {
-    System.out.println(day.file().getAbsoluteName());
-});
-// Output:
-//   logs/production/2024/12/30
-//   logs/production/2024/12/31
-//   logs/production/2025/01/01
-//   logs/production/2025/01/02
-//   logs/production/2025/02/01
 ```
 
 ### Navigate back with @Parent
@@ -188,7 +172,7 @@ System.out.println(env.file().getName());
 
 ## Features Used
 
-- [`@Walk(maxDepth, minDepth)`](../guide/walking-and-listing.md#controlling-depth) — `allYears()` limits to depth 1, `allDays()` targets exactly depth 3
+- [Immediate listing](../guide/walking-and-listing.md#immediate-listing-default) — `allYears()` returns immediate year directories
 - [`@Filter` (method-level)](../guide/filtering.md#client-side-filtering-with-filter) — `appLogs()` and `accessLogs()` on `DayDir` filter by log type
 - [`@Parent`](../api/annotations/parent.md) — `@Parent(3)` navigates from day back to environment
 

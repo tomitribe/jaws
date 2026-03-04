@@ -132,6 +132,28 @@ public interface VersionDir extends S3.Dir {
 }
 ```
 
+### Input validation on single-arg methods
+
+When `@Filter` is placed on the return type of a single-arg proxy method,
+it validates the input name. If the `S3File` doesn't pass the predicate,
+an `IllegalArgumentException` is thrown:
+
+```java
+@Filter(IsJar.class)
+public interface JarFile extends S3.File {}
+
+public interface VersionDir extends S3.Dir {
+    Stream<JarFile> artifacts();         // lists only .jar files
+    JarFile artifact(String name);       // validates name passes IsJar
+}
+
+versionDir.artifact("commons.jar");      // OK
+versionDir.artifact("readme.txt");       // throws IllegalArgumentException
+```
+
+This ensures that names passed to single-arg methods are consistent with
+the filtering applied to listing methods that return the same type.
+
 ### Combining with other annotations
 
 For maximum efficiency, use `@Prefix` to reduce the result set server-side,

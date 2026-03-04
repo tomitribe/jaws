@@ -120,6 +120,28 @@ public interface DataDir extends S3.Dir {
 }
 ```
 
+### Input validation on single-arg methods
+
+When `@Suffix` is placed on the return type of a single-arg proxy method,
+it validates the input name. If the name doesn't end with the required
+suffix, an `IllegalArgumentException` is thrown:
+
+```java
+@Suffix(".parquet")
+public interface ParquetFile extends S3.File {}
+
+public interface DataDir extends S3.Dir {
+    Stream<ParquetFile> data();           // lists only .parquet files
+    ParquetFile partition(String name);   // validates name ends with .parquet
+}
+
+dataDir.partition("2025-01.parquet");   // OK
+dataDir.partition("2025-01.csv");       // throws IllegalArgumentException
+```
+
+This ensures that names passed to single-arg methods are consistent with
+the filtering applied to listing methods that return the same type.
+
 ### Combining with other annotations
 
 `@Suffix` can be combined with `@Prefix`, `@Match`, and `@Filter`.

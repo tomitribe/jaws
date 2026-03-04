@@ -215,6 +215,74 @@ public interface VersionDir extends S3.Dir {
 }
 ```
 
+## Input Validation on Single-Arg Methods
+
+Filter annotations don't just apply to listings — they also **validate input**
+on single-arg proxy methods. When a method takes a `String` parameter and
+returns a typed interface, JAWS checks the name against all `@Suffix`, `@Match`,
+`@Prefix`, and `@Filter` annotations on both the return type and the method.
+If the name doesn't pass, an `IllegalArgumentException` is thrown.
+
+This prevents writing files that would never be read back by a listing method.
+
+### The problem
+
+Consider a `Users` directory where all entries must be `.json` files:
+
+```java
+@Match(".*\\.json")
+public interface UserFile extends S3.File {
+    default String getUserName() {
+        return file().getName().replaceAll("\\.json$", "");
+    }
+}
+
+public interface Users extends S3.Dir {
+    Stream<UserFile> users();      // only lists .json files
+    UserFile user(String name);    // accepts any name — oops!
+}
+```
+
+Without validation, `users.user("notes.txt")` would happily write a file that
+`users()` would never return. With validation, JAWS rejects the name at the
+point of the `user("notes.txt")` call:
+
+```java
+users.user("alice.json");    // OK
+users.user("notes.txt");     // throws IllegalArgumentException
+```
+
+### How it works
+
+When a single-arg method like `UserFile user(String name)` is invoked:
+
+1. JAWS collects annotations from the **return type** (`UserFile`) and the
+   **method** (`user`).
+2. The combined filter is evaluated against the name.
+3. If the name doesn't pass, an `IllegalArgumentException` is thrown with
+   a message like `"notes.txt" does not match the naming constraints of UserFile`.
+
+All annotation types participate: `@Suffix`, `@Match`, `@Filter`, and `@Prefix`.
+Type-level annotations are checked first, then method-level annotations.
+
+### Type-level vs method-level
+
+Annotations can live on either the return type or the method. Both are checked:
+
+```java
+@Suffix(".json")
+public interface JsonFile extends S3.File {}
+
+public interface DataDir extends S3.Dir {
+    // Type-level @Suffix(".json") validates the name
+    JsonFile data(String name);
+
+    // Method-level @Match validates the name
+    @Match("report-\\d{4}\\.csv")
+    S3File report(String name);
+}
+```
+
 ## Combining Annotations
 
 For maximum efficiency, use `@Prefix` to reduce the result set server-side,

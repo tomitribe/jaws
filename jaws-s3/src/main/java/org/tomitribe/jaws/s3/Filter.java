@@ -54,6 +54,12 @@ import java.util.function.Predicate;
  * ends with {@code .jar} if {@code @Suffix(".jar")} is also
  * present.
  *
+ * <p>In addition to filtering listings, {@code @Filter} also
+ * <b>validates input</b> on single-arg proxy methods. When the return
+ * type carries {@code @Filter}, the predicate is evaluated against the
+ * input name and an {@link IllegalArgumentException} is thrown if it
+ * does not pass.
+ *
  * <p>{@code @Filter} is repeatable — multiple filters on the same
  * element are combined with AND logic. It can be placed on methods
  * or on interface types. Interface-level filters run before

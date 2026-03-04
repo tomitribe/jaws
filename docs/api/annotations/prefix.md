@@ -25,7 +25,7 @@ in the key hierarchy. The prefix is sent server-side in the `ListObjects`
 request, so keys that do not match are never returned by AWS and never consume
 bandwidth or processing.
 
-`@Prefix` works on both flat listing methods and `@Walk` methods.
+`@Prefix` works on both immediate listing methods and `@Recursive` methods.
 
 ## Examples
 
@@ -42,7 +42,7 @@ repository/
 
 ### Flat listing
 
-On a method without `@Walk`, the prefix narrows a flat listing:
+On a method without `@Recursive`, the prefix narrows an immediate listing:
 
 ```java
 public interface Repository extends S3.Dir {
@@ -51,31 +51,25 @@ public interface Repository extends S3.Dir {
 }
 ```
 
-### Recursive walk
+### Recursive listing
 
-Combined with `@Walk`, the prefix limits which subtrees are entered,
-reducing both the number of AWS requests and the volume of results:
+Combined with `@Recursive`, the prefix limits which keys are returned,
+reducing both the bandwidth and the volume of results:
 
 ```java
 public interface Repository extends S3.Dir {
-    // Walk only the org/ namespace — com/ and junit/
-    // are never fetched from AWS
-    @Walk
+    // Recursively list only keys under the org/ namespace
+    // — com/ and junit/ are never fetched from AWS
+    @Recursive
     @Prefix("org/")
     Stream<S3File> orgArtifacts();
-
-    // Walk only org/apache/ artifacts, two levels deep
-    @Walk(maxDepth = 2)
-    @Prefix("org/apache/")
-    Stream<S3File> apacheProjects();
 }
 ```
 
-Without `@Prefix`, the walk descends into every namespace in the repository,
-issuing a `ListObjects` request for each prefix visited. With
-`@Prefix("org/apache/")`, only subtrees under `org/apache/` are returned
-by AWS. In a large repository with thousands of groupIds, this can reduce
-requests from thousands to a handful.
+Without `@Prefix`, the recursive listing returns every key in the
+directory. With `@Prefix("org/")`, only keys under `org/` are returned
+by AWS. In a large repository with thousands of groupIds, this can
+significantly reduce the data transferred.
 
 ### Partial prefixes
 
@@ -101,9 +95,33 @@ Because the prefix is applied server-side, AWS returns only the matching
 keys. A directory with hundreds of version entries can be efficiently
 narrowed to just the relevant subset.
 
+## Input Validation on Single-Arg Methods
+
+When `@Prefix` is placed on a single-arg proxy method, it validates that
+the input name starts with the prefix. If not, an `IllegalArgumentException`
+is thrown:
+
+```java
+public interface Logs extends S3.Dir {
+    @Prefix("app-")
+    Stream<S3File> appLogs();            // server-side prefix filter
+
+    @Prefix("app-")
+    S3File appLog(String name);          // validates name starts with "app-"
+}
+
+logs.appLog("app-2025-03-01.log");       // OK
+logs.appLog("system-2025-03-01.log");    // throws IllegalArgumentException
+```
+
+Note that `@Prefix` is method-only (`@Target(ElementType.METHOD)`), so it
+cannot be placed on a type. For listing methods, the prefix is applied
+server-side in the `ListObjects` request. For single-arg methods, it is
+checked client-side against the input name.
+
 ## See Also
 
-- [@Walk](walk.md) — recursive traversal
+- [@Recursive](recursive.md) — recursive listing
 - [@Suffix](suffix.md) — client-side suffix filtering
 - [@Match](match.md) — client-side regex filtering
 - [@Filter](filter.md) — client-side filtering with arbitrary predicates

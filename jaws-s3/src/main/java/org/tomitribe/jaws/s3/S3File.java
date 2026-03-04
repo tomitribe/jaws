@@ -183,6 +183,7 @@ public class S3File {
      *
      * @return a stream of all descendant S3Files
      */
+    @Recursive
     public Stream<S3File> files() {
         return node.get().files();
     }

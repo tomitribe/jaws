@@ -25,9 +25,9 @@ The default delimiter is `"/"`, which treats slashes in keys as directory
 separators. `@Delimiter` allows changing this for keys that use a different
 separator.
 
-`@Delimiter` works on both flat listing methods and `@Walk` methods. When
-used with `@Walk`, the delimiter controls how the walk discovers child
-prefixes at each level.
+`@Delimiter` works on both immediate listing methods and `@Recursive` methods.
+When used with `@Recursive`, the delimiter controls how the walk discovers
+child prefixes at each level.
 
 ## Examples
 
@@ -41,15 +41,15 @@ public interface Logs extends S3.Dir {
 }
 ```
 
-### Walk with a custom delimiter
+### Recursive listing with a custom delimiter
 
 ```java
 public interface DateIndex extends S3.Dir {
     // Keys like "2025-01-15", "2025-02-20"
     // Delimiter "-" splits on hyphens, creating a year/month/day hierarchy
-    @Walk
+    @Recursive
     @Delimiter("-")
-    Stream<S3File> byDate();
+    Stream<S3.Dir> byDate();
 }
 ```
 
@@ -67,5 +67,5 @@ public interface Bucket extends S3.Dir {
 
 ## See Also
 
-- [@Walk](walk.md) — recursive traversal (defaults to `"/"` delimiter)
-- [Walking & Listing](../../guide/walking-and-listing.md) — how delimiters affect listings
+- [@Recursive](recursive.md) — recursive listing (defaults to `"/"` delimiter for S3.Dir types)
+- [Listing & Recursion](../../guide/walking-and-listing.md) — how delimiters affect listings

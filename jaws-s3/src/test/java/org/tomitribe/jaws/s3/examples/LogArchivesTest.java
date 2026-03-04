@@ -25,7 +25,6 @@ import org.tomitribe.jaws.s3.Parent;
 import org.tomitribe.jaws.s3.S3;
 import org.tomitribe.jaws.s3.S3Client;
 import org.tomitribe.jaws.s3.S3File;
-import org.tomitribe.jaws.s3.Walk;
 import org.tomitribe.util.Join;
 
 import java.util.List;
@@ -38,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests modeled after the Log Archives example in docs/examples/log-archives.md.
  *
- * Verifies @Walk with depth control, @Walk + @Prefix, @Filter, and @Parent.
+ * Verifies immediate listing for S3.Dir types, @Filter, and @Parent.
  */
 public class LogArchivesTest {
 
@@ -69,35 +68,16 @@ public class LogArchivesTest {
     }
 
     /**
-     * @Walk(maxDepth = 1) Stream<YearDir> should return only year directories.
+     * Stream<YearDir> should return only immediate year directories.
      */
     @Test
-    public void walkYearsMaxDepth1() throws Exception {
+    public void listYearsImmediate() throws Exception {
         final List<String> names = prod().allYears()
                 .map(y -> y.file().getName())
                 .sorted()
                 .collect(Collectors.toList());
 
         assertEquals("2024\n2025", Join.join("\n", names));
-    }
-
-    /**
-     * @Walk(minDepth = 3, maxDepth = 3) Stream<DayDir> should return only
-     * day directories at exactly depth 3.
-     */
-    @Test
-    public void walkDaysMinMax3() throws Exception {
-        final List<String> paths = prod().allDays()
-                .map(d -> d.file().getAbsoluteName())
-                .sorted()
-                .collect(Collectors.toList());
-
-        assertEquals("" +
-                "production/2024/12/30\n" +
-                "production/2024/12/31\n" +
-                "production/2025/01/01\n" +
-                "production/2025/01/02\n" +
-                "production/2025/02/01", Join.join("\n", paths));
     }
 
     /**
@@ -168,11 +148,7 @@ public class LogArchivesTest {
         Stream<YearDir> years();
         YearDir year(String year);
 
-        @Walk(maxDepth = 1)
         Stream<YearDir> allYears();
-
-        @Walk(minDepth = 3, maxDepth = 3)
-        Stream<DayDir> allDays();
     }
 
     public interface YearDir extends S3.Dir {

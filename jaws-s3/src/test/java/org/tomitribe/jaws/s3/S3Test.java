@@ -478,61 +478,82 @@ public class S3Test {
     }
 
     public interface Returns {
+        @Recursive
         Java[] returnArrayOfInterface();
 
+        @Recursive
         S3File[] returnArrayOfS3File();
 
+        @Recursive
         Stream<Java> returnStreamOfInterface();
 
+        @Recursive
         Stream<S3File> returnStreamOfS3File();
 
+        @Recursive
         List<Java> returnListOfInterface();
 
+        @Recursive
         List<S3File> returnListOfS3File();
 
+        @Recursive
         Set<Java> returnSetOfInterface();
 
+        @Recursive
         Set<S3File> returnSetOfS3File();
 
+        @Recursive
         Collection<Java> returnCollectionOfInterface();
 
+        @Recursive
         Collection<S3File> returnCollectionOfS3File();
     }
 
     public interface MultipleFilteredReturns {
+        @Recursive
         @Filter(IsTxt.class)
         @Filter(IsSrc.class)
         S3File[] multipleFilters();
     }
 
     public interface FilteredReturns {
+        @Recursive
         @Filter(IsGreen.class)
         Java[] returnArrayOfInterface();
 
+        @Recursive
         @Filter(IsGreen.class)
         S3File[] returnArrayOfS3File();
 
+        @Recursive
         @Filter(IsGreen.class)
         Stream<Java> returnStreamOfInterface();
 
+        @Recursive
         @Filter(IsGreen.class)
         Stream<S3File> returnStreamOfS3File();
 
+        @Recursive
         @Filter(IsGreen.class)
         List<Java> returnListOfInterface();
 
+        @Recursive
         @Filter(IsGreen.class)
         List<S3File> returnListOfS3File();
 
+        @Recursive
         @Filter(IsGreen.class)
         Set<Java> returnSetOfInterface();
 
+        @Recursive
         @Filter(IsGreen.class)
         Set<S3File> returnSetOfS3File();
 
+        @Recursive
         @Filter(IsGreen.class)
         Collection<Java> returnCollectionOfInterface();
 
+        @Recursive
         @Filter(IsGreen.class)
         Collection<S3File> returnCollectionOfS3File();
     }
@@ -570,9 +591,11 @@ public class S3Test {
     }
 
     public interface RequestAnnotations extends S3 {
+        @Recursive
         @Prefix("java")
         Stream<S3File> javaFiles();
 
+        @Recursive
         @Marker("src/test/java/org/supertribe/colors/RedTest.java")
         Stream<S3File> afterRedTest();
 

@@ -125,6 +125,37 @@ public interface Reports extends S3.Dir {
 }
 ```
 
+### Input validation on single-arg methods
+
+When `@Match` is placed on the return type of a single-arg proxy method,
+it validates the input name. If the name doesn't match the pattern, an
+`IllegalArgumentException` is thrown:
+
+```java
+@Match(".*\\.json")
+public interface UserFile extends S3.File {}
+
+public interface Users extends S3.Dir {
+    Stream<UserFile> users();       // lists only .json files
+    UserFile user(String name);     // validates name matches .*\.json
+}
+
+users.user("alice.json");     // OK — matches the pattern
+users.user("notes.txt");      // throws IllegalArgumentException
+```
+
+This ensures that names passed to single-arg methods are consistent with
+the filtering applied to listing methods that return the same type.
+
+`@Match` on the method itself also validates:
+
+```java
+public interface Reports extends S3.Dir {
+    @Match("report-\\d{4}\\.csv")
+    S3File report(String name);     // validates name matches the pattern
+}
+```
+
 ### Combining with other annotations
 
 `@Match` can be combined with `@Prefix`, `@Suffix`, and `@Filter`.

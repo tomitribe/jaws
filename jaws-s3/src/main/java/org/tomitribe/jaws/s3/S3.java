@@ -104,6 +104,7 @@ public interface S3 {
          *
          * @return a stream of all descendant S3Files
          */
+        @Recursive
         Stream<S3File> files();
 
         /**

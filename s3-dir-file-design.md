@@ -5,7 +5,7 @@
 JAWS provides a proxy-based interface system for modeling S3 bucket structures as
 type-safe Java interfaces. With `S3.Dir` and `S3.File`, the type hierarchy tells the
 library whether something is a directory or a file — eliminating the need for
-`@Walk(maxDepth=1)` annotations and type-discriminating `@Filter` predicates.
+`@Recursive` annotations and type-discriminating `@Filter` predicates.
 
 ## Quick Example
 
@@ -134,12 +134,12 @@ list S3 objects:
 | `Stream<X>` where X extends `S3.File` | `listObjects` with delimiter, processes only `contents` |
 | `Stream<S3File>` | Flat listing, no delimiter (all objects recursively) |
 
-This means you never need `@Walk(maxDepth=1)` just to list immediate children.
+This means you never need `@Recursive` just to list immediate children.
 The return type says it all:
 
 ```java
-// Before: needed @Walk to get one-level listing
-@Walk(maxDepth = 1)
+// Before: needed @Recursive to get one-level listing
+@Recursive(maxDepth = 1)
 @Filter(ProductName.class)
 Stream<Product> products();
 
@@ -200,20 +200,20 @@ Instant modified = config.settings().getLastModified();
 String etag = config.settings().getETag();
 ```
 
-## @Walk Still Works for Recursive Traversal
+## @Recursive Still Works for Recursive Traversal
 
-`@Walk` is still available when you need recursive directory traversal:
+`@Recursive` is still available when you need recursive directory traversal:
 
 ```java
 interface Repository extends S3.Dir {
 
     // Recursively walk all files
-    @Walk
+    @Recursive
     @Filter(IsJar.class)
     Stream<S3File> allJars();
 
-    // Walk with depth limits
-    @Walk(maxDepth = 2, minDepth = 1)
+    // Recursively list all files
+    @Recursive(maxDepth = 2, minDepth = 1)
     Stream<S3File> shallowEntries();
 }
 ```

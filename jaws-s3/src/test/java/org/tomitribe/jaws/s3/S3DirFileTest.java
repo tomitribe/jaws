@@ -410,6 +410,7 @@ public class S3DirFileTest {
     }
 
     public interface CombinedFilterPalette extends S3.Dir {
+        @Recursive
         @Filter(IsRed.class)
         Stream<DarkItem> darkRedItems();
     }

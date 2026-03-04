@@ -57,8 +57,8 @@ public interface Deployment extends S3.Dir {
     // Top-level files only (index.html, manifest.json)
     Stream<Asset> assets();
 
-    // Walk the full directory tree
-    @Walk
+    // Recursively list the full directory tree
+    @Recursive
     Stream<S3.Dir> layout();
 
     // Parse the deployment timestamp from the directory name
@@ -208,7 +208,7 @@ deploy.js().scripts().forEach(js -> {
 
 ### Inspect top-level assets
 
-Without `@Walk`, `Stream<Asset>` performs a single delimiter-based listing
+Without `@Recursive`, `Stream<Asset>` performs a single delimiter-based listing
 and returns only the files at the deployment level:
 
 ```java
@@ -224,7 +224,7 @@ deploy.assets().forEach(asset -> {
 
 ### View the deployment layout
 
-`@Walk` recursively descends into every subdirectory. Because the element
+`@Recursive` recursively descends into every subdirectory. Because the element
 type is `S3.Dir`, only directories are returned — files are filtered out:
 
 ```java
@@ -243,7 +243,7 @@ deploy.layout().forEach(entry -> {
 
 - [`S3.Dir`](../guide/directories-and-files.md#s3dir--directories) — `CssDir`, `JsDir`, and `ImagesDir` scope listings to the correct subdirectory
 - [`@Filter` (type-level)](../guide/filtering.md#type-level-filters) — `CssFile`, `JsFile`, and `ImageFile` interfaces carry their own filter predicates
-- [`@Walk`](../guide/walking-and-listing.md#recursive-walk) — `layout()` recursively walks the deployment tree
+- [`@Recursive`](../guide/walking-and-listing.md#recursive-listing) — `layout()` recursively lists the deployment tree
 - [`S3.File` content access](../guide/directories-and-files.md#s3file--files-with-content) — `getValueAsString()` on `Manifest`, `getSize()` on assets
 - [Default methods](../guide/typed-proxies.md#default-methods) — `Deployment.getDeployedAt()` parses the directory name via `file().getName()`, `Manifest.getVersion()` and `Asset.getContentType()` add domain logic
 - [`getObjectMetadata()`](../api/s3-interfaces.md#s3file) — `Asset.getContentType()` reads the S3 content type header
