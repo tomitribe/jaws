@@ -274,6 +274,25 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../changelog/" class="md-tabs__link">
+          
+  
+  Changelog
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -636,30 +655,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#walk" class="md-nav__link">
+  <a href="#recursive" class="md-nav__link">
     <span class="md-ellipsis">
       
-        @Walk
+        @Recursive
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="@Walk">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameters
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -814,7 +816,7 @@
   <span class="md-ellipsis">
     
   
-    Walking & Listing
+    Listing & Recursion
   
 
     
@@ -1397,14 +1399,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/annotations/walk/" class="md-nav__link">
+      <a href="../../api/annotations/recursive/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1601,6 +1603,93 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Changelog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1651,30 +1740,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#walk" class="md-nav__link">
+  <a href="#recursive" class="md-nav__link">
     <span class="md-ellipsis">
       
-        @Walk
+        @Recursive
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="@Walk">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameters
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1866,57 +1938,25 @@ without manually tracking the path.</p>
 <p>A <code>NoParentException</code> is thrown at runtime if the proxy is already at the
 bucket root and no further parent exists.</p>
 </div>
-<h2 id="walk">@Walk<a class="headerlink" href="#walk" title="Permanent link">&para;</a></h2>
-<p>Marks a method as performing a recursive walk of the S3 key hierarchy, similar
-to <code>java.nio.file.Files.walk()</code>. Without <code>@Walk</code>, stream-returning methods use
-a single-level delimiter-based listing.</p>
+<h2 id="recursive">@Recursive<a class="headerlink" href="#recursive" title="Permanent link">&para;</a></h2>
+<p>Marks a listing method as recursive — all descendants are returned, not just
+immediate children. Without <code>@Recursive</code>, all listing methods use a
+delimiter-based listing that returns only immediate children at one level.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Repository</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="c1">// Walk everything under this directory</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nd">@Walk</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="c1">// All descendant objects (flat listing, single request)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nd">@Recursive</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">everything</span><span class="p">();</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="c1">// Walk at most 2 levels deep</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nd">@Walk</span><span class="p">(</span><span class="n">maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">shallow</span><span class="p">();</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="c1">// Only return results at exactly depth 2</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="nd">@Walk</span><span class="p">(</span><span class="n">minDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">exactlyTwoLevelsDeep</span><span class="p">();</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">}</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="c1">// All descendant directories (tree walk, one request per prefix)</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nd">@Recursive</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">layout</span><span class="p">();</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">}</span>
 </code></pre></div>
-<h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>maxDepth</code></td>
-<td><code>-1</code> (unlimited)</td>
-<td>Maximum depth to traverse</td>
-</tr>
-<tr>
-<td><code>minDepth</code></td>
-<td><code>0</code></td>
-<td>Minimum depth at which results are included</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition info">
-<p class="admonition-title">AWS request cost</p>
-<p>Each level of the walk issues one <code>ListObjects</code> request per prefix visited.
-A walk over a directory with 5 subdirectories issues at least 6 requests
-(1 for the root + 1 per subdirectory). Use <code>maxDepth</code> to limit this.
-<code>minDepth</code> does <strong>not</strong> reduce requests — all levels are still traversed,
-but shallow results are filtered out before being returned.</p>
-</div>
-<p>See <a href="../walking-and-listing/">Walking &amp; Listing</a> for a detailed walkthrough.</p>
+<p><code>@Recursive</code> is a marker annotation with no attributes. There is no depth
+control; for depth-limited traversal, use the <code>S3File.walk()</code> methods directly.</p>
+<p>See <a href="../walking-and-listing/">Listing &amp; Recursion</a> for a detailed walkthrough.</p>
 <h2 id="prefix">@Prefix<a class="headerlink" href="#prefix" title="Permanent link">&para;</a></h2>
-<p>Narrows a listing or walk to only S3 keys that begin with the given prefix.
+<p>Narrows a listing to only S3 keys that begin with the given prefix.
 The value is relative — it is appended to the current proxy's position in
 the key hierarchy. The prefix is sent server-side in the <code>ListObjects</code> request,
 so non-matching keys are never returned by AWS.</p>
@@ -1925,8 +1965,8 @@ so non-matching keys are never returned by AWS.</p>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;org/apache&quot;</span><span class="p">)</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">apacheArtifacts</span><span class="p">();</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="c1">// Walk only the org/ namespace</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nd">@Walk</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="c1">// Recursively list only keys under the org/ namespace</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nd">@Recursive</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;org/&quot;</span><span class="p">)</span>
 <a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">orgArtifacts</span><span class="p">();</span>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">}</span>
@@ -1966,11 +2006,11 @@ remove entries matching a suffix:</p>
 </code></pre></div>
 <h3 id="type-level-suffix">Type-level suffix<a class="headerlink" href="#type-level-suffix" title="Permanent link">&para;</a></h3>
 <p><code>@Suffix</code> can also be placed on an interface. It applies to all methods that
-return that type:</p>
+return that type — both listings and single-arg lookups:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nd">@Suffix</span><span class="p">(</span><span class="s">&quot;.parquet&quot;</span><span class="p">)</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">ParquetFile</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">File</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="c1">// Every listing that returns Stream&lt;ParquetFile&gt; will</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="c1">// automatically filter to .parquet files only</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="c1">// Stream&lt;ParquetFile&gt; listings filter to .parquet files only</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="c1">// ParquetFile partition(String name) validates name ends with .parquet</span>
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="match">@Match<a class="headerlink" href="#match" title="Permanent link">&para;</a></h2>
@@ -1993,7 +2033,9 @@ remove entries matching a pattern:</p>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">cssExceptReset</span><span class="p">();</span>
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">}</span>
 </code></pre></div>
-<p><code>@Match</code> can also be placed on an interface for type-level filtering.</p>
+<p><code>@Match</code> can also be placed on an interface for type-level filtering and
+validation. Listings return only matching entries, and single-arg methods
+reject names that don't match.</p>
 <h2 id="filter">@Filter<a class="headerlink" href="#filter" title="Permanent link">&para;</a></h2>
 <p>Applies an arbitrary client-side predicate to filter results. The annotation
 takes a <code>Predicate&lt;S3File&gt;</code> class that must have a no-arg constructor.</p>
@@ -2011,11 +2053,11 @@ takes a <code>Predicate&lt;S3File&gt;</code> class that must have a no-arg const
 </code></pre></div>
 <h3 id="type-level-filters">Type-level filters<a class="headerlink" href="#type-level-filters" title="Permanent link">&para;</a></h3>
 <p><code>@Filter</code> can also be placed on an interface. It applies to all methods that
-return that type:</p>
+return that type — both listings and single-arg lookups:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nd">@Filter</span><span class="p">(</span><span class="n">IsJar</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">JarFile</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">File</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="c1">// Every listing that returns Stream&lt;JarFile&gt; will</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="c1">// automatically filter to .jar files only</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="c1">// Stream&lt;JarFile&gt; listings filter to .jar files only</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="c1">// JarFile artifact(String name) validates name passes IsJar</span>
 <a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">}</span>
 <a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
 <a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">VersionDir</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
@@ -2044,8 +2086,8 @@ Prefer <code>@Prefix</code> over all of these when possible — it filters
 server-side and reduces the data transferred from AWS.</p>
 </div>
 <h2 id="delimiter">@Delimiter<a class="headerlink" href="#delimiter" title="Permanent link">&para;</a></h2>
-<p>Sets the delimiter for the <code>ListObjects</code> request. Defaults to <code>"/"</code> for
-<code>@Walk</code> methods. Can be used on both flat listing and walk methods.</p>
+<p>Sets the delimiter for the <code>ListObjects</code> request. Can be used on both
+immediate listing and <code>@Recursive</code> methods.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Logs</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="nd">@Delimiter</span><span class="p">(</span><span class="s">&quot;-&quot;</span><span class="p">)</span>
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">byDate</span><span class="p">();</span>

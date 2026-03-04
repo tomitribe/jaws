@@ -272,6 +272,25 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="./changelog/" class="md-tabs__link">
+          
+  
+  Changelog
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -667,7 +686,7 @@
   <span class="md-ellipsis">
     
   
-    Walking & Listing
+    Listing & Recursion
   
 
     
@@ -1250,14 +1269,14 @@
   
   
     <li class="md-nav__item">
-      <a href="./api/annotations/walk/" class="md-nav__link">
+      <a href="./api/annotations/recursive/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1442,6 +1461,93 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Changelog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1643,7 +1749,7 @@ becomes a typed interface, each file becomes an <code>S3.File</code> or  <code>S
 <li><strong>Typed proxies</strong> — Define interfaces, get proxies. Method names map to S3 keys.</li>
 <li><strong>Directory &amp; File types</strong> — <code>S3.Dir</code> for containers, <code>S3.File</code> for objects with content.
   Return types drive listing behavior automatically.</li>
-<li><strong>Annotations</strong> — <code>@Name</code>, <code>@Parent</code>, <code>@Walk</code>, <code>@Prefix</code>, <code>@Suffix</code>, <code>@Match</code>,
+<li><strong>Annotations</strong> — <code>@Name</code>, <code>@Parent</code>, <code>@Recursive</code>, <code>@Prefix</code>, <code>@Suffix</code>, <code>@Match</code>,
   <code>@Filter</code>, <code>@Delimiter</code> give fine-grained control over key resolution, traversal,
   and filtering.</li>
 <li><strong>Efficient S3 usage</strong> — Delimiter-based listings, server-side prefix filtering, and
@@ -1655,7 +1761,7 @@ becomes a typed interface, each file becomes an <code>S3.File</code> or  <code>S
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">&lt;dependency&gt;</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.tomitribe<span class="nt">&lt;/groupId&gt;</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>jaws-s3<span class="nt">&lt;/artifactId&gt;</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">&lt;version&gt;</span>2.0.5<span class="nt">&lt;/version&gt;</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">&lt;version&gt;</span>2.1.0<span class="nt">&lt;/version&gt;</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nt">&lt;/dependency&gt;</span>
 </code></pre></div>
 <p>Then head to <a href="getting-started/">Getting Started</a> for a complete walkthrough.</p>

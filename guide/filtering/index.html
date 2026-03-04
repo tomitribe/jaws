@@ -274,6 +274,25 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../changelog/" class="md-tabs__link">
+          
+  
+  Changelog
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -588,7 +607,7 @@
   <span class="md-ellipsis">
     
   
-    Walking & Listing
+    Listing & Recursion
   
 
     
@@ -811,6 +830,56 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-validation-on-single-arg-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Validation on Single-Arg Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Input Validation on Single-Arg Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-level-vs-method-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type-level vs method-level
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1347,14 +1416,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/annotations/walk/" class="md-nav__link">
+      <a href="../../api/annotations/recursive/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1551,6 +1620,93 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Changelog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1692,6 +1848,56 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-validation-on-single-arg-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Validation on Single-Arg Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Input Validation on Single-Arg Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-level-vs-method-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type-level vs method-level
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1898,29 +2104,81 @@ interface-level filters run first within each category.</p>
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">JarFile</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">snapshotJars</span><span class="p">();</span>
 <a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">}</span>
 </code></pre></div>
+<h2 id="input-validation-on-single-arg-methods">Input Validation on Single-Arg Methods<a class="headerlink" href="#input-validation-on-single-arg-methods" title="Permanent link">&para;</a></h2>
+<p>Filter annotations don't just apply to listings — they also <strong>validate input</strong>
+on single-arg proxy methods. When a method takes a <code>String</code> parameter and
+returns a typed interface, JAWS checks the name against all <code>@Suffix</code>, <code>@Match</code>,
+<code>@Prefix</code>, and <code>@Filter</code> annotations on both the return type and the method.
+If the name doesn't pass, an <code>IllegalArgumentException</code> is thrown.</p>
+<p>This prevents writing files that would never be read back by a listing method.</p>
+<h3 id="the-problem">The problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h3>
+<p>Consider a <code>Users</code> directory where all entries must be <code>.json</code> files:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nd">@Match</span><span class="p">(</span><span class="s">&quot;.*\\.json&quot;</span><span class="p">)</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">UserFile</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">File</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="k">default</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getUserName</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">file</span><span class="p">().</span><span class="na">getName</span><span class="p">().</span><span class="na">replaceAll</span><span class="p">(</span><span class="s">&quot;\\.json$&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">);</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">}</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Users</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">UserFile</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">users</span><span class="p">();</span><span class="w">      </span><span class="c1">// only lists .json files</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span><span class="n">UserFile</span><span class="w"> </span><span class="nf">user</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">);</span><span class="w">    </span><span class="c1">// accepts any name — oops!</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="p">}</span>
+</code></pre></div>
+<p>Without validation, <code>users.user("notes.txt")</code> would happily write a file that
+<code>users()</code> would never return. With validation, JAWS rejects the name at the
+point of the <code>user("notes.txt")</code> call:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">users</span><span class="p">.</span><span class="na">user</span><span class="p">(</span><span class="s">&quot;alice.json&quot;</span><span class="p">);</span><span class="w">    </span><span class="c1">// OK</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">users</span><span class="p">.</span><span class="na">user</span><span class="p">(</span><span class="s">&quot;notes.txt&quot;</span><span class="p">);</span><span class="w">     </span><span class="c1">// throws IllegalArgumentException</span>
+</code></pre></div>
+<h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
+<p>When a single-arg method like <code>UserFile user(String name)</code> is invoked:</p>
+<ol>
+<li>JAWS collects annotations from the <strong>return type</strong> (<code>UserFile</code>) and the
+   <strong>method</strong> (<code>user</code>).</li>
+<li>The combined filter is evaluated against the name.</li>
+<li>If the name doesn't pass, an <code>IllegalArgumentException</code> is thrown with
+   a message like <code>"notes.txt" does not match the naming constraints of UserFile</code>.</li>
+</ol>
+<p>All annotation types participate: <code>@Suffix</code>, <code>@Match</code>, <code>@Filter</code>, and <code>@Prefix</code>.
+Type-level annotations are checked first, then method-level annotations.</p>
+<h3 id="type-level-vs-method-level">Type-level vs method-level<a class="headerlink" href="#type-level-vs-method-level" title="Permanent link">&para;</a></h3>
+<p>Annotations can live on either the return type or the method. Both are checked:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nd">@Suffix</span><span class="p">(</span><span class="s">&quot;.json&quot;</span><span class="p">)</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">JsonFile</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">File</span><span class="w"> </span><span class="p">{}</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">DataDir</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="c1">// Type-level @Suffix(&quot;.json&quot;) validates the name</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="n">JsonFile</span><span class="w"> </span><span class="nf">data</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">);</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">    </span><span class="c1">// Method-level @Match validates the name</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span><span class="nd">@Match</span><span class="p">(</span><span class="s">&quot;report-\\d{4}\\.csv&quot;</span><span class="p">)</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span><span class="n">S3File</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">);</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="p">}</span>
+</code></pre></div>
 <h2 id="combining-annotations">Combining Annotations<a class="headerlink" href="#combining-annotations" title="Permanent link">&para;</a></h2>
 <p>For maximum efficiency, use <code>@Prefix</code> to reduce the result set server-side,
 then layer on client-side filters as needed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Repository</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="c1">// Server-side: only keys starting with &quot;org/apache&quot;</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="c1">// Client-side: only .jar files</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;org/apache&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="nd">@Suffix</span><span class="p">(</span><span class="s">&quot;.jar&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">apacheJars</span><span class="p">();</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="c1">// Server-side: only keys starting with &quot;export-&quot;</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">    </span><span class="c1">// Client-side: only .parquet files matching a date pattern</span>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;export-&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">    </span><span class="nd">@Suffix</span><span class="p">(</span><span class="s">&quot;.parquet&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">    </span><span class="nd">@Match</span><span class="p">(</span><span class="s">&quot;export-2025-.*\\.parquet&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">exports2025</span><span class="p">();</span>
-<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>
-<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">    </span><span class="c1">// All three client-side filters together</span>
-<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="w">    </span><span class="nd">@Suffix</span><span class="p">(</span><span class="s">&quot;.jar&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">    </span><span class="nd">@Match</span><span class="p">(</span><span class="s">&quot;.*-SNAPSHOT\\.jar&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="w">    </span><span class="nd">@Filter</span><span class="p">(</span><span class="n">IsInRange</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
-<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">recentSnapshots</span><span class="p">();</span>
-<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Repository</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="c1">// Server-side: only keys starting with &quot;org/apache&quot;</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="c1">// Client-side: only .jar files</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;org/apache&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="nd">@Suffix</span><span class="p">(</span><span class="s">&quot;.jar&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">apacheJars</span><span class="p">();</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="c1">// Server-side: only keys starting with &quot;export-&quot;</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="c1">// Client-side: only .parquet files matching a date pattern</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;export-&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="nd">@Suffix</span><span class="p">(</span><span class="s">&quot;.parquet&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">    </span><span class="nd">@Match</span><span class="p">(</span><span class="s">&quot;export-2025-.*\\.parquet&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">exports2025</span><span class="p">();</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">    </span><span class="c1">// All three client-side filters together</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">    </span><span class="nd">@Suffix</span><span class="p">(</span><span class="s">&quot;.jar&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="w">    </span><span class="nd">@Match</span><span class="p">(</span><span class="s">&quot;.*-SNAPSHOT\\.jar&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a><span class="w">    </span><span class="nd">@Filter</span><span class="p">(</span><span class="n">IsInRange</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">recentSnapshots</span><span class="p">();</span>
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="p">}</span>
 </code></pre></div>
 
 

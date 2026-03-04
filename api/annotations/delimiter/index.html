@@ -274,6 +274,25 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../changelog/" class="md-tabs__link">
+          
+  
+  Changelog
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -583,7 +602,7 @@
   <span class="md-ellipsis">
     
   
-    Walking & Listing
+    Listing & Recursion
   
 
     
@@ -1176,14 +1195,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../walk/" class="md-nav__link">
+      <a href="../recursive/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1433,10 +1452,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#walk-with-a-custom-delimiter" class="md-nav__link">
+  <a href="#recursive-listing-with-a-custom-delimiter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk with a custom delimiter
+        Recursive listing with a custom delimiter
       
     </span>
   </a>
@@ -1510,6 +1529,93 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Changelog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1606,10 +1712,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#walk-with-a-custom-delimiter" class="md-nav__link">
+  <a href="#recursive-listing-with-a-custom-delimiter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk with a custom delimiter
+        Recursive listing with a custom delimiter
       
     </span>
   </a>
@@ -1692,9 +1798,9 @@
 The default delimiter is <code>"/"</code>, which treats slashes in keys as directory
 separators. <code>@Delimiter</code> allows changing this for keys that use a different
 separator.</p>
-<p><code>@Delimiter</code> works on both flat listing methods and <code>@Walk</code> methods. When
-used with <code>@Walk</code>, the delimiter controls how the walk discovers child
-prefixes at each level.</p>
+<p><code>@Delimiter</code> works on both immediate listing methods and <code>@Recursive</code> methods.
+When used with <code>@Recursive</code>, the delimiter controls how the walk discovers
+child prefixes at each level.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <h3 id="flat-listing-with-a-custom-delimiter">Flat listing with a custom delimiter<a class="headerlink" href="#flat-listing-with-a-custom-delimiter" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Logs</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
@@ -1703,13 +1809,13 @@ prefixes at each level.</p>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">bySegment</span><span class="p">();</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
 </code></pre></div>
-<h3 id="walk-with-a-custom-delimiter">Walk with a custom delimiter<a class="headerlink" href="#walk-with-a-custom-delimiter" title="Permanent link">&para;</a></h3>
+<h3 id="recursive-listing-with-a-custom-delimiter">Recursive listing with a custom delimiter<a class="headerlink" href="#recursive-listing-with-a-custom-delimiter" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">DateIndex</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="c1">// Keys like &quot;2025-01-15&quot;, &quot;2025-02-20&quot;</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="c1">// Delimiter &quot;-&quot; splits on hyphens, creating a year/month/day hierarchy</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nd">@Walk</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nd">@Recursive</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nd">@Delimiter</span><span class="p">(</span><span class="s">&quot;-&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">byDate</span><span class="p">();</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">byDate</span><span class="p">();</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="no-delimiter">No delimiter<a class="headerlink" href="#no-delimiter" title="Permanent link">&para;</a></h3>
@@ -1722,8 +1828,8 @@ prefixes at each level.</p>
 </code></pre></div>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../walk/">@Walk</a> — recursive traversal (defaults to <code>"/"</code> delimiter)</li>
-<li><a href="../../../guide/walking-and-listing/">Walking &amp; Listing</a> — how delimiters affect listings</li>
+<li><a href="../recursive/">@Recursive</a> — recursive listing (defaults to <code>"/"</code> delimiter for S3.Dir types)</li>
+<li><a href="../../../guide/walking-and-listing/">Listing &amp; Recursion</a> — how delimiters affect listings</li>
 </ul>
 
 

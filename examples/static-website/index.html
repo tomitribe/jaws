@@ -274,6 +274,25 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../changelog/" class="md-tabs__link">
+          
+  
+  Changelog
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -583,7 +602,7 @@
   <span class="md-ellipsis">
     
   
-    Walking & Listing
+    Listing & Recursion
   
 
     
@@ -1352,14 +1371,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/annotations/walk/" class="md-nav__link">
+      <a href="../../api/annotations/recursive/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1544,6 +1563,93 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Changelog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1786,8 +1892,8 @@ for domain logic, and <code>getObjectMetadata()</code> for inspecting content ty
 <a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="c1">// Top-level files only (index.html, manifest.json)</span>
 <a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">Asset</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">assets</span><span class="p">();</span>
 <a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">    </span><span class="c1">// Walk the full directory tree</span>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="nd">@Walk</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">    </span><span class="c1">// Recursively list the full directory tree</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="nd">@Recursive</span>
 <a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">layout</span><span class="p">();</span>
 <a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
 <a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">    </span><span class="c1">// Parse the deployment timestamp from the directory name</span>
@@ -1920,7 +2026,7 @@ and <code>ImageFile</code> add an extra layer of safety:</p>
 <a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="c1">//   vendor.js</span>
 </code></pre></div>
 <h3 id="inspect-top-level-assets">Inspect top-level assets<a class="headerlink" href="#inspect-top-level-assets" title="Permanent link">&para;</a></h3>
-<p>Without <code>@Walk</code>, <code>Stream&lt;Asset&gt;</code> performs a single delimiter-based listing
+<p>Without <code>@Recursive</code>, <code>Stream&lt;Asset&gt;</code> performs a single delimiter-based listing
 and returns only the files at the deployment level:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">Deployment</span><span class="w"> </span><span class="n">deploy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">deployment</span><span class="p">(</span><span class="s">&quot;20250301-143022&quot;</span><span class="p">);</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
@@ -1932,7 +2038,7 @@ and returns only the files at the deployment level:</p>
 <a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1">//   manifest.json → application/json</span>
 </code></pre></div>
 <h3 id="view-the-deployment-layout">View the deployment layout<a class="headerlink" href="#view-the-deployment-layout" title="Permanent link">&para;</a></h3>
-<p><code>@Walk</code> recursively descends into every subdirectory. Because the element
+<p><code>@Recursive</code> recursively descends into every subdirectory. Because the element
 type is <code>S3.Dir</code>, only directories are returned — files are filtered out:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">Deployment</span><span class="w"> </span><span class="n">deploy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">deployment</span><span class="p">(</span><span class="s">&quot;20250301-143022&quot;</span><span class="p">);</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
@@ -1948,7 +2054,7 @@ type is <code>S3.Dir</code>, only directories are returned — files are filtere
 <ul>
 <li><a href="../../guide/directories-and-files/#s3dir--directories"><code>S3.Dir</code></a> — <code>CssDir</code>, <code>JsDir</code>, and <code>ImagesDir</code> scope listings to the correct subdirectory</li>
 <li><a href="../../guide/filtering/#type-level-filters"><code>@Filter</code> (type-level)</a> — <code>CssFile</code>, <code>JsFile</code>, and <code>ImageFile</code> interfaces carry their own filter predicates</li>
-<li><a href="../../guide/walking-and-listing/#recursive-walk"><code>@Walk</code></a> — <code>layout()</code> recursively walks the deployment tree</li>
+<li><a href="../../guide/walking-and-listing/#recursive-listing"><code>@Recursive</code></a> — <code>layout()</code> recursively lists the deployment tree</li>
 <li><a href="../../guide/directories-and-files/#s3file--files-with-content"><code>S3.File</code> content access</a> — <code>getValueAsString()</code> on <code>Manifest</code>, <code>getSize()</code> on assets</li>
 <li><a href="../../guide/typed-proxies/#default-methods">Default methods</a> — <code>Deployment.getDeployedAt()</code> parses the directory name via <code>file().getName()</code>, <code>Manifest.getVersion()</code> and <code>Asset.getContentType()</code> add domain logic</li>
 <li><a href="../../api/s3-interfaces/#s3file"><code>getObjectMetadata()</code></a> — <code>Asset.getContentType()</code> reads the S3 content type header</li>

@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://tomitribe.github.io/jaws/api/annotations/prefix/">
       
       
-        <link rel="prev" href="../walk/">
+        <link rel="prev" href="../recursive/">
       
       
         <link rel="next" href="../suffix/">
@@ -267,6 +267,25 @@
           
   
   API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../changelog/" class="md-tabs__link">
+          
+  
+  Changelog
 
         </a>
       </li>
@@ -583,7 +602,7 @@
   <span class="md-ellipsis">
     
   
-    Walking & Listing
+    Listing & Recursion
   
 
     
@@ -1176,14 +1195,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../walk/" class="md-nav__link">
+      <a href="../recursive/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1321,10 +1340,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#recursive-walk" class="md-nav__link">
+  <a href="#recursive-listing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Recursive walk
+        Recursive listing
       
     </span>
   </a>
@@ -1344,6 +1363,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-validation-on-single-arg-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Validation on Single-Arg Methods
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1522,6 +1552,93 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Changelog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1606,10 +1723,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#recursive-walk" class="md-nav__link">
+  <a href="#recursive-listing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Recursive walk
+        Recursive listing
       
     </span>
   </a>
@@ -1629,6 +1746,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-validation-on-single-arg-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input Validation on Single-Arg Methods
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1692,7 +1820,7 @@
 in the key hierarchy. The prefix is sent server-side in the <code>ListObjects</code>
 request, so keys that do not match are never returned by AWS and never consume
 bandwidth or processing.</p>
-<p><code>@Prefix</code> works on both flat listing methods and <code>@Walk</code> methods.</p>
+<p><code>@Prefix</code> works on both immediate listing methods and <code>@Recursive</code> methods.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>Consider a Maven repository stored in S3:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>repository/
@@ -1703,33 +1831,27 @@ bandwidth or processing.</p>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  junit/junit/4.13.2/junit-4.13.2.jar
 </code></pre></div>
 <h3 id="flat-listing">Flat listing<a class="headerlink" href="#flat-listing" title="Permanent link">&para;</a></h3>
-<p>On a method without <code>@Walk</code>, the prefix narrows a flat listing:</p>
+<p>On a method without <code>@Recursive</code>, the prefix narrows an immediate listing:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Repository</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;org/apache&quot;</span><span class="p">)</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">apacheArtifacts</span><span class="p">();</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
 </code></pre></div>
-<h3 id="recursive-walk">Recursive walk<a class="headerlink" href="#recursive-walk" title="Permanent link">&para;</a></h3>
-<p>Combined with <code>@Walk</code>, the prefix limits which subtrees are entered,
-reducing both the number of AWS requests and the volume of results:</p>
+<h3 id="recursive-listing">Recursive listing<a class="headerlink" href="#recursive-listing" title="Permanent link">&para;</a></h3>
+<p>Combined with <code>@Recursive</code>, the prefix limits which keys are returned,
+reducing both the bandwidth and the volume of results:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Repository</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="c1">// Walk only the org/ namespace — com/ and junit/</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// are never fetched from AWS</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nd">@Walk</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="c1">// Recursively list only keys under the org/ namespace</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// — com/ and junit/ are never fetched from AWS</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nd">@Recursive</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;org/&quot;</span><span class="p">)</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">orgArtifacts</span><span class="p">();</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="c1">// Walk only org/apache/ artifacts, two levels deep</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="nd">@Walk</span><span class="p">(</span><span class="n">maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;org/apache/&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">apacheProjects</span><span class="p">();</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">}</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
 </code></pre></div>
-<p>Without <code>@Prefix</code>, the walk descends into every namespace in the repository,
-issuing a <code>ListObjects</code> request for each prefix visited. With
-<code>@Prefix("org/apache/")</code>, only subtrees under <code>org/apache/</code> are returned
-by AWS. In a large repository with thousands of groupIds, this can reduce
-requests from thousands to a handful.</p>
+<p>Without <code>@Prefix</code>, the recursive listing returns every key in the
+directory. With <code>@Prefix("org/")</code>, only keys under <code>org/</code> are returned
+by AWS. In a large repository with thousands of groupIds, this can
+significantly reduce the data transferred.</p>
 <h3 id="partial-prefixes">Partial prefixes<a class="headerlink" href="#partial-prefixes" title="Permanent link">&para;</a></h3>
 <p>The prefix does not need to end with a delimiter — it can be any key prefix,
 including a partial name. This is useful for matching a subset of entries
@@ -1749,9 +1871,28 @@ within a single directory:</p>
 <p>Because the prefix is applied server-side, AWS returns only the matching
 keys. A directory with hundreds of version entries can be efficiently
 narrowed to just the relevant subset.</p>
+<h2 id="input-validation-on-single-arg-methods">Input Validation on Single-Arg Methods<a class="headerlink" href="#input-validation-on-single-arg-methods" title="Permanent link">&para;</a></h2>
+<p>When <code>@Prefix</code> is placed on a single-arg proxy method, it validates that
+the input name starts with the prefix. If not, an <code>IllegalArgumentException</code>
+is thrown:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Logs</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;app-&quot;</span><span class="p">)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">appLogs</span><span class="p">();</span><span class="w">            </span><span class="c1">// server-side prefix filter</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;app-&quot;</span><span class="p">)</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="n">S3File</span><span class="w"> </span><span class="nf">appLog</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">);</span><span class="w">          </span><span class="c1">// validates name starts with &quot;app-&quot;</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">}</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">logs</span><span class="p">.</span><span class="na">appLog</span><span class="p">(</span><span class="s">&quot;app-2025-03-01.log&quot;</span><span class="p">);</span><span class="w">       </span><span class="c1">// OK</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="n">logs</span><span class="p">.</span><span class="na">appLog</span><span class="p">(</span><span class="s">&quot;system-2025-03-01.log&quot;</span><span class="p">);</span><span class="w">    </span><span class="c1">// throws IllegalArgumentException</span>
+</code></pre></div>
+<p>Note that <code>@Prefix</code> is method-only (<code>@Target(ElementType.METHOD)</code>), so it
+cannot be placed on a type. For listing methods, the prefix is applied
+server-side in the <code>ListObjects</code> request. For single-arg methods, it is
+checked client-side against the input name.</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../walk/">@Walk</a> — recursive traversal</li>
+<li><a href="../recursive/">@Recursive</a> — recursive listing</li>
 <li><a href="../suffix/">@Suffix</a> — client-side suffix filtering</li>
 <li><a href="../match/">@Match</a> — client-side regex filtering</li>
 <li><a href="../filter/">@Filter</a> — client-side filtering with arbitrary predicates</li>

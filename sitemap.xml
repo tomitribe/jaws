@@ -61,7 +61,7 @@
         <loc>https://tomitribe.github.io/jaws/api/annotations/parent/</loc>
       </url>
       <url>
-        <loc>https://tomitribe.github.io/jaws/api/annotations/walk/</loc>
+        <loc>https://tomitribe.github.io/jaws/api/annotations/recursive/</loc>
       </url>
       <url>
         <loc>https://tomitribe.github.io/jaws/api/annotations/prefix/</loc>
@@ -80,5 +80,8 @@
       </url>
       <url>
         <loc>https://tomitribe.github.io/jaws/api/annotations/marker/</loc>
+      </url>
+      <url>
+        <loc>https://tomitribe.github.io/jaws/changelog/</loc>
       </url>
 </urlset>

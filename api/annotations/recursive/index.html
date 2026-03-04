@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://tomitribe.github.io/jaws/api/annotations/walk/">
+        <link rel="canonical" href="https://tomitribe.github.io/jaws/api/annotations/recursive/">
       
       
         <link rel="prev" href="../parent/">
@@ -27,7 +27,7 @@
     
     
       
-        <title>@Walk - JAWS — Java AWS S3</title>
+        <title>@Recursive - JAWS — Java AWS S3</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#walk" class="md-skip">
+        <a href="#recursive" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              @Walk
+              @Recursive
             
           </span>
         </div>
@@ -267,6 +267,25 @@
           
   
   API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../changelog/" class="md-tabs__link">
+          
+  
+  Changelog
 
         </a>
       </li>
@@ -583,7 +602,7 @@
   <span class="md-ellipsis">
     
   
-    Walking & Listing
+    Listing & Recursion
   
 
     
@@ -1192,7 +1211,7 @@
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1210,7 +1229,7 @@
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1248,17 +1267,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Attributes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#description" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1266,23 +1274,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Description">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#applicable-return-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Applicable return types
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1299,10 +1290,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#unlimited-walk" class="md-nav__link">
+  <a href="#recursive-listing-of-all-objects" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unlimited walk
+        Recursive listing of all objects
       
     </span>
   </a>
@@ -1310,10 +1301,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#controlled-depth" class="md-nav__link">
+  <a href="#recursive-listing-of-directories" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Controlled depth
+        Recursive listing of directories
       
     </span>
   </a>
@@ -1321,10 +1312,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#walk-with-prefix-narrowing" class="md-nav__link">
+  <a href="#recursive-listing-with-prefix-narrowing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk with prefix narrowing
+        Recursive listing with prefix narrowing
       
     </span>
   </a>
@@ -1332,10 +1323,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#walk-with-custom-delimiter" class="md-nav__link">
+  <a href="#recursive-listing-with-filter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk with custom delimiter
+        Recursive listing with filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recursive-listing-with-custom-delimiter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursive listing with custom delimiter
       
     </span>
   </a>
@@ -1355,23 +1357,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="AWS Request Cost">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1578,6 +1563,93 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Changelog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1617,17 +1689,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Attributes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#description" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1635,23 +1696,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Description">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#applicable-return-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Applicable return types
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1668,10 +1712,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#unlimited-walk" class="md-nav__link">
+  <a href="#recursive-listing-of-all-objects" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unlimited walk
+        Recursive listing of all objects
       
     </span>
   </a>
@@ -1679,10 +1723,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#controlled-depth" class="md-nav__link">
+  <a href="#recursive-listing-of-directories" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Controlled depth
+        Recursive listing of directories
       
     </span>
   </a>
@@ -1690,10 +1734,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#walk-with-prefix-narrowing" class="md-nav__link">
+  <a href="#recursive-listing-with-prefix-narrowing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk with prefix narrowing
+        Recursive listing with prefix narrowing
       
     </span>
   </a>
@@ -1701,10 +1745,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#walk-with-custom-delimiter" class="md-nav__link">
+  <a href="#recursive-listing-with-filter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk with custom delimiter
+        Recursive listing with filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recursive-listing-with-custom-delimiter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursive listing with custom delimiter
       
     </span>
   </a>
@@ -1724,23 +1779,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="AWS Request Cost">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1773,159 +1811,79 @@
   
 
 
-<h1 id="walk">@Walk<a class="headerlink" href="#walk" title="Permanent link">&para;</a></h1>
-<p>Marks a proxy method as performing a recursive walk of the S3 key hierarchy.</p>
+<h1 id="recursive">@Recursive<a class="headerlink" href="#recursive" title="Permanent link">&para;</a></h1>
+<p>Marks a listing method as recursive — all descendants are returned, not just
+immediate children.</p>
 <h2 id="declaration">Declaration<a class="headerlink" href="#declaration" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@Target</span><span class="p">(</span><span class="n">ElementType</span><span class="p">.</span><span class="na">METHOD</span><span class="p">)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nd">@Retention</span><span class="p">(</span><span class="n">RetentionPolicy</span><span class="p">.</span><span class="na">RUNTIME</span><span class="p">)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nd">@Documented</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">public</span><span class="w"> </span><span class="nd">@interface</span><span class="w"> </span><span class="n">Walk</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="nf">maxDepth</span><span class="p">()</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="nf">minDepth</span><span class="p">()</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">public</span><span class="w"> </span><span class="nd">@interface</span><span class="w"> </span><span class="n">Recursive</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
 </code></pre></div>
-<h2 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>maxDepth</code></td>
-<td><code>int</code></td>
-<td><code>-1</code> (unlimited)</td>
-<td>Maximum depth to traverse</td>
-</tr>
-<tr>
-<td><code>minDepth</code></td>
-<td><code>int</code></td>
-<td><code>0</code></td>
-<td>Minimum depth at which results are included</td>
-</tr>
-</tbody>
-</table>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
-<p>Without <code>@Walk</code>, stream-returning methods use a single-level delimiter-based
-listing. With <code>@Walk</code>, the listing descends recursively into child prefixes,
-similar to <code>java.nio.file.Files.walk()</code>.</p>
-<p>The annotated method must return <code>Stream&lt;S3File&gt;</code>, <code>List&lt;S3File&gt;</code>, <code>S3File[]</code>,
-or a collection type whose element type is <code>S3File</code> or an interface extending <code>S3</code>.</p>
-<h3 id="applicable-return-types">Applicable return types<a class="headerlink" href="#applicable-return-types" title="Permanent link">&para;</a></h3>
-<p><code>@Walk</code> is designed for use with <code>S3File</code> or <code>S3.Dir</code> element types:</p>
+<p>Without <code>@Recursive</code>, all listing methods use a delimiter-based listing that
+returns only immediate children at one level. With <code>@Recursive</code>, the listing
+returns all descendants.</p>
+<p>The behavior depends on the element type:</p>
 <ul>
-<li><strong><code>Stream&lt;S3File&gt;</code></strong> — returns all objects and directories recursively</li>
-<li><strong><code>Stream&lt;X extends S3.Dir&gt;</code></strong> — returns only directories, useful for
-  discovering the tree structure or targeting a specific depth with
-  <code>maxDepth</code>/<code>minDepth</code></li>
+<li><strong><code>Stream&lt;S3File&gt;</code></strong> — uses <code>files()</code>, a single flat request returning all
+  descendant objects</li>
+<li><strong><code>Stream&lt;X extends S3.Dir&gt;</code></strong> — uses <code>walk()</code>, a multi-request tree
+  traversal returning directories only</li>
 </ul>
-<p>If the element type extends <code>S3.File</code>, <strong>omit <code>@Walk</code></strong> for best performance.
-A walk visits every prefix (one <code>ListObjects</code> request per directory) only to
-discard the directories from the results. A plain listing without <code>@Walk</code>
-returns the same files with a single request (plus pagination), because
-the return type already filters to files only.</p>
+<p>If the element type extends <code>S3.File</code>, <strong>omit <code>@Recursive</code></strong> for best
+performance. A recursive listing already returns only files.</p>
+<p>There is no depth control. For depth-limited traversal, use the
+<code>S3File.walk()</code> methods directly.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<h3 id="unlimited-walk">Unlimited walk<a class="headerlink" href="#unlimited-walk" title="Permanent link">&para;</a></h3>
+<h3 id="recursive-listing-of-all-objects">Recursive listing of all objects<a class="headerlink" href="#recursive-listing-of-all-objects" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Repository</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nd">@Walk</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nd">@Recursive</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">everything</span><span class="p">();</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
 </code></pre></div>
-<h3 id="controlled-depth">Controlled depth<a class="headerlink" href="#controlled-depth" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Repository</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="c1">// Walk at most 2 levels deep</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nd">@Walk</span><span class="p">(</span><span class="n">maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">shallow</span><span class="p">();</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="c1">// Only return results at depth 2 and below</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nd">@Walk</span><span class="p">(</span><span class="n">minDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">deepOnly</span><span class="p">();</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="c1">// Only results at exactly depth 2</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="nd">@Walk</span><span class="p">(</span><span class="n">minDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">exactlyTwoLevelsDeep</span><span class="p">();</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">}</span>
+<h3 id="recursive-listing-of-directories">Recursive listing of directories<a class="headerlink" href="#recursive-listing-of-directories" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Deployment</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="nd">@Recursive</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">layout</span><span class="p">();</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
 </code></pre></div>
-<h3 id="walk-with-prefix-narrowing">Walk with prefix narrowing<a class="headerlink" href="#walk-with-prefix-narrowing" title="Permanent link">&para;</a></h3>
+<h3 id="recursive-listing-with-prefix-narrowing">Recursive listing with prefix narrowing<a class="headerlink" href="#recursive-listing-with-prefix-narrowing" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Repository</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="c1">// Walk only the org/ namespace — com/ and junit/</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// are never fetched from AWS</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nd">@Walk</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="c1">// Recursively list only keys under the org/ namespace</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// — com/ and junit/ are never fetched from AWS</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nd">@Recursive</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nd">@Prefix</span><span class="p">(</span><span class="s">&quot;org/&quot;</span><span class="p">)</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">orgArtifacts</span><span class="p">();</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
 </code></pre></div>
-<h3 id="walk-with-custom-delimiter">Walk with custom delimiter<a class="headerlink" href="#walk-with-custom-delimiter" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">DateIndex</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="c1">// Keys like &quot;2025-01-15&quot;, &quot;2025-02-20&quot;</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nd">@Walk</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nd">@Delimiter</span><span class="p">(</span><span class="s">&quot;-&quot;</span><span class="p">)</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">byDate</span><span class="p">();</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+<h3 id="recursive-listing-with-filter">Recursive listing with filter<a class="headerlink" href="#recursive-listing-with-filter" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Processed</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="nd">@Recursive</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nd">@Filter</span><span class="p">(</span><span class="n">IsParquet</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">allParquetFiles</span><span class="p">();</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="recursive-listing-with-custom-delimiter">Recursive listing with custom delimiter<a class="headerlink" href="#recursive-listing-with-custom-delimiter" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">DateIndex</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="c1">// Keys like &quot;2025-01-15&quot;, &quot;2025-02-20&quot;</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nd">@Recursive</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nd">@Delimiter</span><span class="p">(</span><span class="s">&quot;-&quot;</span><span class="p">)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3</span><span class="p">.</span><span class="na">Dir</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">byDate</span><span class="p">();</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="aws-request-cost">AWS Request Cost<a class="headerlink" href="#aws-request-cost" title="Permanent link">&para;</a></h2>
-<p>Each level of the walk issues one <code>ListObjects</code> request per prefix (directory)
-visited. If a single response is truncated (more than 1,000 keys), additional
-paginated requests are made automatically.</p>
-<p>The total number of requests is:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>requests = sum of ceil(entries / 1000) for each prefix visited
-</code></pre></div>
-<h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
-<p>Consider a bucket with this structure:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>photos/
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  2024/
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    jan/   (50 files)
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    feb/   (50 files)
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  2025/
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    jan/   (50 files)
-</code></pre></div>
-<p>An unlimited <code>@Walk</code> from <code>photos/</code> issues <strong>5 requests</strong>: one for <code>photos/</code>,
-one each for <code>2024/</code> and <code>2025/</code>, and one each for the month prefixes.</p>
-<table>
-<thead>
-<tr>
-<th>Annotation</th>
-<th>Prefixes visited</th>
-<th>Requests</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>@Walk</code></td>
-<td>all 5</td>
-<td>5</td>
-</tr>
-<tr>
-<td><code>@Walk(maxDepth = 1)</code></td>
-<td><code>photos/</code>, <code>2024/</code>, <code>2025/</code></td>
-<td>3</td>
-</tr>
-<tr>
-<td><code>@Walk(maxDepth = 2)</code></td>
-<td>all 5</td>
-<td>5</td>
-</tr>
-<tr>
-<td><code>@Walk(minDepth = 2)</code></td>
-<td>all 5 (results filtered)</td>
-<td>5</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition info">
-<p class="admonition-title">Info</p>
-<p><code>maxDepth</code> reduces requests by limiting which prefixes are descended into.
-<code>minDepth</code> does <strong>not</strong> reduce requests — all levels up to <code>maxDepth</code> are
-still traversed; results are simply filtered before being returned.</p>
-</div>
+<p>For <code>@Recursive Stream&lt;S3File&gt;</code> (and other non-<code>S3.Dir</code> types), the listing
+uses a single flat <code>ListObjects</code> request (no delimiter) plus pagination if
+needed. This is the most efficient way to get all objects.</p>
+<p>For <code>@Recursive Stream&lt;X extends S3.Dir&gt;</code>, each prefix visited generates at
+least one <code>ListObjects</code> request. If a single response is truncated (more
+than 1,000 keys), additional paginated requests are made automatically.</p>
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../../../guide/walking-and-listing/">Walking &amp; Listing</a> — detailed walkthrough</li>
-<li><a href="../prefix/">@Prefix</a> — narrow which subtrees are entered</li>
+<li><a href="../../../guide/walking-and-listing/">Listing &amp; Recursion</a> — detailed walkthrough</li>
+<li><a href="../prefix/">@Prefix</a> — narrow which keys are returned</li>
 <li><a href="../delimiter/">@Delimiter</a> — change how the hierarchy is split</li>
 </ul>
 

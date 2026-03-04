@@ -274,6 +274,25 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../changelog/" class="md-tabs__link">
+          
+  
+  Changelog
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -583,7 +602,7 @@
   <span class="md-ellipsis">
     
   
-    Walking & Listing
+    Listing & Recursion
   
 
     
@@ -959,10 +978,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#walk-all-parquet-files" class="md-nav__link">
+  <a href="#recursively-list-all-parquet-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk all parquet files
+        Recursively list all parquet files
       
     </span>
   </a>
@@ -1352,14 +1371,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/annotations/walk/" class="md-nav__link">
+      <a href="../../api/annotations/recursive/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    @Walk
+    @Recursive
   
 
     
@@ -1556,6 +1575,93 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Changelog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1646,10 +1752,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#walk-all-parquet-files" class="md-nav__link">
+  <a href="#recursively-list-all-parquet-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Walk all parquet files
+        Recursively list all parquet files
       
     </span>
   </a>
@@ -1794,8 +1900,8 @@ and collection return types like <code>List&lt;&gt;</code> and arrays.</p>
 <a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="nd">@Name</span><span class="p">(</span><span class="s">&quot;year=2025&quot;</span><span class="p">)</span>
 <a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">    </span><span class="n">YearPartition</span><span class="w"> </span><span class="nf">year2025</span><span class="p">();</span>
 <a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">    </span><span class="c1">// Walk all parquet files across all partitions</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">    </span><span class="nd">@Walk</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">    </span><span class="c1">// Recursively list all parquet files across all partitions</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">    </span><span class="nd">@Recursive</span>
 <a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">    </span><span class="nd">@Filter</span><span class="p">(</span><span class="n">IsParquet</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
 <a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">    </span><span class="n">Stream</span><span class="o">&lt;</span><span class="n">S3File</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">allParquetFiles</span><span class="p">();</span>
 <a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
@@ -1889,8 +1995,8 @@ and collection return types like <code>List&lt;&gt;</code> and arrays.</p>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1">//   day=15</span>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1">//   day=16</span>
 </code></pre></div>
-<h3 id="walk-all-parquet-files">Walk all parquet files<a class="headerlink" href="#walk-all-parquet-files" title="Permanent link">&para;</a></h3>
-<p><code>@Walk</code> combined with <code>@Filter</code> finds every parquet file across all partitions:</p>
+<h3 id="recursively-list-all-parquet-files">Recursively list all parquet files<a class="headerlink" href="#recursively-list-all-parquet-files" title="Permanent link">&para;</a></h3>
+<p><code>@Recursive</code> combined with <code>@Filter</code> finds every parquet file across all partitions:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">lake</span><span class="p">.</span><span class="na">processed</span><span class="p">().</span><span class="na">allParquetFiles</span><span class="p">().</span><span class="na">forEach</span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="na">getAbsoluteName</span><span class="p">());</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">});</span>
@@ -1948,7 +2054,7 @@ interrupted scans over large datasets:</p>
 <li><a href="../../api/annotations/prefix/"><code>@Prefix</code></a> — server-side filtering for <code>dailySummaries()</code> and <code>monthlySummaries()</code></li>
 <li><a href="../../api/annotations/marker/"><code>@Marker</code></a> — resume listing from a known position with <code>reportsAfterJan15()</code></li>
 <li><a href="../../guide/filtering/#client-side-filtering-with-filter"><code>@Filter</code> (method-level)</a> — <code>IsParquet</code> predicate on <code>allParquetFiles()</code> and <code>parquetFiles()</code></li>
-<li><a href="../../guide/walking-and-listing/#recursive-walk"><code>@Walk</code></a> — recursive traversal across all Hive partitions</li>
+<li><a href="../../guide/walking-and-listing/#recursive-listing"><code>@Recursive</code></a> — recursive listing across all Hive partitions</li>
 <li><a href="../../guide/typed-proxies/#collections--stream-list-set-array"><code>List&lt;&gt;</code> and array returns</a> — <code>years()</code> returns <code>List&lt;YearPartition&gt;</code>, <code>months()</code> returns <code>MonthPartition[]</code></li>
 </ul>
 <h2 id="test">Test<a class="headerlink" href="#test" title="Permanent link">&para;</a></h2>
