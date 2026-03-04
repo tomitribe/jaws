@@ -138,7 +138,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>org.tomitribe</groupId>
     <artifactId>jaws-s3</artifactId>
-    <version>2.0.5</version>
+    <version>2.1.0</version>
 </dependency>
 ```
 

@@ -49,6 +49,9 @@ nav = [
             {"@Marker" = "api/annotations/marker.md"},
         ]},
     ]},
+    {"Changelog" = [
+        {"Changelog" = "changelog.md"},
+    ]},
 ]
 
 [project.theme]
