@@ -20,6 +20,8 @@ import org.tomitribe.jaws.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
 
 import java.util.Iterator;
@@ -117,11 +119,15 @@ public class S3Client {
      *         that name exists
      */
     public S3Bucket getBucket(final String name) {
-        final Bucket bucket = join(s3.listBuckets()).buckets().stream()
-                .filter(item -> name.equals(item.name()))
-                .findAny()
-                .orElseThrow(() -> new NoSuchBucketException(name));
-
+        try {
+            join(s3.headBucket(HeadBucketRequest.builder().bucket(name).build()));
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                throw new NoSuchBucketException(name);
+            }
+            throw e;
+        }
+        final Bucket bucket = Bucket.builder().name(name).build();
         return new S3Bucket(this, bucket);
     }
 
