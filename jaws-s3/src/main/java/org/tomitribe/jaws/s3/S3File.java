@@ -705,6 +705,38 @@ public class S3File {
     }
 
     /**
+     * Downloads this S3 object to a local path.
+     *
+     * @param destination the local path to write to
+     * @return the in-progress PathDownload
+     */
+    public FileDownload download(final java.nio.file.Path destination) {
+        return download(destination, null);
+    }
+
+    /**
+     * Downloads this S3 object to a local path with a transfer listener.
+     *
+     * @param destination the local path to write to
+     * @param listener    the listener for transfer progress events, or {@code null}
+     * @return the in-progress PathDownload
+     */
+    public FileDownload download(final java.nio.file.Path destination, final TransferListener listener) {
+        final DownloadFileRequest.Builder builder = DownloadFileRequest.builder()
+                .getObjectRequest(GetObjectRequest.builder()
+                        .bucket(getBucketName())
+                        .key(getAbsoluteName())
+                        .build())
+                .destination(destination);
+
+        if (listener != null) {
+            builder.addTransferListener(listener);
+        }
+
+        return node.get().download(builder.build());
+    }
+
+    /**
      * AmazonS3 API has a very large number of ways to get at
      * the same data.
      * <p>

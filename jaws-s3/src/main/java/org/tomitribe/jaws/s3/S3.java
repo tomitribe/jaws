@@ -143,6 +143,34 @@ public interface S3 {
         default Upload upload(final java.io.File file, final TransferListener listener) {
             return file(file.getName()).upload(file, listener);
         }
+
+        /**
+         * Uploads a local path into this directory using the path's file name
+         * as the object key. Content type and metadata are derived
+         * automatically from the path.
+         *
+         * <p>Equivalent to {@code file(path.getFileName().toString()).upload(path)}.
+         *
+         * @param path the local path to upload
+         * @return the in-progress Upload
+         */
+        default Upload upload(final java.nio.file.Path path) {
+            return file(path.getFileName().toString()).upload(path);
+        }
+
+        /**
+         * Uploads a local path into this directory using the path's file name
+         * as the object key, with a transfer listener for progress tracking.
+         *
+         * <p>Equivalent to {@code file(path.getFileName().toString()).upload(path, listener)}.
+         *
+         * @param path     the local path to upload
+         * @param listener the listener for transfer progress events, or {@code null}
+         * @return the in-progress Upload
+         */
+        default Upload upload(final java.nio.file.Path path, final TransferListener listener) {
+            return file(path.getFileName().toString()).upload(path, listener);
+        }
     }
 
     /**
