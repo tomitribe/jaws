@@ -631,6 +631,12 @@ public class S3File {
             putBuilder.metadata(userMetadata);
         }
 
+        putBuilder.checksumCRC32(objectMetadata.getChecksumCRC32())
+                .checksumCRC32C(objectMetadata.getChecksumCRC32C())
+                .checksumCRC64NVME(objectMetadata.getChecksumCRC64NVME())
+                .checksumSHA1(objectMetadata.getChecksumSHA1())
+                .checksumSHA256(objectMetadata.getChecksumSHA256());
+
         final UploadRequest.Builder builder = UploadRequest.builder()
                 .putObjectRequest(putBuilder.build())
                 .requestBody(body);
@@ -1039,7 +1045,13 @@ public class S3File {
 
         @Override
         public ObjectMetadata getObjectMetadata() {
-            return new ObjectMetadata(eTag, contentLength, lastModified, contentType, userMetadata);
+            return ObjectMetadata.builder()
+                    .eTag(eTag)
+                    .contentLength(contentLength)
+                    .lastModified(lastModified)
+                    .contentType(contentType)
+                    .userMetadata(userMetadata)
+                    .build();
         }
 
         @Override
