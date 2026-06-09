@@ -19,8 +19,6 @@ package org.tomitribe.jaws.s3;
 import org.junit.rules.ExternalResource;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
-import java.io.File;
-
 public class MockS3Rule extends ExternalResource {
 
     private final MockS3 mockS3 = new MockS3();
@@ -37,9 +35,5 @@ public class MockS3Rule extends ExternalResource {
 
     public S3AsyncClient getS3Client() {
         return mockS3.getS3Client();
-    }
-
-    public File getBlobStoreLocation() {
-        return mockS3.getBlobStoreLocation();
     }
 }

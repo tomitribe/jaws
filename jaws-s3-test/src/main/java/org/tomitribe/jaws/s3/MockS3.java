@@ -24,8 +24,6 @@ import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
-import java.io.File;
-import java.lang.reflect.Field;
 import java.net.URI;
 
 public class MockS3 {
@@ -54,15 +52,5 @@ public class MockS3 {
                 .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                 .forcePathStyle(true)
                 .build();
-    }
-
-    public File getBlobStoreLocation() {
-        try {
-            final Field field = S3ProxyJunitCore.class.getDeclaredField("blobStoreLocation");
-            field.setAccessible(true);
-            return (File) field.get(core);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to get blobStoreLocation", e);
-        }
     }
 }

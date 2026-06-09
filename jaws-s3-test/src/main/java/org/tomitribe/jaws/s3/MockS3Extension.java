@@ -21,8 +21,6 @@ import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 
-import java.io.File;
-
 public class MockS3Extension implements BeforeEachCallback, AfterEachCallback {
 
     private final MockS3 mockS3 = new MockS3();
@@ -39,9 +37,5 @@ public class MockS3Extension implements BeforeEachCallback, AfterEachCallback {
 
     public S3AsyncClient getS3Client() {
         return mockS3.getS3Client();
-    }
-
-    public File getBlobStoreLocation() {
-        return mockS3.getBlobStoreLocation();
     }
 }
