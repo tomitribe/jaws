@@ -6,6 +6,10 @@
 *.war
 *.ear
 
+.jackknife/
+.DS_Store/
+.DS_Store
+
 # IDEA #
 *.iml
 .idea

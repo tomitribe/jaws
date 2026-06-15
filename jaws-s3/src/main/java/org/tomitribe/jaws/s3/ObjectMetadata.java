@@ -36,24 +36,13 @@ public class ObjectMetadata {
     private final Instant lastModified;
     private final String contentType;
     private final Map<String, String> userMetadata;
-    private final String checksumCRC32;
-    private final String checksumCRC32C;
-    private final String checksumCRC64NVME;
-    private final String checksumSHA1;
-    private final String checksumSHA256;
 
-    private ObjectMetadata(final String eTag, final long contentLength, final Instant lastModified, final String contentType, final Map<String, String> userMetadata,
-                           final String checksumCRC32, final String checksumCRC32C, final String checksumCRC64NVME, final String checksumSHA1, final String checksumSHA256) {
+    private ObjectMetadata(final String eTag, final long contentLength, final Instant lastModified, final String contentType, final Map<String, String> userMetadata) {
         this.eTag = eTag;
         this.contentLength = contentLength;
         this.lastModified = lastModified;
         this.contentType = contentType;
         this.userMetadata = userMetadata;
-        this.checksumCRC32 = checksumCRC32;
-        this.checksumCRC32C = checksumCRC32C;
-        this.checksumCRC64NVME = checksumCRC64NVME;
-        this.checksumSHA1 = checksumSHA1;
-        this.checksumSHA256 = checksumSHA256;
     }
 
     public String getETag() {
@@ -77,26 +66,6 @@ public class ObjectMetadata {
         return Collections.unmodifiableMap(userMetadata);
     }
 
-    public String getChecksumCRC32() {
-        return checksumCRC32;
-    }
-
-    public String getChecksumCRC32C() {
-        return checksumCRC32C;
-    }
-
-    public String getChecksumCRC64NVME() {
-        return checksumCRC64NVME;
-    }
-
-    public String getChecksumSHA1() {
-        return checksumSHA1;
-    }
-
-    public String getChecksumSHA256() {
-        return checksumSHA256;
-    }
-
     public static Builder builder() {
         return new Builder();
     }
@@ -107,12 +76,7 @@ public class ObjectMetadata {
                 .contentLength(contentLength)
                 .lastModified(lastModified)
                 .contentType(contentType)
-                .userMetadata(userMetadata != null ? new HashMap<>(userMetadata) : null)
-                .checksumCRC32(checksumCRC32)
-                .checksumCRC32C(checksumCRC32C)
-                .checksumCRC64NVME(checksumCRC64NVME)
-                .checksumSHA1(checksumSHA1)
-                .checksumSHA256(checksumSHA256);
+                .userMetadata(userMetadata != null ? new HashMap<>(userMetadata) : null);
     }
 
     public static class Builder {
@@ -121,11 +85,6 @@ public class ObjectMetadata {
         private Instant lastModified;
         private String contentType;
         private Map<String, String> userMetadata;
-        private String checksumCRC32;
-        private String checksumCRC32C;
-        private String checksumCRC64NVME;
-        private String checksumSHA1;
-        private String checksumSHA256;
 
         public Builder eTag(final String eTag) {
             this.eTag = eTag;
@@ -160,34 +119,8 @@ public class ObjectMetadata {
             return this;
         }
 
-        public Builder checksumCRC32(final String checksumCRC32) {
-            this.checksumCRC32 = checksumCRC32;
-            return this;
-        }
-
-        public Builder checksumCRC32C(final String checksumCRC32C) {
-            this.checksumCRC32C = checksumCRC32C;
-            return this;
-        }
-
-        public Builder checksumCRC64NVME(final String checksumCRC64NVME) {
-            this.checksumCRC64NVME = checksumCRC64NVME;
-            return this;
-        }
-
-        public Builder checksumSHA1(final String checksumSHA1) {
-            this.checksumSHA1 = checksumSHA1;
-            return this;
-        }
-
-        public Builder checksumSHA256(final String checksumSHA256) {
-            this.checksumSHA256 = checksumSHA256;
-            return this;
-        }
-
         public ObjectMetadata build() {
-            return new ObjectMetadata(eTag, contentLength, lastModified, contentType, userMetadata,
-                    checksumCRC32, checksumCRC32C, checksumCRC64NVME, checksumSHA1, checksumSHA256);
+            return new ObjectMetadata(eTag, contentLength, lastModified, contentType, userMetadata);
         }
     }
 
@@ -236,11 +169,6 @@ public class ObjectMetadata {
                 .lastModified(response.lastModified())
                 .contentType(response.contentType())
                 .userMetadata(response.metadata())
-                .checksumCRC32(response.checksumCRC32())
-                .checksumCRC32C(response.checksumCRC32C())
-                .checksumCRC64NVME(response.checksumCRC64NVME())
-                .checksumSHA1(response.checksumSHA1())
-                .checksumSHA256(response.checksumSHA256())
                 .build();
     }
 
@@ -251,11 +179,6 @@ public class ObjectMetadata {
                 .lastModified(response.lastModified())
                 .contentType(response.contentType())
                 .userMetadata(response.metadata())
-                .checksumCRC32(response.checksumCRC32())
-                .checksumCRC32C(response.checksumCRC32C())
-                .checksumCRC64NVME(response.checksumCRC64NVME())
-                .checksumSHA1(response.checksumSHA1())
-                .checksumSHA256(response.checksumSHA256())
                 .build();
     }
 
@@ -263,11 +186,6 @@ public class ObjectMetadata {
         return builder()
                 .eTag(S3File.stripQuotes(response.eTag()))
                 .contentLength(contentLength)
-                .checksumCRC32(response.checksumCRC32())
-                .checksumCRC32C(response.checksumCRC32C())
-                .checksumCRC64NVME(response.checksumCRC64NVME())
-                .checksumSHA1(response.checksumSHA1())
-                .checksumSHA256(response.checksumSHA256())
                 .build();
     }
 

@@ -95,7 +95,7 @@ public class S3File {
     S3File(final S3Bucket bucket, final String key, final HeadObjectResponse response) {
         this.bucket = bucket;
         this.path = Path.fromKey(key);
-        this.node.set(new Metadata(response.eTag(), response.contentLength(), response.lastModified(), response.contentType(), response.metadata()));
+        this.node.set(new Metadata(ObjectMetadata.fromHead(response)));
     }
 
     S3File(final S3Bucket bucket, final Path path, final Class<? extends Node> type) {
@@ -631,12 +631,6 @@ public class S3File {
             putBuilder.metadata(userMetadata);
         }
 
-        putBuilder.checksumCRC32(objectMetadata.getChecksumCRC32())
-                .checksumCRC32C(objectMetadata.getChecksumCRC32C())
-                .checksumCRC64NVME(objectMetadata.getChecksumCRC64NVME())
-                .checksumSHA1(objectMetadata.getChecksumSHA1())
-                .checksumSHA256(objectMetadata.getChecksumSHA256());
-
         final UploadRequest.Builder builder = UploadRequest.builder()
                 .putObjectRequest(putBuilder.build())
                 .requestBody(body);
@@ -962,18 +956,10 @@ public class S3File {
      * common metadata.
      */
     private class Metadata implements Node {
-        private final String eTag;
-        private final long contentLength;
-        private final Instant lastModified;
-        private final String contentType;
-        private final Map<String, String> userMetadata;
+        private final ObjectMetadata metadata;
 
-        public Metadata(final String eTag, final long contentLength, final Instant lastModified, final String contentType, final Map<String, String> userMetadata) {
-            this.eTag = stripQuotes(eTag);
-            this.contentLength = contentLength;
-            this.lastModified = lastModified;
-            this.contentType = contentType;
-            this.userMetadata = userMetadata;
+        public Metadata(final ObjectMetadata metadata) {
+            this.metadata = metadata;
         }
 
         @Override
@@ -1024,17 +1010,17 @@ public class S3File {
 
         @Override
         public String getETag() {
-            return eTag;
+            return metadata.getETag();
         }
 
         @Override
         public long getSize() {
-            return contentLength;
+            return metadata.getContentLength();
         }
 
         @Override
         public Instant getLastModified() {
-            return lastModified;
+            return metadata.getLastModified();
         }
 
         @Override
@@ -1045,13 +1031,7 @@ public class S3File {
 
         @Override
         public ObjectMetadata getObjectMetadata() {
-            return ObjectMetadata.builder()
-                    .eTag(eTag)
-                    .contentLength(contentLength)
-                    .lastModified(lastModified)
-                    .contentType(contentType)
-                    .userMetadata(userMetadata)
-                    .build();
+            return metadata;
         }
 
         @Override
@@ -1614,7 +1594,7 @@ public class S3File {
             throw e;
         }
         final GetObjectResponse response = responseStream.response();
-        final Metadata metadata = new Metadata(response.eTag(), response.contentLength(), response.lastModified(), response.contentType(), response.metadata());
+        final Metadata metadata = new Metadata(ObjectMetadata.fromGet(response));
         node.compareAndSet(current, metadata);
         return responseStream;
     }
@@ -1664,7 +1644,7 @@ public class S3File {
         }
 
 
-        final Metadata newNode = new Metadata(response.eTag(), response.contentLength(), response.lastModified(), response.contentType(), response.metadata());
+        final Metadata newNode = new Metadata(ObjectMetadata.fromHead(response));
 
         if (node.compareAndSet(current, newNode)) {
             return newNode;
