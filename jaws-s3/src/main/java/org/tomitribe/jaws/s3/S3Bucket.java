@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
@@ -147,6 +148,11 @@ public class S3Bucket {
         return this;
     }
 
+    public S3Bucket put(String key, Path path) {
+        putObject(key, path);
+        return this;
+    }
+
     /**
      * Returns objects matching the given listing request. The request's
      * bucket is set automatically.
@@ -172,7 +178,26 @@ public class S3Bucket {
      */
     public PutObjectResponse putObject(final String key, final File file) {
         return S3Client.join(s3.putObject(
-                PutObjectRequest.builder().bucket(bucket.name()).key(key).build(),
+                PutObjectRequest.builder()
+                        .bucket(bucket.name())
+                        .key(key)
+                        .build(),
+                AsyncRequestBody.fromFile(file)));
+    }
+
+    /**
+     * Uploads a local file as an S3 object with the given key.
+     *
+     * @param key  the object key
+     * @param file the local file to upload
+     * @return the put response
+     */
+    public PutObjectResponse putObject(final String key, final java.nio.file.Path file) {
+        return S3Client.join(s3.putObject(
+                PutObjectRequest.builder()
+                        .bucket(bucket.name())
+                        .key(key)
+                        .build(),
                 AsyncRequestBody.fromFile(file)));
     }
 

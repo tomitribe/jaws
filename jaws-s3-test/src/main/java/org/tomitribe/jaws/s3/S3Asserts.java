@@ -29,12 +29,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -154,6 +156,10 @@ public class S3Asserts {
         }
     }
 
+    public ListingBuilder list() {
+        return new ListingBuilder();
+    }
+
     public static class Snapshot {
 
         private final S3AsyncClient s3;
@@ -188,5 +194,63 @@ public class S3Asserts {
             assertNull(entries.get(key), "Expected object to NOT exist: " + key);
             return this;
         }
+    }
+
+    public class ListingBuilder {
+        private final List<Function<S3Object, String>> columns = new ArrayList<>();
+        private final List<Function<String, String>> transformers = new ArrayList<>();
+
+        public ListingBuilder etag() {
+            columns.add(object -> String.format("%-32s", stripQuotes(object.eTag())));
+            return this;
+        }
+
+        public ListingBuilder size() {
+            return size(12);
+        }
+
+        public ListingBuilder size(final int width) {
+            columns.add(object -> String.format("%" + width + "s", object.size()));
+            return this;
+        }
+
+        public ListingBuilder lastModified() {
+            columns.add(object -> object.lastModified().toString());
+            return this;
+        }
+
+        public ListingBuilder key() {
+            columns.add(S3Object::key);
+            return this;
+        }
+
+        private Function<S3Object, String> rowFormatter() {
+            return object -> columns.stream()
+                    .map(column -> column.apply(object))
+                    .collect(Collectors.joining(" "));
+        }
+
+        private String actual() {
+            final Function<String, String> transform = transformers.stream()
+                    .reduce(Function.identity(), Function::andThen);
+
+            final Stream<S3Object> stream = listObjects().stream();
+            return stream
+                    .filter(o -> !o.key().endsWith("/"))
+                    .sorted(Comparator.comparing(S3Object::key))
+                    .map(rowFormatter())
+                    .map(transform)
+                    .collect(Collectors.joining("\n"));
+        }
+
+        public ListingBuilder replaceAll(final String pattern, final String replacement) {
+            transformers.add(s -> s.replaceAll(pattern, replacement));
+            return this;
+        }
+
+        public void assertListing(final String expected) {
+            assertEquals(expected, actual());
+        }
+
     }
 }
