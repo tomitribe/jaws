@@ -102,10 +102,6 @@ public class S3FileNodeUnknown3Test {
     public void files() {
         final List<S3File> list = file.files().collect(Collectors.toList());
         assertEquals("" +
-                "org.color.bright/green/1/1.4\n" +
-                "org.color.bright/green/1/1.4/a\n" +
-                "org.color.bright/green/1/1.4/a/b\n" +
-                "org.color.bright/green/1/1.4/a/b/c\n" +
                 "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
                 "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", S3File::getAbsoluteName, list));
     }
@@ -114,10 +110,6 @@ public class S3FileNodeUnknown3Test {
     public void testFiles() {
         final List<S3File> list = file.files(ListObjectsRequest.builder().build()).collect(Collectors.toList());
         assertEquals("" +
-                "org.color.bright/green/1/1.4\n" +
-                "org.color.bright/green/1/1.4/a\n" +
-                "org.color.bright/green/1/1.4/a/b\n" +
-                "org.color.bright/green/1/1.4/a/b/c\n" +
                 "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
                 "org.color.bright/green/1/1.4/foo.txt", Join.join("\n", S3File::getAbsoluteName, list));
     }

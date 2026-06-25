@@ -140,14 +140,11 @@ public class S3DirFileTest {
                 .collect(Collectors.toList());
 
         assertEquals("" +
-                "blue\n" +
                 "blue/dark.txt\n" +
                 "blue/light.txt\n" +
-                "green\n" +
                 "green/dark.txt\n" +
                 "green/light.txt\n" +
                 "readme.txt\n" +
-                "red\n" +
                 "red/dark.txt\n" +
                 "red/light.txt", Join.join("\n", list));
     }

@@ -55,25 +55,9 @@ public class S3RecursiveTest {
         final List<String> paths = paths(list);
 
         // @Recursive Stream<S3File> uses files() — flat listing of all descendant objects
-        assertEquals("io.tomitribe\n" +
-                "io.tomitribe/crest\n" +
-                "io.tomitribe/crest/5\n" +
-                "io.tomitribe/crest/5/5.4.1.2\n" +
-                "io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
-                "junit\n" +
-                "junit/junit\n" +
-                "junit/junit/4\n" +
-                "junit/junit/4/4.12\n" +
+        assertEquals("io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
                 "junit/junit/4/4.12/bar.txt\n" +
-                "org.color\n" +
-                "org.color.bright\n" +
-                "org.color.bright/green\n" +
-                "org.color.bright/green/1\n" +
-                "org.color.bright/green/1/1.4\n" +
                 "org.color.bright/green/1/1.4/foo.txt\n" +
-                "org.color/red\n" +
-                "org.color/red/1\n" +
-                "org.color/red/1/1.4\n" +
                 "org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
     }
 
@@ -125,15 +109,7 @@ public class S3RecursiveTest {
 
         // @Recursive @Prefix("org.") uses files(request) — returns all objects with prefix "org."
         assertEquals("" +
-                "org.color\n" +
-                "org.color.bright\n" +
-                "org.color.bright/green\n" +
-                "org.color.bright/green/1\n" +
-                "org.color.bright/green/1/1.4\n" +
                 "org.color.bright/green/1/1.4/foo.txt\n" +
-                "org.color/red\n" +
-                "org.color/red/1\n" +
-                "org.color/red/1/1.4\n" +
                 "org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
     }
 
@@ -207,25 +183,9 @@ public class S3RecursiveTest {
 
         final List<String> paths = paths(list);
 
-        assertEquals("io.tomitribe\n" +
-                "io.tomitribe/crest\n" +
-                "io.tomitribe/crest/5\n" +
-                "io.tomitribe/crest/5/5.4.1.2\n" +
-                "io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
-                "junit\n" +
-                "junit/junit\n" +
-                "junit/junit/4\n" +
-                "junit/junit/4/4.12\n" +
+        assertEquals("io.tomitribe/crest/5/5.4.1.2/baz.txt\n" +
                 "junit/junit/4/4.12/bar.txt\n" +
-                "org.color\n" +
-                "org.color.bright\n" +
-                "org.color.bright/green\n" +
-                "org.color.bright/green/1\n" +
-                "org.color.bright/green/1/1.4\n" +
                 "org.color.bright/green/1/1.4/foo.txt\n" +
-                "org.color/red\n" +
-                "org.color/red/1\n" +
-                "org.color/red/1/1.4\n" +
                 "org.color/red/1/1.4/foo.txt", Join.join("\n", paths));
     }
 

@@ -105,12 +105,6 @@ public class S3FileNodeDirectoryTest {
     public void files() {
         final List<S3File> list = file.files().collect(Collectors.toList());
         assertEquals("" +
-                "org.color.bright/green/1/1.4/a\n" +
-                "org.color.bright/green/1/1.4/a/b\n" +
-                "org.color.bright/green/1/1.4/a/b/c\n" +
-                "org.color.bright/green/1/1.4/a/b/c/d\n" +
-                "org.color.bright/green/1/1.4/a/b/c/d/e\n" +
-                "org.color.bright/green/1/1.4/a/b/c/d/e/f\n" +
                 "org.color.bright/green/1/1.4/a/b/c/d/e/f/bar.txt\n" +
                 "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
                 "org.color.bright/green/1/1.4/a/bar.txt\n" +
@@ -122,12 +116,6 @@ public class S3FileNodeDirectoryTest {
     public void testFiles() {
         final List<S3File> list = file.files(ListObjectsRequest.builder().build()).collect(Collectors.toList());
         assertEquals("" +
-                "org.color.bright/green/1/1.4/a\n" +
-                "org.color.bright/green/1/1.4/a/b\n" +
-                "org.color.bright/green/1/1.4/a/b/c\n" +
-                "org.color.bright/green/1/1.4/a/b/c/d\n" +
-                "org.color.bright/green/1/1.4/a/b/c/d/e\n" +
-                "org.color.bright/green/1/1.4/a/b/c/d/e/f\n" +
                 "org.color.bright/green/1/1.4/a/b/c/d/e/f/bar.txt\n" +
                 "org.color.bright/green/1/1.4/a/b/c/foo.txt\n" +
                 "org.color.bright/green/1/1.4/a/bar.txt\n" +

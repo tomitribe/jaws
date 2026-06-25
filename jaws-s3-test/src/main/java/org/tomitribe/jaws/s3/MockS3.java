@@ -30,6 +30,7 @@ public class MockS3 {
 
     private final S3ProxyJunitCore core = new S3ProxyJunitCore.Builder()
             .withCredentials("access", "secret")
+            .withBlobStoreProvider("transient-nio2")
             .build();
 
     public void start() throws Exception {

@@ -59,14 +59,12 @@ public class S3Asserts {
 
     public Snapshot snapshot() {
         final Map<String, S3Object> entries = listObjects().stream()
-                .filter(o -> !o.key().endsWith("/"))
                 .collect(Collectors.toMap(S3Object::key, Function.identity()));
         return new Snapshot(s3, bucketName, entries);
     }
 
     public String listing() {
         return listObjects().stream()
-                .filter(o -> !o.key().endsWith("/"))
                 .sorted((a, b) -> a.key().compareTo(b.key()))
                 .map(o -> String.format("%-38s %s", stripQuotes(o.eTag()), o.key()))
                 .collect(Collectors.joining("\n"));
@@ -236,7 +234,6 @@ public class S3Asserts {
 
             final Stream<S3Object> stream = listObjects().stream();
             return stream
-                    .filter(o -> !o.key().endsWith("/"))
                     .sorted(Comparator.comparing(S3Object::key))
                     .map(rowFormatter())
                     .map(transform)
