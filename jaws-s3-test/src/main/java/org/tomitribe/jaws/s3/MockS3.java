@@ -28,10 +28,18 @@ import java.net.URI;
 
 public class MockS3 {
 
-    private final S3ProxyJunitCore core = new S3ProxyJunitCore.Builder()
-            .withCredentials("access", "secret")
-            .withBlobStoreProvider("transient-nio2")
-            .build();
+    private final S3ProxyJunitCore core;
+
+    public MockS3() {
+        this(BlobStore.MEMORY);
+    }
+
+    public MockS3(final BlobStore blobStore) {
+        this.core = new S3ProxyJunitCore.Builder()
+                .withCredentials("access", "secret")
+                .withBlobStoreProvider(blobStore.getProvider())
+                .build();
+    }
 
     public void start() throws Exception {
         core.beforeEach();

@@ -23,7 +23,15 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 
 public class MockS3Extension implements BeforeEachCallback, AfterEachCallback {
 
-    private final MockS3 mockS3 = new MockS3();
+    private final MockS3 mockS3;
+
+    public MockS3Extension() {
+        this.mockS3 = new MockS3();
+    }
+
+    public MockS3Extension(final BlobStore blobStore) {
+        this.mockS3 = new MockS3(blobStore);
+    }
 
     @Override
     public void beforeEach(final ExtensionContext context) throws Exception {

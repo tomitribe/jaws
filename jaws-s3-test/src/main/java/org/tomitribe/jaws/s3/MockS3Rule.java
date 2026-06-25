@@ -21,7 +21,15 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 
 public class MockS3Rule extends ExternalResource {
 
-    private final MockS3 mockS3 = new MockS3();
+    private final MockS3 mockS3;
+
+    public MockS3Rule() {
+        this.mockS3 = new MockS3();
+    }
+
+    public MockS3Rule(final BlobStore blobStore) {
+        this.mockS3 = new MockS3(blobStore);
+    }
 
     @Override
     protected void before() throws Exception {
