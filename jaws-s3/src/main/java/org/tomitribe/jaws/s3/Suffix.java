@@ -73,10 +73,10 @@ import java.lang.annotation.Target;
  * @see Prefix
  */
 @Repeatable(Suffixes.class)
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target({ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Suffix {
-    String[] value();
+    String[] value() default {};
 
     boolean exclude() default false;
 }

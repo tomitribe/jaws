@@ -107,8 +107,8 @@ import java.lang.annotation.Target;
  * @see Recursive
  * @see Delimiter
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Prefix {
-    String value();
+    String value() default "";
 }

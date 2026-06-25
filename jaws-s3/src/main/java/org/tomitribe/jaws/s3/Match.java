@@ -69,10 +69,10 @@ import java.lang.annotation.Target;
  * @see Prefix
  */
 @Repeatable(Matches.class)
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target({ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Match {
-    String value();
+    String value() default "";
 
     boolean exclude() default false;
 }
