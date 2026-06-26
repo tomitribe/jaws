@@ -408,88 +408,149 @@ public class MethodAnnotationsTest {
     // Validation errors
     // ---------------------------------------------------------------
 
+    private static final String VALID_PREFIX =
+            "\n\n  Valid @Prefix usage:" +
+            "\n    @Prefix(\"images/\") Stream<S3File> method()" +
+            "\n    Stream<S3File> method(@Prefix String prefix)";
+
+    private static final String VALID_MATCH =
+            "\n\n  Valid @Match usage:" +
+            "\n    @Match(\".*\\\\.jpg\") Stream<S3File> method()" +
+            "\n    Stream<S3File> method(@Match String pattern)" +
+            "\n    Stream<S3File> method(@Match String pattern, boolean exclude)" +
+            "\n    Stream<S3File> method(@Match Pattern pattern)" +
+            "\n    Stream<S3File> method(@Match Pattern pattern, boolean exclude)";
+
+    private static final String VALID_SUFFIX =
+            "\n\n  Valid @Suffix usage:" +
+            "\n    @Suffix(\".jar\") Stream<S3File> method()" +
+            "\n    Stream<S3File> method(@Suffix String suffix)" +
+            "\n    Stream<S3File> method(@Suffix String suffix, boolean exclude)";
+
     @Test
     public void error_prefixOnBothMethodAndParam() throws Exception {
         final InvalidAnnotationException e = invalidMethod("prefixOnBothMethodAndParam", String.class);
-        assertEquals("prefixOnBothMethodAndParam: @Prefix on both method and parameter is ambiguous", e.getMessage());
+        assertEquals(
+                "@Prefix(\"foo\") Stream<S3File> prefixOnBothMethodAndParam(@Prefix String)" +
+                "\n  @Prefix on both method and parameter is ambiguous" + VALID_PREFIX,
+                e.getMessage());
     }
 
     @Test
     public void error_prefixOnNonStringParam() throws Exception {
         final InvalidAnnotationException e = invalidMethod("prefixOnNonStringParam", int.class);
-        assertEquals("prefixOnNonStringParam: @Prefix parameter must be String, found int", e.getMessage());
+        assertEquals(
+                "Stream<S3File> prefixOnNonStringParam(@Prefix int)" +
+                "\n  @Prefix parameter must be String, found int" + VALID_PREFIX,
+                e.getMessage());
     }
 
     @Test
     public void error_multiplePrefixParams() throws Exception {
         final InvalidAnnotationException e = invalidMethod("multiplePrefixParams", String.class, String.class);
-        assertEquals("multiplePrefixParams: only one @Prefix parameter allowed", e.getMessage());
+        assertEquals(
+                "Stream<S3File> multiplePrefixParams(@Prefix String, @Prefix String)" +
+                "\n  only one @Prefix parameter allowed" + VALID_PREFIX,
+                e.getMessage());
     }
 
     @Test
     public void error_matchBooleanWithoutPattern() throws Exception {
         final InvalidAnnotationException e = invalidMethod("matchBooleanWithoutPattern", boolean.class);
-        assertEquals("matchBooleanWithoutPattern: @Match is not allowed on boolean parameters", e.getMessage());
+        assertEquals(
+                "Stream<S3File> matchBooleanWithoutPattern(@Match boolean)" +
+                "\n  @Match is not allowed on boolean parameters" + VALID_MATCH,
+                e.getMessage());
     }
 
     @Test
     public void error_matchOnBothMethodAndParam() throws Exception {
         final InvalidAnnotationException e = invalidMethod("matchOnBothMethodAndParam", String.class);
-        assertEquals("matchOnBothMethodAndParam: @Match on both method and parameter is ambiguous", e.getMessage());
+        assertEquals(
+                "@Match(\".*\\\\.jpg\") Stream<S3File> matchOnBothMethodAndParam(@Match String)" +
+                "\n  @Match on both method and parameter is ambiguous" + VALID_MATCH,
+                e.getMessage());
     }
 
     @Test
     public void error_suffixBooleanWithoutString() throws Exception {
         final InvalidAnnotationException e = invalidMethod("suffixBooleanWithoutString", boolean.class);
-        assertEquals("suffixBooleanWithoutString: @Suffix is not allowed on boolean parameters", e.getMessage());
+        assertEquals(
+                "Stream<S3File> suffixBooleanWithoutString(@Suffix boolean)" +
+                "\n  @Suffix is not allowed on boolean parameters" + VALID_SUFFIX,
+                e.getMessage());
     }
 
     @Test
     public void error_suffixOnBothMethodAndParam() throws Exception {
         final InvalidAnnotationException e = invalidMethod("suffixOnBothMethodAndParam", String.class);
-        assertEquals("suffixOnBothMethodAndParam: @Suffix on both method and parameter is ambiguous", e.getMessage());
+        assertEquals(
+                "@Suffix(\".jar\") Stream<S3File> suffixOnBothMethodAndParam(@Suffix String)" +
+                "\n  @Suffix on both method and parameter is ambiguous" + VALID_SUFFIX,
+                e.getMessage());
     }
 
     @Test
     public void error_matchAnnotationDuplicated() throws Exception {
         final InvalidAnnotationException e = invalidMethod("matchAnnotationDuplicated", String.class, boolean.class);
-        assertEquals("matchAnnotationDuplicated: @Match is not allowed on boolean parameters", e.getMessage());
+        assertEquals(
+                "Stream<S3File> matchAnnotationDuplicated(@Match String, @Match boolean)" +
+                "\n  @Match is not allowed on boolean parameters" + VALID_MATCH,
+                e.getMessage());
     }
 
     @Test
     public void error_suffixAnnotationDuplicated() throws Exception {
         final InvalidAnnotationException e = invalidMethod("suffixAnnotationDuplicated", String.class, boolean.class);
-        assertEquals("suffixAnnotationDuplicated: @Suffix is not allowed on boolean parameters", e.getMessage());
+        assertEquals(
+                "Stream<S3File> suffixAnnotationDuplicated(@Suffix String, @Suffix boolean)" +
+                "\n  @Suffix is not allowed on boolean parameters" + VALID_SUFFIX,
+                e.getMessage());
     }
 
     @Test
     public void error_prefixMissingValue() throws Exception {
         final InvalidAnnotationException e = invalidMethod("prefixMissingValue");
-        assertEquals("prefixMissingValue: @Prefix on method requires a non-empty value", e.getMessage());
+        assertEquals(
+                "@Prefix Stream<S3File> prefixMissingValue()" +
+                "\n  @Prefix on method requires a non-empty value" + VALID_PREFIX,
+                e.getMessage());
     }
 
     @Test
     public void error_matchMissingValue() throws Exception {
         final InvalidAnnotationException e = invalidMethod("matchMissingValue");
-        assertEquals("matchMissingValue: @Match on method requires a non-empty value", e.getMessage());
+        assertEquals(
+                "@Match Stream<S3File> matchMissingValue()" +
+                "\n  @Match on method requires a non-empty value" + VALID_MATCH,
+                e.getMessage());
     }
 
     @Test
     public void error_matchMissingValue2() throws Exception {
         final InvalidAnnotationException e = invalidMethod("matchMissingValue2");
-        assertEquals("matchMissingValue2: @Match on method requires a non-empty value", e.getMessage());
+        assertEquals(
+                "@Match(exclude = true) Stream<S3File> matchMissingValue2()" +
+                "\n  @Match on method requires a non-empty value" + VALID_MATCH,
+                e.getMessage());
     }
 
     @Test
     public void error_suffixMissingValue() throws Exception {
         final InvalidAnnotationException e = invalidMethod("suffixMissingValue");
-        assertEquals("suffixMissingValue: @Suffix on method requires at least one value", e.getMessage());
+        assertEquals(
+                "@Suffix Stream<S3File> suffixMissingValue()" +
+                "\n  @Suffix on method requires at least one value" + VALID_SUFFIX,
+                e.getMessage());
     }
 
     @Test
     public void error_suffixMissingValue2() throws Exception {
         final InvalidAnnotationException e = invalidMethod("suffixMissingValue2");
-        assertEquals("suffixMissingValue2: @Suffix on method requires at least one value", e.getMessage());
+        assertEquals(
+                "@Suffix(exclude = true) Stream<S3File> suffixMissingValue2()" +
+                "\n  @Suffix on method requires at least one value" + VALID_SUFFIX,
+                e.getMessage());
     }
 
     // ---------------------------------------------------------------

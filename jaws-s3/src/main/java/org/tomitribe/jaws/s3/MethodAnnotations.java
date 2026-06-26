@@ -73,7 +73,7 @@ public class MethodAnnotations {
         // --- @Prefix ---
         // Validate static usage: a bare @Prefix on the method with no value is meaningless.
         if (method.isAnnotationPresent(Prefix.class) && method.getAnnotation(Prefix.class).value().isEmpty()) {
-            errors.add(method.getName() + ": @Prefix on method requires a non-empty value");
+            errors.add("@Prefix on method requires a non-empty value");
         }
 
         for (int i = 0; i < params.length; i++) {
@@ -81,11 +81,11 @@ public class MethodAnnotations {
             if (!param.isAnnotationPresent(Prefix.class)) continue;
 
             if (method.isAnnotationPresent(Prefix.class)) {
-                errors.add(method.getName() + ": @Prefix on both method and parameter is ambiguous");
+                errors.add("@Prefix on both method and parameter is ambiguous");
             } else if (param.getType() != String.class) {
-                errors.add(method.getName() + ": @Prefix parameter must be String, found " + param.getType().getSimpleName());
+                errors.add("@Prefix parameter must be String, found " + param.getType().getSimpleName());
             } else if (prefix != null) {
-                errors.add(method.getName() + ": only one @Prefix parameter allowed");
+                errors.add("only one @Prefix parameter allowed");
             } else {
                 prefix = new PrefixBinding(i);
             }
@@ -98,12 +98,12 @@ public class MethodAnnotations {
         if (method.isAnnotationPresent(Match.class) || method.isAnnotationPresent(Matches.class)) {
             for (final Match m : method.getAnnotationsByType(Match.class)) {
                 if (m.value().isEmpty()) {
-                    errors.add(method.getName() + ": @Match on method requires a non-empty value");
+                    errors.add("@Match on method requires a non-empty value");
                 }
             }
             for (final Parameter param : params) {
                 if (param.isAnnotationPresent(Match.class)) {
-                    errors.add(method.getName() + ": @Match on both method and parameter is ambiguous");
+                    errors.add("@Match on both method and parameter is ambiguous");
                     break;
                 }
             }
@@ -121,9 +121,9 @@ public class MethodAnnotations {
                         }
                         pendingPatternIndex = i;
                     } else if (type == boolean.class) {
-                        errors.add(method.getName() + ": @Match is not allowed on boolean parameters");
+                        errors.add("@Match is not allowed on boolean parameters");
                     } else {
-                        errors.add(method.getName() + ": @Match parameter must be String or Pattern, found " + type.getSimpleName());
+                        errors.add("@Match parameter must be String or Pattern, found " + type.getSimpleName());
                     }
                 } else if (param.getType() == boolean.class && pendingPatternIndex >= 0) {
                     matches.add(new MatchBinding(pendingPatternIndex, i));
@@ -143,12 +143,12 @@ public class MethodAnnotations {
         if (method.isAnnotationPresent(Suffix.class) || method.isAnnotationPresent(Suffixes.class)) {
             for (final Suffix s : method.getAnnotationsByType(Suffix.class)) {
                 if (s.value().length == 0) {
-                    errors.add(method.getName() + ": @Suffix on method requires at least one value");
+                    errors.add("@Suffix on method requires at least one value");
                 }
             }
             for (final Parameter param : params) {
                 if (param.isAnnotationPresent(Suffix.class)) {
-                    errors.add(method.getName() + ": @Suffix on both method and parameter is ambiguous");
+                    errors.add("@Suffix on both method and parameter is ambiguous");
                     break;
                 }
             }
@@ -166,9 +166,9 @@ public class MethodAnnotations {
                         }
                         pendingValueIndex = i;
                     } else if (type == boolean.class) {
-                        errors.add(method.getName() + ": @Suffix is not allowed on boolean parameters");
+                        errors.add("@Suffix is not allowed on boolean parameters");
                     } else {
-                        errors.add(method.getName() + ": @Suffix parameter must be String, found " + type.getSimpleName());
+                        errors.add("@Suffix parameter must be String, found " + type.getSimpleName());
                     }
                 } else if (param.getType() == boolean.class && pendingValueIndex >= 0) {
                     suffixes.add(new SuffixBinding(pendingValueIndex, i));
