@@ -62,14 +62,20 @@ public class MethodAnnotations {
         this.matches = Collections.unmodifiableList(matches);
     }
 
-    public static MethodAnnotations of(final Method method, final List<String> errors) {
+    public static MethodAnnotations of(final Method method) {
         final Parameter[] params = method.getParameters();
+        final List<String> errors = new ArrayList<>();
 
         PrefixBinding prefix = null;
         final List<SuffixBinding> suffixes = new ArrayList<>();
         final List<MatchBinding> matches = new ArrayList<>();
 
         // --- @Prefix ---
+        // Validate static usage: a bare @Prefix on the method with no value is meaningless.
+        if (method.isAnnotationPresent(Prefix.class) && method.getAnnotation(Prefix.class).value().isEmpty()) {
+            errors.add(method.getName() + ": @Prefix on method requires a non-empty value");
+        }
+
         for (int i = 0; i < params.length; i++) {
             final Parameter param = params[i];
             if (!param.isAnnotationPresent(Prefix.class)) continue;
@@ -86,83 +92,97 @@ public class MethodAnnotations {
         }
 
         // --- @Match ---
-        {
-            int patternIndex = -1;
-            int excludeIndex = -1;
-            boolean hasMatchParam = false;
+        // A @Match String/Pattern opens a group. The next unannotated boolean closes it as the
+        // exclude flag. Another @Match String opens a new group, closing the previous one without
+        // an exclude. @Match must never appear on a boolean parameter — the pairing is positional.
+        if (method.isAnnotationPresent(Match.class) || method.isAnnotationPresent(Matches.class)) {
+            for (final Match m : method.getAnnotationsByType(Match.class)) {
+                if (m.value().isEmpty()) {
+                    errors.add(method.getName() + ": @Match on method requires a non-empty value");
+                }
+            }
+            for (final Parameter param : params) {
+                if (param.isAnnotationPresent(Match.class)) {
+                    errors.add(method.getName() + ": @Match on both method and parameter is ambiguous");
+                    break;
+                }
+            }
+        } else {
+            int pendingPatternIndex = -1;
 
             for (int i = 0; i < params.length; i++) {
                 final Parameter param = params[i];
-                if (!param.isAnnotationPresent(Match.class)) continue;
-                hasMatchParam = true;
 
-                final Class<?> type = param.getType();
-                if (type == String.class || type == Pattern.class) {
-                    if (patternIndex >= 0) {
-                        errors.add(method.getName() + ": only one @Match pattern parameter allowed");
+                if (param.isAnnotationPresent(Match.class)) {
+                    final Class<?> type = param.getType();
+                    if (type == String.class || type == Pattern.class) {
+                        if (pendingPatternIndex >= 0) {
+                            matches.add(new MatchBinding(pendingPatternIndex, -1));
+                        }
+                        pendingPatternIndex = i;
+                    } else if (type == boolean.class) {
+                        errors.add(method.getName() + ": @Match is not allowed on boolean parameters");
                     } else {
-                        patternIndex = i;
+                        errors.add(method.getName() + ": @Match parameter must be String or Pattern, found " + type.getSimpleName());
                     }
-                } else if (type == boolean.class) {
-                    if (excludeIndex >= 0) {
-                        errors.add(method.getName() + ": only one @Match exclude parameter allowed");
-                    } else {
-                        excludeIndex = i;
-                    }
-                } else {
-                    errors.add(method.getName() + ": @Match parameter must be String, Pattern, or boolean, found " + type.getSimpleName());
+                } else if (param.getType() == boolean.class && pendingPatternIndex >= 0) {
+                    matches.add(new MatchBinding(pendingPatternIndex, i));
+                    pendingPatternIndex = -1;
                 }
             }
 
-            if (hasMatchParam) {
-                if (method.isAnnotationPresent(Match.class) || method.isAnnotationPresent(Matches.class)) {
-                    errors.add(method.getName() + ": @Match on both method and parameter is ambiguous");
-                } else if (patternIndex < 0) {
-                    errors.add(method.getName() + ": @Match exclude parameter requires a @Match pattern parameter");
-                } else {
-                    matches.add(new MatchBinding(patternIndex, excludeIndex));
-                }
+            if (pendingPatternIndex >= 0) {
+                matches.add(new MatchBinding(pendingPatternIndex, -1));
             }
         }
 
         // --- @Suffix ---
-        {
-            int valueIndex = -1;
-            int excludeIndex = -1;
-            boolean hasSuffixParam = false;
+        // Same grouping rules as @Match: a @Suffix String opens a group, the next unannotated
+        // boolean closes it as the exclude, another @Suffix String opens a new group.
+        // @Suffix must never appear on a boolean parameter — the pairing is positional.
+        if (method.isAnnotationPresent(Suffix.class) || method.isAnnotationPresent(Suffixes.class)) {
+            for (final Suffix s : method.getAnnotationsByType(Suffix.class)) {
+                if (s.value().length == 0) {
+                    errors.add(method.getName() + ": @Suffix on method requires at least one value");
+                }
+            }
+            for (final Parameter param : params) {
+                if (param.isAnnotationPresent(Suffix.class)) {
+                    errors.add(method.getName() + ": @Suffix on both method and parameter is ambiguous");
+                    break;
+                }
+            }
+        } else {
+            int pendingValueIndex = -1;
 
             for (int i = 0; i < params.length; i++) {
                 final Parameter param = params[i];
-                if (!param.isAnnotationPresent(Suffix.class)) continue;
-                hasSuffixParam = true;
 
-                final Class<?> type = param.getType();
-                if (type == String.class) {
-                    if (valueIndex >= 0) {
-                        errors.add(method.getName() + ": only one @Suffix value parameter allowed");
+                if (param.isAnnotationPresent(Suffix.class)) {
+                    final Class<?> type = param.getType();
+                    if (type == String.class) {
+                        if (pendingValueIndex >= 0) {
+                            suffixes.add(new SuffixBinding(pendingValueIndex, -1));
+                        }
+                        pendingValueIndex = i;
+                    } else if (type == boolean.class) {
+                        errors.add(method.getName() + ": @Suffix is not allowed on boolean parameters");
                     } else {
-                        valueIndex = i;
+                        errors.add(method.getName() + ": @Suffix parameter must be String, found " + type.getSimpleName());
                     }
-                } else if (type == boolean.class) {
-                    if (excludeIndex >= 0) {
-                        errors.add(method.getName() + ": only one @Suffix exclude parameter allowed");
-                    } else {
-                        excludeIndex = i;
-                    }
-                } else {
-                    errors.add(method.getName() + ": @Suffix parameter must be String or boolean, found " + type.getSimpleName());
+                } else if (param.getType() == boolean.class && pendingValueIndex >= 0) {
+                    suffixes.add(new SuffixBinding(pendingValueIndex, i));
+                    pendingValueIndex = -1;
                 }
             }
 
-            if (hasSuffixParam) {
-                if (method.isAnnotationPresent(Suffix.class) || method.isAnnotationPresent(Suffixes.class)) {
-                    errors.add(method.getName() + ": @Suffix on both method and parameter is ambiguous");
-                } else if (valueIndex < 0) {
-                    errors.add(method.getName() + ": @Suffix exclude parameter requires a @Suffix value parameter");
-                } else {
-                    suffixes.add(new SuffixBinding(valueIndex, excludeIndex));
-                }
+            if (pendingValueIndex >= 0) {
+                suffixes.add(new SuffixBinding(pendingValueIndex, -1));
             }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new InvalidAnnotationException(method, errors);
         }
 
         return new MethodAnnotations(method, prefix, suffixes, matches);
