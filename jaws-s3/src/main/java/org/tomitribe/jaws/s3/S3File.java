@@ -427,7 +427,7 @@ public class S3File {
         return (T) Proxy.newProxyInstance(
                 Thread.currentThread().getContextClassLoader(),
                 new Class[]{clazz},
-                new S3Handler(this)
+                new S3Handler(this, clazz)
         );
     }
 

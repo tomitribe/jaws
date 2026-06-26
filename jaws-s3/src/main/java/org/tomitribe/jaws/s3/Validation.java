@@ -55,7 +55,7 @@ public class Validation implements Predicate<S3File> {
 
     public static class Builder {
         private Class<?> type;
-        private Method method;
+        private AnnotatedElement element;
         private boolean prefix = true;
 
         public Builder type(final Class<?> type) {
@@ -64,7 +64,12 @@ public class Validation implements Predicate<S3File> {
         }
 
         public Builder method(final Method method) {
-            this.method = method;
+            this.element = method;
+            return this;
+        }
+
+        public Builder element(final AnnotatedElement element) {
+            this.element = element;
             return this;
         }
 
@@ -82,8 +87,8 @@ public class Validation implements Predicate<S3File> {
             }
 
             // Method-level annotations second
-            if (method != null) {
-                predicate = predicate.and(fromAnnotations(method, prefix));
+            if (element != null) {
+                predicate = predicate.and(fromAnnotations(element, prefix));
             }
 
             return new Validation(predicate);

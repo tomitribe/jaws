@@ -19,13 +19,18 @@ import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import java.io.FileNotFoundException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -33,9 +38,27 @@ import java.util.stream.Stream;
 
 public class S3Handler implements InvocationHandler {
     private final S3File dir;
+    private final Map<Method, MethodAnnotations> methodAnnotations;
 
-    public S3Handler(final S3File dir) {
+    public S3Handler(final S3File dir, final Class<?> iface) {
         this.dir = dir;
+        this.methodAnnotations = buildMethodAnnotations(iface);
+    }
+
+    private static Map<Method, MethodAnnotations> buildMethodAnnotations(final Class<?> iface) {
+        final Map<Method, MethodAnnotations> map = new HashMap<>();
+        for (final Method method : iface.getMethods()) {
+            if (method.getDeclaringClass() == Object.class) continue;
+            if (method.isDefault()) continue;
+            if (Modifier.isStatic(method.getModifiers())) continue;
+            map.put(method, MethodAnnotations.of(method));
+        }
+        return Collections.unmodifiableMap(map);
+    }
+
+    private AnnotatedElement element(final Method method, final Object[] args) {
+        final MethodAnnotations ma = methodAnnotations.get(method);
+        return ma != null ? ma.asAnnotatedElement(args) : method;
     }
 
     @Override
@@ -66,23 +89,23 @@ public class S3Handler implements InvocationHandler {
         final Class<?> returnType = method.getReturnType();
 
         if (returnType.isArray()) {
-            return returnArray(method);
+            return returnArray(method, args);
         }
 
-        if (Stream.class.equals(returnType) && args == null) {
-            return returnStream(method);
+        if (Stream.class.equals(returnType)) {
+            return returnStream(method, args);
         }
 
-        if (List.class.equals(returnType) && args == null) {
-            return returnList(method);
+        if (List.class.equals(returnType)) {
+            return returnList(method, args);
         }
 
-        if (Set.class.equals(returnType) && args == null) {
-            return returnSet(method);
+        if (Set.class.equals(returnType)) {
+            return returnSet(method, args);
         }
 
-        if (Collection.class.equals(returnType) && args == null) {
-            return returnList(method);
+        if (Collection.class.equals(returnType)) {
+            return returnList(method, args);
         }
 
         if (S3File.class.equals(returnType) && args == null) {
@@ -94,7 +117,7 @@ public class S3Handler implements InvocationHandler {
             final S3File target = dir.getFile(name);
             final Validation validation = Validation.builder()
                     .type(returnType)
-                    .method(method)
+                    .element(method)
                     .build();
             if (!validation.test(target)) {
                 throw new IllegalArgumentException(
@@ -202,10 +225,11 @@ public class S3Handler implements InvocationHandler {
         return Arrays.asList(exceptionTypes);
     }
 
-    private Object returnArray(final Method method) {
+    private Object returnArray(final Method method, final Object[] args) {
+        final AnnotatedElement element = element(method, args);
         final Predicate<S3File> filter = Validation.builder()
                 .type(getElementType(method))
-                .method(method)
+                .element(element)
                 .prefix(false)
                 .build();
 
@@ -213,14 +237,14 @@ public class S3Handler implements InvocationHandler {
 
         if (S3File.class.equals(arrayType)) {
 
-            return stream(method)
+            return stream(method, element)
                     .filter(filter)
                     .toArray(S3File[]::new);
 
         } else if (arrayType.isInterface()) {
 
             // will be an array of type Object[]
-            final Object[] src = stream(method)
+            final Object[] src = stream(method, element)
                     .filter(filter)
                     .map(child -> child.as(arrayType))
                     .toArray();
@@ -236,23 +260,24 @@ public class S3Handler implements InvocationHandler {
         throw new UnsupportedOperationException(method.toGenericString());
     }
 
-    private Object returnList(final Method method) {
+    private Object returnList(final Method method, final Object[] args) {
+        final AnnotatedElement element = element(method, args);
         final Class<?> listType = (Class<?>) Generics.getReturnType(method);
         final Predicate<S3File> filter = Validation.builder()
                 .type(getElementType(method))
-                .method(method)
+                .element(element)
                 .prefix(false)
                 .build();
 
         if (S3File.class.equals(listType)) {
 
-            return stream(method)
+            return stream(method, element)
                     .filter(filter)
                     .collect(Collectors.toList());
 
         } else if (listType.isInterface()) {
 
-            return stream(method)
+            return stream(method, element)
                     .filter(filter)
                     .map(child -> child.as(listType))
                     .collect(Collectors.toList());
@@ -261,23 +286,24 @@ public class S3Handler implements InvocationHandler {
         throw new UnsupportedOperationException(method.toGenericString());
     }
 
-    private Object returnSet(final Method method) {
+    private Object returnSet(final Method method, final Object[] args) {
+        final AnnotatedElement element = element(method, args);
         final Class<?> listType = (Class<?>) Generics.getReturnType(method);
         final Predicate<S3File> filter = Validation.builder()
                 .type(getElementType(method))
-                .method(method)
+                .element(element)
                 .prefix(false)
                 .build();
 
         if (S3File.class.equals(listType)) {
 
-            return stream(method)
+            return stream(method, element)
                     .filter(filter)
                     .collect(Collectors.toSet());
 
         } else if (listType.isInterface()) {
 
-            return stream(method)
+            return stream(method, element)
                     .filter(filter)
                     .map(child -> child.as(listType))
                     .collect(Collectors.toSet());
@@ -286,21 +312,22 @@ public class S3Handler implements InvocationHandler {
         throw new UnsupportedOperationException(method.toGenericString());
     }
 
-    private Object returnStream(final Method method) {
+    private Object returnStream(final Method method, final Object[] args) {
+        final AnnotatedElement element = element(method, args);
         final Class returnType = (Class) Generics.getReturnType(method);
         final Predicate<S3File> filter = Validation.builder()
                 .type(getElementType(method))
-                .method(method)
+                .element(element)
                 .prefix(false)
                 .build();
 
         if (returnType.isInterface()) {
-            return stream(method)
+            return stream(method, element)
                     .filter(filter)
                     .map(child -> child.as(returnType));
         }
         if (S3File.class.equals(returnType)) {
-            return stream(method)
+            return stream(method, element)
                     .filter(filter);
         }
         throw new UnsupportedOperationException(method.toGenericString());
@@ -318,12 +345,12 @@ public class S3Handler implements InvocationHandler {
         return null;
     }
 
-    private Stream<S3File> stream(final Method method) {
+    private Stream<S3File> stream(final Method method, final AnnotatedElement element) {
 
         final Class<?> elementType = getElementType(method);
         final boolean recursive = method.isAnnotationPresent(Recursive.class);
 
-        final boolean hasListAnnotations = method.isAnnotationPresent(Prefix.class)
+        final boolean hasListAnnotations = element.isAnnotationPresent(Prefix.class)
                 || method.isAnnotationPresent(Marker.class)
                 || method.isAnnotationPresent(Delimiter.class);
 
@@ -341,8 +368,8 @@ public class S3Handler implements InvocationHandler {
 
         ListObjectsRequest.Builder builder = ListObjectsRequest.builder();
 
-        if (method.isAnnotationPresent(Prefix.class)) {
-            final Prefix prefix = method.getAnnotation(Prefix.class);
+        if (element.isAnnotationPresent(Prefix.class)) {
+            final Prefix prefix = element.getAnnotation(Prefix.class);
             final String searchPrefix = dir.getPath().getSearchPrefix();
             builder.prefix((searchPrefix != null ? searchPrefix : "") + prefix.value());
         }
