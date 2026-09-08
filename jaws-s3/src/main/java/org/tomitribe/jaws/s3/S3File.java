@@ -21,6 +21,7 @@ import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.CommonPrefix;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
@@ -514,6 +515,49 @@ public class S3File {
                 ? AsyncRequestBody.fromInputStream(input, size, bucket.getClient().getExecutor())
                 : AsyncRequestBody.empty();
         return upload(body, objectMetadata, listener);
+    }
+
+    /**
+     * Server-side copy of this object to {@code destination}: a single S3 {@code CopyObject}, so no
+     * bytes flow through the client. Single-op — the source object must be under 5&nbsp;GiB (this does
+     * not fall back to a multipart copy). Server-side encryption and user metadata follow S3's
+     * {@code CopyObject} defaults. Blocks until the copy completes.
+     *
+     * @param destination the file to copy this object to (same account/region; any bucket)
+     * @throws NoSuchS3ObjectException if this (source) object does not exist
+     */
+    public void copyTo(final S3File destination) {
+        try {
+            S3Client.join(bucket.getClient().getS3().copyObject(CopyObjectRequest.builder()
+                    .sourceBucket(getBucketName())
+                    .sourceKey(getAbsoluteName())
+                    .destinationBucket(destination.getBucketName())
+                    .destinationKey(destination.getAbsoluteName())
+                    .build()));
+        } catch (final S3Exception e) {
+            if (e.statusCode() == 404) {
+                throw new NoSuchS3ObjectException(getBucketName(), getAbsoluteName(), e);
+            }
+            throw e;
+        }
+        // The destination object now exists; drop any stale cached state (e.g. a NewObject
+        // left by a pre-copy exists() check) so reads reflect the newly written object.
+        destination.node.set(destination.new Unknown());
+    }
+
+    /**
+     * Server-side copy of this object to {@code key} within this file's bucket. See
+     * {@link #copyTo(S3File)}.
+     *
+     * @param key the destination key in this file's bucket
+     * @return the destination file
+     */
+    public S3File copyTo(final String key) {
+        // root().getFile navigates by path without a HEAD — the destination need not exist yet
+        // (bucket.getFile would HEAD it and 404 before the copy).
+        final S3File destination = bucket.root().getFile(key);
+        copyTo(destination);
+        return destination;
     }
 
     /**
