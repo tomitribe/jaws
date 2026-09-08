@@ -246,6 +246,28 @@ public interface S3 {
         }
 
         /**
+         * Uploads content from the given input stream of known length. The stream is
+         * consumed but not closed by this call.
+         *
+         * @param input the content to upload
+         * @param size  the content length in bytes
+         * @return the in-progress upload
+         */
+        default Upload upload(final InputStream input, final long size) {
+            return file().upload(input, size);
+        }
+
+        /**
+         * Server-side copies this object to {@code destination}: a single S3 CopyObject,
+         * no bytes flow through the client. See {@link S3File#copyTo(S3File)}.
+         *
+         * @param destination the file to copy this object to
+         */
+        default void copyTo(final S3.File destination) {
+            file().copyTo(destination.file());
+        }
+
+        /**
          * Returns the ETag of the object, typically an MD5 hash of the content.
          *
          * @return the ETag, or {@code null} if not yet fetched
