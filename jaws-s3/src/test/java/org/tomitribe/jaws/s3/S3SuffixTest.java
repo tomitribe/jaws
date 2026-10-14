@@ -242,6 +242,26 @@ public class S3SuffixTest {
         assertEquals("main.css", Join.join("\n", S3File::getName, data));
     }
 
+    /**
+     * Repeated includes are OR'd, same as listing the values in one annotation
+     */
+    @Test
+    public void stackedIncludes() throws Exception {
+        final ExcludeReturns returns = root().assets().file().as(ExcludeReturns.class);
+        final List<S3File> data = returns.cssOrJs().collect(Collectors.toList());
+        assertEquals("app.js\nmain.css\nreset.css\nvendor.js", Join.join("\n", S3File::getName, data));
+    }
+
+    /**
+     * Repeated excludes are OR'd
+     */
+    @Test
+    public void stackedExcludes() throws Exception {
+        final ExcludeReturns returns = root().assets().file().as(ExcludeReturns.class);
+        final List<S3File> data = returns.cssExceptResetAndMain().collect(Collectors.toList());
+        assertEquals("", Join.join("\n", S3File::getName, data));
+    }
+
     // ---------------------------------------------------------------
     // Filter ordering: @Filter only sees post-@Suffix entries
     // ---------------------------------------------------------------
@@ -340,6 +360,15 @@ public class S3SuffixTest {
         @Suffix(".css")
         @Suffix(value = "reset.css", exclude = true)
         Stream<S3File> cssExceptReset();
+
+        @Suffix(".css")
+        @Suffix(".js")
+        Stream<S3File> cssOrJs();
+
+        @Suffix(".css")
+        @Suffix(value = "reset.css", exclude = true)
+        @Suffix(value = "main.css", exclude = true)
+        Stream<S3File> cssExceptResetAndMain();
     }
 
     public interface FilterOrderReturns {

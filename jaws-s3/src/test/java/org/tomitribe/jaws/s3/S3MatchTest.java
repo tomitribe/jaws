@@ -256,6 +256,26 @@ public class S3MatchTest {
         assertEquals("main.css", Join.join("\n", S3File::getName, data));
     }
 
+    /**
+     * Repeated includes are OR'd, same as alternation in one pattern
+     */
+    @Test
+    public void stackedIncludes() throws Exception {
+        final ExcludeReturns returns = root().assets().file().as(ExcludeReturns.class);
+        final List<S3File> data = returns.cssOrJs().collect(Collectors.toList());
+        assertEquals("app.js\nmain.css\nreset.css\nvendor.js", Join.join("\n", S3File::getName, data));
+    }
+
+    /**
+     * Repeated excludes are OR'd
+     */
+    @Test
+    public void stackedExcludes() throws Exception {
+        final ExcludeReturns returns = root().assets().file().as(ExcludeReturns.class);
+        final List<S3File> data = returns.cssExceptResetAndMain().collect(Collectors.toList());
+        assertEquals("", Join.join("\n", S3File::getName, data));
+    }
+
     // ---------------------------------------------------------------
     // Filter ordering: @Filter only sees post-@Suffix-and-@Match entries
     // ---------------------------------------------------------------
@@ -360,6 +380,15 @@ public class S3MatchTest {
         @Match(".*\\.css")
         @Match(value = "reset\\.css", exclude = true)
         Stream<S3File> cssExceptReset();
+
+        @Match(".*\\.css")
+        @Match(".*\\.js")
+        Stream<S3File> cssOrJs();
+
+        @Match(".*\\.css")
+        @Match(value = "reset\\.css", exclude = true)
+        @Match(value = "main\\.css", exclude = true)
+        Stream<S3File> cssExceptResetAndMain();
     }
 
     public interface FilterOrderReturns {

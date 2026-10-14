@@ -37,8 +37,9 @@ import java.lang.annotation.Target;
  * <p>{@code @Match} is repeatable. When {@link #exclude()} is
  * {@code false} (the default), the annotation <b>includes</b> entries
  * matching the pattern. When {@code exclude = true}, it <b>excludes</b>
- * entries matching the pattern. Includes are applied before excludes,
- * so you can combine them:
+ * entries matching the pattern. All includes are OR'd together, all
+ * excludes are OR'd together, and an entry passes if it matches an
+ * include and does not match an exclude:
  *
  * <pre>{@code
  * public interface Reports extends S3.Dir {
@@ -57,12 +58,11 @@ import java.lang.annotation.Target;
  *
  * <h3>Evaluation order</h3>
  *
- * <p>When multiple filter annotations are present, they are applied
- * in order: {@link Prefix @Prefix} (server-side) &rarr;
- * {@link Suffix @Suffix} includes &rarr; {@link Suffix @Suffix}
- * excludes &rarr; {@code @Match} includes &rarr; {@code @Match}
- * excludes &rarr; {@link Filter @Filter}. Each filter only sees
- * entries that passed the previous ones.
+ * <p>Different annotation kinds are AND'd, applied in order:
+ * {@link Prefix @Prefix} (server-side) &rarr; {@link Suffix @Suffix} &rarr;
+ * {@code @Match} &rarr; {@link Filter @Filter}. Each kind only sees
+ * entries that passed the previous ones. Repeating {@code @Match} is the
+ * same as listing more values in one annotation.
  *
  * @see Suffix
  * @see Filter

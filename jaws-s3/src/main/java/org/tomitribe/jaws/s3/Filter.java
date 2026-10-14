@@ -37,12 +37,11 @@ import java.util.function.Predicate;
  * <ol>
  *   <li>{@link Prefix @Prefix} — server-side, in the
  *       {@code ListObjects} request</li>
- *   <li>{@link Suffix @Suffix} includes — client-side,
- *       {@link String#endsWith}</li>
- *   <li>{@link Suffix @Suffix} excludes</li>
- *   <li>{@link Match @Match} includes — client-side, compiled regex
- *       via {@link java.util.regex.Pattern#asMatchPredicate()}</li>
- *   <li>{@link Match @Match} excludes</li>
+ *   <li>{@link Suffix @Suffix} — client-side,
+ *       {@link String#endsWith}; includes OR'd, excludes OR'd</li>
+ *   <li>{@link Match @Match} — client-side, compiled regex
+ *       via {@link java.util.regex.Pattern#asMatchPredicate()};
+ *       includes OR'd, excludes OR'd</li>
  *   <li>{@code @Filter} — client-side, arbitrary
  *       {@code Predicate<S3File>}</li>
  * </ol>
